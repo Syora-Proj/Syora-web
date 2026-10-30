@@ -1,8 +1,24 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
 
-const shopLinks    = ['Juttis', 'Heels', 'Sneakers', 'Sandals', 'New Arrivals'];
+// Shop column is derived from the single source of truth for universes.
+const shopLinks = UNIVERSE_ORDER.map((id) => ({
+  label: UNIVERSES[id].name.charAt(0) + UNIVERSES[id].name.slice(1).toLowerCase(),
+  path: `/universe/${id}`,
+}));
 const serviceLinks = ['Contact Us', 'Shipping & Delivery', 'Returns & Refunds', 'Size Guide', 'FAQs'];
-const aboutLinks   = ['Our Story', 'Craftsmanship', 'Sustainability', 'Privacy Policy', 'Terms & Conditions'];
+// 'Our Story' routes to the homepage Our Journey section. The former
+// 'Craftsmanship' entry had no destination (href="#") and was removed.
+const aboutLinks   = ['Our Story', 'Sustainability', 'Privacy Policy', 'Terms & Conditions'];
+
+// Real social profile URLs are not in the repository and must not be invented.
+// Add the URL for each network here and its icon will appear automatically.
+const SOCIAL_LINKS = [
+  { name: 'Instagram', url: '' },
+  { name: 'Pinterest', url: '' },
+  { name: 'Facebook',  url: '' },
+];
 
 export default function Footer() {
   const [activeService, setActiveService] = useState(null);
@@ -91,9 +107,9 @@ export default function Footer() {
             Premium Indian women's footwear.<br />
             Handcrafted tradition, contemporary design.
           </p>
-          <div className="footer__socials">
-            {['Instagram', 'Pinterest', 'Facebook'].map(s => (
-              <a key={s} href="#" className="footer__social" aria-label={s}>
+          {SOCIAL_LINKS.some(({ url }) => url) && <div className="footer__socials">
+            {SOCIAL_LINKS.filter(({ url }) => url).map(({ name: s, url }) => (
+              <a key={s} href={url} className="footer__social" aria-label={s} target="_blank" rel="noopener noreferrer">
                 {s === 'Instagram' && (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                 )}
@@ -105,13 +121,13 @@ export default function Footer() {
                 )}
               </a>
             ))}
-          </div>
+          </div>}
         </div>
 
         {/* Shop */}
         <div className="footer__col">
           <h4 className="footer__col-title">SHOP</h4>
-          <ul>{shopLinks.map(l => <li key={l}><a href="#">{l}</a></li>)}</ul>
+          <ul>{shopLinks.map(l => <li key={l.label}><Link to={l.path}>{l.label}</Link></li>)}</ul>
         </div>
 
         {/* Customer Service */}
@@ -125,13 +141,13 @@ export default function Footer() {
           <h4 className="footer__col-title">ABOUT</h4>
           <ul>{aboutLinks.map(l => <li key={l}>{['Sustainability', 'Privacy Policy', 'Terms & Conditions'].includes(l)
             ? <button type="button" className="footer__service-button" onClick={() => setActiveService(l)}>{l}</button>
-            : <a href="#">{l}</a>}</li>)}</ul>
+            : <Link to="/#about">{l}</Link>}</li>)}</ul>
         </div>
       </div>
 
       {/* Payment */}
       <div className="footer__bottom">
-        <p className="footer__copy">© 2025 SYORA. All rights reserved.</p>
+        <p className="footer__copy">© {new Date().getFullYear()} SYORA. All rights reserved.</p>
         <div className="footer__payments">
           {['VISA', 'MC', 'UPI', 'GPAY', 'COD'].map(p => (
             <span key={p} className="payment-badge">{p}</span>
@@ -141,7 +157,7 @@ export default function Footer() {
       {activeService && (
         <div className="service-modal__backdrop" onMouseDown={(event) => event.target === event.currentTarget && setActiveService(null)}>
           <section className="service-modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-            <button type="button" className="service-modal__close" onClick={() => setActiveService(null)} aria-label="Close">×</button>
+            <button type="button" className="service-modal__close" onClick={() => setActiveService(null)} aria-label="Close" autoFocus>×</button>
             <p className="service-modal__eyebrow">SYORA CUSTOMER SERVICE</p>
             <h2 id="service-modal-title">{activeService}</h2>
             <div className="service-modal__content">{renderServiceContent()}</div>

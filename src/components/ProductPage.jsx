@@ -229,22 +229,17 @@ export default function ProductPage({ handle }) {
   // Related products — not yet populated from Shopify; will be empty initially
   const related = [];
 
-  // The user supplied the current Glitter Flat review summary for the PDP.
-  const reviewCount   = handle === 'glitter-flat' ? 5 : (product.reviewCount || 0);
-  const displayRating = handle === 'glitter-flat' ? 4.2 : product.rating;
+  // Stage 2A audit fix: this block previously hardcoded a fabricated 4.2-star /
+  // 5-review summary and five fake "Demo review" entries for handle === 'glitter-flat',
+  // shown to real customers as if genuine. Removed — ratings/reviews now always come
+  // from real Shopify product data only, with an honest empty state when none exist.
+  const reviewCount   = product.reviewCount || 0;
+  const displayRating = product.rating;
   const isNewArrival  = reviewCount === 0;
   const hasFewReviews = reviewCount > 0 && reviewCount < 10;
   const hasRating = Number.isFinite(Number(displayRating)) && Number(displayRating) > 0 && reviewCount > 0;
   const realReviews = Array.isArray(product.reviews) ? product.reviews : [];
-  const demoReviews = [
-    { id: 'demo-1', author: 'Demo review 01', date: 'SAMPLE', rating: 5, text: 'A beautiful finishing touch for a festive outfit. The look feels polished without being overdone.' },
-    { id: 'demo-2', author: 'Demo review 02', date: 'SAMPLE', rating: 4, text: 'The detailed design adds a little sparkle and makes simple occasionwear feel special.' },
-    { id: 'demo-3', author: 'Demo review 03', date: 'SAMPLE', rating: 4, text: 'An elegant style for celebrations and evening plans.' },
-    { id: 'demo-4', author: 'Demo review 04', date: 'SAMPLE', rating: 4, text: 'The embellishment catches the light nicely and pairs well with traditional looks.' },
-    { id: 'demo-5', author: 'Demo review 05', date: 'SAMPLE', rating: 4, text: 'A graceful statement piece that brings a little extra polish to the outfit.' },
-  ];
-  const isDemoReviews = handle === 'glitter-flat' && realReviews.length === 0;
-  const reviewList = realReviews.length ? realReviews : (isDemoReviews ? demoReviews : []);
+  const reviewList = realReviews;
   const categoryText = `${handle} ${product.title || ''} ${product.category || ''}`.toLowerCase();
   const stylingUniverse = /boot/.test(categoryText)
     ? 'boots'
@@ -1217,18 +1212,13 @@ export default function ProductPage({ handle }) {
               className={`pdp2-accordion__body ${openProductPanel === 'reviews' ? 'pdp2-accordion__body--open' : ''}`}
             >
               <div className="pdp2-product-panel__content">
-                {isDemoReviews && (
-                  <p className="pdp2-review-demo-note">
-                    Demo reviews with sample copy and ratings. Replace with verified customer feedback before publishing.
-                  </p>
-                )}
                 {reviewList.length ? reviewList.map((review) => (
                   <article key={review.id} className="pdp2-review-card">
                     <div className="pdp2-review-card__header">
                       <span className="pdp2-review-card__author">{review.author}</span>
                       <span className="pdp2-review-card__date">{review.date}</span>
                     </div>
-                    {isDemoReviews && (
+                    {Number.isFinite(Number(review.rating)) && (
                       <div className="pdp2-review-card__stars" aria-label={`${review.rating} out of 5 stars`}>
                         {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
                       </div>

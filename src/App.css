@@ -80,7 +80,11 @@
 .nav-left {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 2.5vw, 36px);
+  gap: clamp(12px, 1.2vw, 36px);
+}
+/* Wide desktops keep the original generous spacing. */
+@media (min-width: 1440px) {
+  .nav-left { gap: clamp(24px, 2.5vw, 36px); }
 }
 .nav-link {
   font-size: 0.75rem;
@@ -136,6 +140,22 @@
 .nav-action:hover { opacity: 1; }
 .nav-action__label { font-weight: 600; }
 .nav-sep { color: #fff; opacity: 0.3; font-weight: 300; }
+
+/* Current page uses the existing hover treatment (no new visual language). */
+.nav-link[aria-current="page"] { opacity: 1; }
+.nav-link[aria-current="page"]::after { width: 100%; }
+
+/* Search / Account have no backing feature yet: shown, but honestly inert. */
+.nav-action--soon,
+.nav-action--soon:hover { opacity: 0.4; cursor: default; }
+
+.nav-link:focus-visible,
+.nav-logo:focus-visible,
+.nav-action:focus-visible,
+.nav-hamburger:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 6px;
+}
 
 /* ───────────────────────────────────────────────
    BUTTONS (shared)
@@ -1183,16 +1203,63 @@
 .about-us--mobile .about-us__footer  { font-size: 0.68rem; padding-top: 16px; margin-top: 8px; }
 
 /* ───────────────────────────────────────────────
+   NAVIGATION COLLAPSE
+   The left nav (THE MULTIVERSE + four universes) needs ~435px beside the
+   centred logo, which only fits above ~1220px. Below that it collapses into
+   the hamburger drawer. Previously this happened at 768px, so tablets and
+   small laptops (769–1220px) had links running into the logo.
+─────────────────────────────────────────────── */
+@media (max-width: 1220px) {
+  .navbar { grid-template-columns: auto 1fr auto; padding: 18px 5%; }
+  .nav-hamburger { display: flex; position: relative; z-index: 400; padding: 10px 0; box-sizing: content-box; }
+  .nav-action { min-width: 44px; min-height: 44px; justify-content: center; }
+  .nav-left {
+    position: fixed;
+    top: 0; left: 0;
+    width: min(75%, 360px);
+    height: 100vh;
+    height: 100dvh;
+    background: var(--bg-primary);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 80px 32px 32px;
+    transform: translateX(-100%);
+    /* visibility keeps the closed drawer's links out of the tab order */
+    visibility: hidden;
+    transition: transform 0.35s ease, visibility 0s linear 0.35s;
+    z-index: 300;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+    gap: 24px;
+  }
+  .nav-left.open { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+  /* The header blends with `difference` over hero imagery; that must be switched
+     off while the drawer is open or the drawer renders colour-inverted. */
+  .navbar--menu-open { mix-blend-mode: normal; }
+  .navbar--menu-open .nav-hamburger span { background: var(--text-main); }
+  .nav-link { font-size: 0.9rem; min-height: 44px; display: inline-flex; align-items: center; }
+  /* Drawer sits on a light surface: the hero-oriented white link colour would vanish. */
+  .nav-left .nav-link { color: var(--text-main); mix-blend-mode: normal; }
+  .nav-left .nav-link::after { background: var(--text-main); }
+}
+
+/* ───────────────────────────────────────────────
    RESPONSIVE
 ─────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .best-of__grid { grid-template-columns: repeat(2, 1fr); }
-  .footer__top { grid-template-columns: 1fr 1fr; gap: 32px; }
+  /* Tablet: brand on its own row, then the three link columns side by side. */
+  .footer__top { grid-template-columns: repeat(3, 1fr); gap: 40px 32px; }
+  .footer__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .footer__top { grid-template-columns: repeat(2, 1fr); gap: 36px 24px; }
+}
+@media (max-width: 379px) {
+  .footer__top { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-  /* ── Navbar ── */
-  .nav-hamburger { display: flex; position: relative; z-index: 400; }
+  /* ── Navbar (page-level; the drawer/hamburger collapse lives in the 1220px block above) ── */
   .pdp2 > .navbar.navbar--universe {
     position: relative;
     top: auto;
@@ -1207,26 +1274,7 @@
   .pdp2 > .navbar.navbar--universe .nav-sep,
   .pdp2 > .navbar.navbar--universe .nav-link { color: #171615; }
   .pdp2 > .navbar.navbar--universe .nav-hamburger span { background: #171615; }
-  .nav-left {
-    position: fixed;
-    top: 0; left: 0;
-    width: 75%;
-    height: 100vh;
-    background: var(--bg-primary);
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 80px 32px 32px;
-    transform: translateX(-100%);
-    transition: transform 0.35s ease;
-    z-index: 300;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
-    gap: 24px;
-  }
-  .nav-left.open { transform: translateX(0); }
-  .nav-link { font-size: 0.9rem; }
   .nav-action__label { display: none; }
-  .navbar { grid-template-columns: auto 1fr auto; padding: 18px 5%; }
-
   /* ── Hero ── */
   .hero { height: 100vh; min-height: 520px; }
   /* Smaller handwritten text so it doesn't dominate */
@@ -1303,7 +1351,6 @@
   .trust-sep { display: none; }
 
   /* ── Footer ── */
-  .footer__top { grid-template-columns: 1fr; }
   .footer__bottom { flex-direction: column; gap: 12px; }
   .topbar { flex-direction: column; gap: 4px; font-size: 0.6rem; }
 }
@@ -1501,7 +1548,8 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.4);
-  z-index: 200;
+  /* Must sit BELOW the header (z-index 200) or it dims the open drawer itself. */
+  z-index: 150;
 }
 
 
@@ -1533,11 +1581,17 @@
 .u-hero {
   position: relative;
   width: 100%;
-  height: 100vh;
-  min-height: 640px;
+  /* Fill the viewport, but GROW with the content. A fixed height let a tall
+     headline block overflow upward (flex-end) underneath the absolutely
+     positioned navbar on short viewports. */
+  min-height: max(640px, 100vh);
+  min-height: max(640px, 100svh);
   overflow: hidden;
   display: flex;
   align-items: flex-end;
+  /* Reserves clearance for the absolutely-positioned navbar (height ~96px desktop)
+     so bottom-anchored hero content can never ride up under the nav band. */
+  padding-top: 120px;
 }
 .u-hero__img-wrap {
   position: absolute;
@@ -1919,7 +1973,7 @@
   .mv-glass__btn-name { font-size: 1.4rem; }
   .mv-glass__btn-sub { display: none; }
 
-  .u-hero { height: 100svh; min-height: 560px; }
+  .u-hero { min-height: max(560px, 100vh); min-height: max(560px, 100svh); padding-top: 88px; }
   .u-hero__content { padding: 24px 20px 56px; max-width: 100%; }
   .u-hero__headline { font-size: clamp(2.4rem, 9vw, 3.5rem); }
   .u-hero__actions { flex-direction: column; gap: 10px; }

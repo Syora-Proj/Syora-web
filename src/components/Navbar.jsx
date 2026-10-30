@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
 
 /**
  * SYORA — Navbar
@@ -9,7 +10,8 @@ import { useCart } from '../context/CartContext';
  * - Universe mode: overlaid on coloured hero, light text
  * - Entry / default: overlaid on Multiverse video or normal page
  *
- * Nav items (per spec): THE MULTIVERSE | SHOP | NEW ARRIVALS | BESTSELLERS
+ * Nav items: THE MULTIVERSE followed by the four active universes, in the
+ * canonical order from src/data/universes.js (single source of truth).
  */
 export default function Navbar({ universeMode = false }) {
   const navigate = useNavigate();
@@ -27,15 +29,24 @@ export default function Navbar({ universeMode = false }) {
     navigate(path);
   }
 
+  // Close the mobile drawer with Escape (keyboard users) and whenever the route changes.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKeyDown = (event) => event.key === 'Escape' && setMenuOpen(false);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [menuOpen]);
+
   return (
     <>
-      <header className={`navbar ${lightMode ? 'navbar--light' : ''} ${universeMode ? 'navbar--universe' : ''}`}>
+      <header className={`navbar ${lightMode ? 'navbar--light' : ''} ${universeMode ? 'navbar--universe' : ''} ${menuOpen ? 'navbar--menu-open' : ''}`}>
         {/* Mobile hamburger */}
         <button
           className="nav-hamburger"
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Open navigation menu"
+          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
         >
           <span />
           <span />
@@ -43,17 +54,26 @@ export default function Navbar({ universeMode = false }) {
         </button>
 
         {/* Left nav */}
-        <nav className={`nav-left ${menuOpen ? 'open' : ''}`} aria-label="Main navigation">
-          <button
+        <nav id="primary-navigation" className={`nav-left ${menuOpen ? 'open' : ''}`} aria-label="Main navigation">
+          <Link
             className="nav-link"
-            onClick={() => goTo('/')}
-            aria-label="Return to the Multiverse"
+            to="/"
+            onClick={() => setMenuOpen(false)}
+            aria-current={isEntry ? 'page' : undefined}
           >
             THE MULTIVERSE
-          </button>
-          <button className="nav-link" onClick={() => goTo('/#shop')}>SHOP</button>
-          <button className="nav-link" onClick={() => goTo('/#new-arrivals')}>NEW ARRIVALS</button>
-          <button className="nav-link" onClick={() => goTo('/#bestsellers')}>BESTSELLERS</button>
+          </Link>
+          {UNIVERSE_ORDER.map((id) => (
+            <Link
+              key={id}
+              className="nav-link"
+              to={`/universe/${id}`}
+              onClick={() => setMenuOpen(false)}
+              aria-current={location.pathname === `/universe/${id}` ? 'page' : undefined}
+            >
+              {UNIVERSES[id].name}
+            </Link>
+          ))}
         </nav>
 
         {/* Center SYORA logo */}
@@ -67,7 +87,7 @@ export default function Navbar({ universeMode = false }) {
 
         {/* Right actions */}
         <div className="nav-right">
-          <button className="nav-action" aria-label="Search">
+          <button className="nav-action nav-action--soon" aria-label="Search (coming soon)" aria-disabled="true" title="Search — coming soon" onClick={(e) => e.preventDefault()}>
             <span className="nav-action__label" style={{ marginRight: '6px' }}>SEARCH</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="11" cy="11" r="8"/>
@@ -75,7 +95,7 @@ export default function Navbar({ universeMode = false }) {
             </svg>
           </button>
           <span className="nav-sep">|</span>
-          <button className="nav-action" aria-label="Account">
+          <button className="nav-action nav-action--soon" aria-label="Account (coming soon)" aria-disabled="true" title="Account — coming soon" onClick={(e) => e.preventDefault()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>

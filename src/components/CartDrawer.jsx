@@ -50,6 +50,7 @@ export default function CartDrawer() {
         className={`cart-drawer ${cartOpen ? 'cart-drawer--open' : ''}`}
         aria-label="Shopping bag"
         aria-modal="true"
+        aria-hidden={!cartOpen}
         role="dialog"
       >
         {/* Header */}
