@@ -369,3 +369,4 @@ a.sy-tile:hover .sy-tile__name { text-decoration: underline; text-underline-offs
 .sy-tile__name { font-size: clamp(1.25rem, 2vw, 1.5rem); overflow-wrap: anywhere; }
 @media (min-width: 901px) { .sy-tile__label { flex-direction: row; align-items: baseline; justify-content: space-between; } }
 @media (max-width: 899px) { .sy-footer__top { grid-template-columns: 1fr 1fr; } .sy-footer__top > :first-child { grid-column: 1 / -1; } .sy-footer__top > :last-child { grid-column: 1 / -1; } }
+@media (min-width: 600px) and (max-width: 900px) { .sy-chapter { flex-basis: 40vw; } }
