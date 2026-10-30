@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useShopifyProduct } from '../hooks/useShopifyProduct';
 import { useCart } from '../context/CartContext';
-import { formatMoney } from '../lib/shopify/products';
+import { UNIVERSES } from '../data/universes';
+import { useWishlisted } from '../lib/wishlist';
 import { getCheckoutUrl } from '../lib/shopify/cart';
 import { trackViewItem, trackAddToCart } from '../lib/analytics';
 
@@ -18,6 +19,11 @@ const EVERYDAY_FEATURE_GALLERY_INDEX = {
   'syora-flat-1': { cushioning: 4, finish: 2, sole: 5 },
   'zebra-flats': { cushioning: 2, finish: 4, sole: 5 },
 };
+
+// The delivery PIN-code checker has no real serviceability data behind it: it used to
+// answer "delivery in 5–7 days, COD available" for ANY 6-digit code after a fake delay.
+// It stays off until it can be wired to a real service; the UI code is kept intact.
+const SHOW_PIN_CHECKER = false;
 
 export default function ProductPage({ handle }) {
   const navigate = useNavigate();
@@ -33,7 +39,7 @@ export default function ProductPage({ handle }) {
   const [selectedSize, setSize]           = useState(null);
   const [selectedVariantId, setVariantId] = useState(null);
   const [sizeError, setSizeError]         = useState(false);
-  const [wishlisted, setWishlisted]       = useState(false);
+  const [wishlisted, toggleWishlist]    = useWishlisted(handle);
   const [addedToCart, setAddedToCart]     = useState(false);
   const [cartFeedback, setCartFeedback]   = useState(null); // 'added' | 'error'
   const [pinCode, setPinCode]             = useState('');
@@ -161,8 +167,19 @@ export default function ProductPage({ handle }) {
     });
   }
 
+  function requireSize() {
+    setSizeError(true);
+    document.getElementById('pdp2-sizes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => setSizeError(false), 3200);
+  }
+
+  function showCartError() {
+    setCartFeedback('error');
+    setTimeout(() => setCartFeedback(null), 4000);
+  }
+
   async function handleAddToCart() {
-    if (!selectedVariantId) { setSizeError(true); setTimeout(() => setSizeError(false), 2200); return; }
+    if (!selectedVariantId) { requireSize(); return; }
     const result = await addToCart(selectedVariantId, 1);
     if (result) {
       // Fire GA4 add_to_cart event
@@ -172,17 +189,18 @@ export default function ProductPage({ handle }) {
       setCartFeedback('added');
       setTimeout(() => { setAddedToCart(false); setCartFeedback(null); }, 2500);
     } else {
-      setCartFeedback('error');
-      setTimeout(() => setCartFeedback(null), 3000);
+      showCartError();
     }
   }
 
   async function handleBuyNow() {
-    if (!selectedVariantId) { setSizeError(true); setTimeout(() => setSizeError(false), 2200); return; }
-    await addToCart(selectedVariantId, 1);
-    // Redirect immediately to Shopify checkout
+    if (!selectedVariantId) { requireSize(); return; }
+    const result = await addToCart(selectedVariantId, 1);
+    // Never continue to checkout with a cart the add step failed to update.
+    if (!result) { showCartError(); return; }
     const url = await getCheckoutUrl();
     if (url) window.location.href = url;
+    else showCartError();
   }
 
   function handlePinCheck() {
@@ -235,8 +253,6 @@ export default function ProductPage({ handle }) {
   // from real Shopify product data only, with an honest empty state when none exist.
   const reviewCount   = product.reviewCount || 0;
   const displayRating = product.rating;
-  const isNewArrival  = reviewCount === 0;
-  const hasFewReviews = reviewCount > 0 && reviewCount < 10;
   const hasRating = Number.isFinite(Number(displayRating)) && Number(displayRating) > 0 && reviewCount > 0;
   const realReviews = Array.isArray(product.reviews) ? product.reviews : [];
   const reviewList = realReviews;
@@ -325,6 +341,12 @@ export default function ProductPage({ handle }) {
   const comfortFact = availableFact(product.comfortProfile?.bestForHours)
     ? `Comfort profile: ${product.comfortProfile.bestForHours}.`
     : (availableFact(product.soleType) ? `${product.soleType}.` : null);
+  const productFacts = [
+    ['Material', product.material],
+    ['Closure', product.closureType],
+    ['Sole', product.soleType],
+    ['Best for', product.bestForOccasion],
+  ].filter(([, value]) => availableFact(value));
   const everydayCloserLook = isEverydayFlat && everydayGallery.length > 0 ? [
     {
       title: 'Cushioning',
@@ -361,7 +383,7 @@ export default function ProductPage({ handle }) {
       title: 'COMPOSITION & CARE',
       content: (
         <>
-          <p><strong>Composition:</strong> {product.material || 'Material details are not provided in the current product listing. Please refer to the product label or contact SYORA support.'}</p>
+          {availableFact(product.material) && <p><strong>Composition:</strong> {product.material}</p>}
           <p><strong>Care:</strong> Wipe gently with a soft, dry cloth. Keep away from prolonged moisture, direct heat, and harsh chemicals. Store in a cool, dry place.</p>
         </>
       ),
@@ -376,15 +398,15 @@ export default function ProductPage({ handle }) {
     },
   ];
 
-  /* CTA label */
+  /* CTA labels */
   const isProcessing = cartLoading;
-  const ctaLabel = isProcessing
+  const bagLabel = isProcessing
     ? 'ADDING…'
     : addedToCart
       ? '✓ ADDED TO BAG'
       : selectedSize
-        ? `BUY NOW — SIZE ${selectedSize}`
-        : 'SELECT SIZE';
+        ? `ADD TO BAG — SIZE ${selectedSize}`
+        : 'ADD TO BAG';
 
   /* Variant availability */
   function isSizeAvailable(size) {
@@ -392,13 +414,64 @@ export default function ProductPage({ handle }) {
     if (!variant) return false;
     return variant.availableForSale !== false;
   }
+  const productSoldOut = product.availableForSale === false
+    || (product.sizes?.length > 0 && !product.sizes.some(isSizeAvailable));
+
+  /* Purchase actions: ONE definition rendered next to the size picker (where the
+     decision is made) and again after the editorial content. Previously the only
+     buy button was a "BUY NOW" at the very bottom of the page, and there was no
+     Add to Bag at all (handleAddToCart existed but nothing called it). */
+  const renderPurchaseActions = (variant, suffix) => (
+    <div className={`pdp2-cta-row pdp2-cta-row--${variant}`} role="group" aria-label="Purchase options">
+      <div className="pdp2-cta-stack">
+        <button
+          type="button"
+          id={`pdp2-add-to-bag-${suffix}`}
+          className={`pdp2-cta-buy ${addedToCart ? 'pdp2-cta-buy--done' : ''} ${!selectedSize && !productSoldOut ? 'pdp2-cta-buy--unselected' : ''}`}
+          onClick={handleAddToCart}
+          disabled={productSoldOut || isProcessing}
+        >
+          <span>{productSoldOut ? 'SOLD OUT' : bagLabel}</span>
+          {!addedToCart && !productSoldOut && <span className="pdp2-cta-buy__arrow" aria-hidden="true">→</span>}
+        </button>
+        <div className="pdp2-cta-secondary-row">
+          {!productSoldOut && (
+            <button
+              type="button"
+              id={`pdp2-buy-now-${suffix}`}
+              className="pdp2-cta-buy pdp2-cta-buy--secondary"
+              onClick={handleBuyNow}
+              disabled={isProcessing}
+            >
+              <span>BUY NOW</span>
+              <span className="pdp2-cta-buy__arrow" aria-hidden="true">→</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className={`pdp2-cta-wishlist ${wishlisted ? 'pdp2-cta-wishlist--active' : ''}`}
+            onClick={toggleWishlist}
+            aria-pressed={wishlisted}
+            aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <span aria-hidden="true">{wishlisted ? '♥' : '♡'}</span>
+          </button>
+        </div>
+        {cartFeedback === 'error' && (
+          <p className="pdp2-cta-feedback" role="alert">
+            {cartError || "We couldn't update your bag just now. Please try again."}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="pdp2">
       <title>{product.pageTitle}</title>
       <meta name="description" content={product.pageDescription} />
 
-      <Navbar universeMode universeId={product.universeId} />
+      <Navbar universeMode />
 
       {/* ═══════════ OFFER BANNER ═══════════ */}
       {product.offerBanner && (
@@ -418,11 +491,15 @@ export default function ProductPage({ handle }) {
         <div className="pdp2-info-top pdp2-info">
           {/* Mobile: breadcrumb / universe label */}
           <nav className="pdp2-info__breadcrumb" aria-label="Breadcrumb">
-            <span onClick={() => navigate('/')} style={{cursor:'pointer'}}>Home</span>
-            <span className="pdp2-info__breadcrumb-sep">/</span>
-            <span onClick={() => navigate(`/universe/${product.universeId}`)} style={{cursor:'pointer'}}>{product.category}</span>
-            <span className="pdp2-info__breadcrumb-sep">/</span>
-            <span>{product.subCategory}</span>
+            <Link to="/">Home</Link>
+            {UNIVERSES[product.universeId] && (
+              <>
+                <span className="pdp2-info__breadcrumb-sep" aria-hidden="true">/</span>
+                <Link to={`/universe/${product.universeId}`}>{UNIVERSES[product.universeId].name}</Link>
+              </>
+            )}
+            <span className="pdp2-info__breadcrumb-sep" aria-hidden="true">/</span>
+            <span aria-current="page">{product.name}</span>
           </nav>
 
           {/* Badge */}
@@ -430,39 +507,37 @@ export default function ProductPage({ handle }) {
             <span className="pdp2-info__badge">{product.badge}</span>
           )}
 
-          {/* Rating */}
-          <div className="pdp2-info__rating">
-            {isNewArrival ? (
-              <span className="pdp2-info__new-arrival">✦ New Arrival</span>
-            ) : (
-              <>
-                <span className="pdp2-info__rating-num">{Number(displayRating).toFixed(1)}</span>
-                <div className="pdp2-stars" aria-label={`${displayRating} out of 5 stars`}>
-                  {[1,2,3,4,5].map(s => {
-                    const fill = Math.max(0, Math.min(1, Number(displayRating) - s + 1));
-                    return <span
-                      key={s}
-                      className={`pdp2-star ${fill === 1 ? 'pdp2-star--filled' : fill > 0 ? 'pdp2-star--half' : ''}`}
-                      style={hasRating ? {
-                        background: `linear-gradient(90deg, #1a1412 ${fill * 100}%, #bdbdbd ${fill * 100}%)`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      } : undefined}
-                    >★</span>;
-                  })}
-                </div>
-                <button
-                  className="pdp2-info__rating-link"
-                  onClick={() => {
-                    setProductPanel('reviews');
-                    document.getElementById('pdp2-product-reviews')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  ({reviewCount})
-                </button>
-              </>
-            )}
-          </div>
+          {/* Rating — only rendered when real review data exists. The old block showed
+              "✦ New Arrival" for every product with zero reviews, which is not a fact. */}
+          {hasRating && (
+            <div className="pdp2-info__rating">
+              <span className="pdp2-info__rating-num">{Number(displayRating).toFixed(1)}</span>
+              <div className="pdp2-stars" aria-label={`${displayRating} out of 5 stars`}>
+                {[1,2,3,4,5].map(star => {
+                  const fill = Math.max(0, Math.min(1, Number(displayRating) - star + 1));
+                  return <span
+                    key={star}
+                    className={`pdp2-star ${fill === 1 ? 'pdp2-star--filled' : fill > 0 ? 'pdp2-star--half' : ''}`}
+                    style={{
+                      background: `linear-gradient(90deg, #1a1412 ${fill * 100}%, #bdbdbd ${fill * 100}%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >★</span>;
+                })}
+              </div>
+              <button
+                type="button"
+                className="pdp2-info__rating-link"
+                onClick={() => {
+                  setProductPanel('reviews');
+                  document.getElementById('pdp2-product-reviews')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                ({reviewCount})
+              </button>
+            </div>
+          )}
 
           {/* Name */}
           <h1 className="pdp2-info__name">{product.name}</h1>
@@ -497,13 +572,6 @@ export default function ProductPage({ handle }) {
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          {/* Badge — desktop only (mobile badge is in info) */}
-          {product.badge && (
-            <div className={`pdp2-gallery__badge pdp2-gallery__badge--${product.badge.toLowerCase().replace(' ', '-')} pdp2-desktop-only`}>
-              {product.badge}
-            </div>
-          )}
-
           {/* Main image */}
           <div className="pdp2-gallery__main">
             <img
@@ -529,7 +597,7 @@ export default function ProductPage({ handle }) {
           </div>
 
           {/* Thumbnail strip */}
-          <div className="pdp2-gallery__thumbs pdp2-desktop-only" role="list" aria-label="Product images">
+          <div className="pdp2-gallery__thumbs" role="list" aria-label="Product images">
             {galleryImageIndices.map((imageIndex, i) => (
               <button
                 key={imageIndex}
@@ -545,9 +613,11 @@ export default function ProductPage({ handle }) {
 
           {/* Dot nav — mobile */}
           <div className="pdp2-gallery__dots" aria-hidden="true">
-            {galleryImageIndices.map((imageIndex, i) => (
+            {galleryImageIndices.map((imageIndex) => (
               <button
                 key={imageIndex}
+                type="button"
+                tabIndex={-1}
                 className={`pdp2-gallery__dot ${imageIndex === activeImg ? 'pdp2-gallery__dot--active' : ''}`}
                 onClick={() => setActiveImg(imageIndex)}
               />
@@ -630,7 +700,7 @@ export default function ProductPage({ handle }) {
               </button>
             </div>
 
-            <div className={`pdp2-sizes ${sizeError ? 'pdp2-sizes--error' : ''}`}>
+            <div id="pdp2-sizes" className={`pdp2-sizes ${sizeError ? 'pdp2-sizes--error' : ''}`}>
               {product.sizes.map(sz => {
                 const available = isSizeAvailable(sz);
                 return (
@@ -638,6 +708,7 @@ export default function ProductPage({ handle }) {
                     key={sz}
                     id={`pdp2-size-${sz}`}
                     className={`pdp2-size-btn ${selectedSize === sz ? 'pdp2-size-btn--active' : ''} ${!available ? 'pdp2-size-btn--soldout' : ''}`}
+                    type="button"
                     onClick={() => available && handleSizeSelect(sz)}
                     aria-pressed={selectedSize === sz}
                     aria-label={available ? `Size ${sz}` : `Size ${sz} — sold out`}
@@ -645,7 +716,6 @@ export default function ProductPage({ handle }) {
                     title={!available ? 'Sold out' : undefined}
                   >
                     {sz}
-                    {!available && <span className="pdp2-size-btn__soldout-line" />}
                   </button>
                 );
               })}
@@ -664,8 +734,11 @@ export default function ProductPage({ handle }) {
             )}
           </div>
 
-          {/* ── Delivery PIN checker (desktop only) ── */}
-          <div className="pdp2-pin-checker pdp2-desktop-only">
+          {/* ── Purchase actions: directly under the size picker ── */}
+          {renderPurchaseActions('panel', 'panel')}
+
+          {/* ── Delivery PIN checker (off: see SHOW_PIN_CHECKER) ── */}
+          {SHOW_PIN_CHECKER && <div className="pdp2-pin-checker pdp2-desktop-only">
             <p className="pdp2-pin-checker__label">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Check delivery to your PIN code
@@ -696,7 +769,7 @@ export default function ProductPage({ handle }) {
             {pinResult?.error && (
               <p className="pdp2-pin-result pdp2-pin-result--err">{pinResult.error}</p>
             )}
-          </div>
+          </div>}
 
         </div>
 
@@ -996,16 +1069,7 @@ export default function ProductPage({ handle }) {
         />
       </section>
 
-      <div className="pdp2-cta-row pdp2-cta-row--after-guide" role="group" aria-label="Buy after size guide">
-        <button
-          id={`pdp2-buy-now-after-guide-${handle}`}
-          className={`pdp2-cta-buy ${addedToCart ? 'pdp2-cta-buy--done' : ''} ${!selectedSize ? 'pdp2-cta-buy--unselected' : ''}`}
-          onClick={handleBuyNow}
-        >
-          <span>{ctaLabel}</span>
-          {!addedToCart && <span className="pdp2-cta-buy__arrow">→</span>}
-        </button>
-      </div>
+      {renderPurchaseActions('page pdp2-cta-row--after-guide', 'after-guide')}
 
       <section className="pdp2-description" aria-label="Product description">
         <p className="pdp2-description__eyebrow">PRODUCT DESCRIPTION</p>
@@ -1034,39 +1098,46 @@ export default function ProductPage({ handle }) {
         </section>
       )}
 
-      {/* ═══════════ PRODUCT DETAILS ═══════════ */}
-      <section className="pdp2-details" aria-label="Product details">
-        <div className="pdp2-details__inner">
-          {/* Quick facts - desktop */}
-          <div className="pdp2-details__facts pdp2-desktop-only">
-            <p className="pdp2-section-eyebrow" style={{marginBottom:16}}>PRODUCT DETAILS</p>
-            <div className="pdp2-details__facts-grid">
-              <div className="pdp2-fact"><span className="pdp2-fact__label">Material</span><span className="pdp2-fact__value">{product.material}</span></div>
-              <div className="pdp2-fact"><span className="pdp2-fact__label">Closure</span><span className="pdp2-fact__value">{product.closureType}</span></div>
-              <div className="pdp2-fact"><span className="pdp2-fact__label">Sole</span><span className="pdp2-fact__value">{product.soleType}</span></div>
-              <div className="pdp2-fact"><span className="pdp2-fact__label">Best for</span><span className="pdp2-fact__value">{product.bestForOccasion}</span></div>
-            </div>
-          </div>
-
-          {/* Accordions */}
-          {product.accordion.map((item, i) => (
-            <div key={i} className="pdp2-accordion__item">
-              <button
-                className="pdp2-accordion__trigger"
-                onClick={() => setAccordion(openAccordion === i ? null : i)}
-                aria-expanded={openAccordion === i}
-              >
-                <span>{item.title}</span>
-                <span className="pdp2-accordion__icon">{openAccordion === i ? '−' : '+'}</span>
-              </button>
-              <div className={`pdp2-accordion__body ${openAccordion === i ? 'pdp2-accordion__body--open' : ''}`}>
-                <p>{item.content}</p>
+      {/* ═══════════ PRODUCT DETAILS ═══════════
+          Each fact renders only when it has a real value (no empty labels or dashes).
+          The block is ready to fill in as soon as Shopify metafields are mapped. */}
+      {(productFacts.length > 0 || product.accordion?.length > 0) && (
+        <section className="pdp2-details" aria-label="Product details">
+          <div className="pdp2-details__inner">
+            {productFacts.length > 0 && (
+              <div className="pdp2-details__facts">
+                <p className="pdp2-section-eyebrow" style={{marginBottom:16}}>PRODUCT DETAILS</p>
+                <dl className="pdp2-details__facts-grid">
+                  {productFacts.map(([label, value]) => (
+                    <div className="pdp2-fact" key={label}>
+                      <dt className="pdp2-fact__label">{label}</dt>
+                      <dd className="pdp2-fact__value">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
-            </div>
-          ))}
+            )}
 
-        </div>
-      </section>
+            {/* Accordions */}
+            {(product.accordion || []).map((item, i) => (
+              <div key={i} className="pdp2-accordion__item">
+                <button
+                  type="button"
+                  className="pdp2-accordion__trigger"
+                  onClick={() => setAccordion(openAccordion === i ? null : i)}
+                  aria-expanded={openAccordion === i}
+                >
+                  <span>{item.title}</span>
+                  <span className="pdp2-accordion__icon" aria-hidden="true">{openAccordion === i ? '−' : '+'}</span>
+                </button>
+                <div className={`pdp2-accordion__body ${openAccordion === i ? 'pdp2-accordion__body--open' : ''}`}>
+                  <p>{item.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ═══════════ COMPLETE THE LOOK ═══════════ */}
       {product.completeTheLook && product.completeTheLook.length > 0 && (
@@ -1185,7 +1256,9 @@ export default function ProductPage({ handle }) {
                 <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>
                 {shareFeedback || 'SHARE'}
               </button>
+              {hasRating || reviewList.length > 0 ? (
               <button
+                type="button"
                 className="pdp2-product-rating"
                 onClick={() => setProductPanel(openProductPanel === 'reviews' ? null : 'reviews')}
                 aria-expanded={openProductPanel === 'reviews'}
@@ -1206,8 +1279,11 @@ export default function ProductPage({ handle }) {
                 </span>
                 <span>{hasRating ? `${reviewCount} reviews | ${Number(displayRating).toFixed(1)}` : `${reviewCount} reviews`}</span>
               </button>
+              ) : (
+                <p className="pdp2-product-rating pdp2-product-rating--empty">No reviews yet</p>
+              )}
             </div>
-            <div
+            {(hasRating || reviewList.length > 0) && <div
               id="pdp2-product-reviews"
               className={`pdp2-accordion__body ${openProductPanel === 'reviews' ? 'pdp2-accordion__body--open' : ''}`}
             >
@@ -1225,28 +1301,12 @@ export default function ProductPage({ handle }) {
                     )}
                     <p className="pdp2-review-card__text">{review.text}</p>
                   </article>
-                )) : <p>{reviewCount ? 'Review details are not available yet.' : 'No reviews yet. Be the first to share your experience.'}</p>}
+                )) : <p>Review details are not available yet.</p>}
               </div>
-            </div>
+            </div>}
           </div>
 
-      <div className="pdp2-cta-row">
-            <button
-              id={`pdp2-buy-now-${handle}`}
-              className={`pdp2-cta-buy ${addedToCart ? 'pdp2-cta-buy--done' : ''} ${!selectedSize ? 'pdp2-cta-buy--unselected' : ''}`}
-              onClick={handleBuyNow}
-            >
-              <span>{ctaLabel}</span>
-              {!addedToCart && <span className="pdp2-cta-buy__arrow">→</span>}
-            </button>
-            <button
-              className={`pdp2-cta-wishlist ${wishlisted ? 'pdp2-cta-wishlist--active' : ''}`}
-              onClick={() => setWishlisted(w => !w)}
-              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              {wishlisted ? '♥' : '♡'}
-            </button>
-      </div>
+      {renderPurchaseActions('page', 'end')}
 
       <Footer />
     </div>

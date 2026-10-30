@@ -46,7 +46,7 @@ export default function UniversePage({ universe: universeId }) {
       style={{ '--u-bg': palette.bg, '--u-accent': palette.accent, '--u-text': palette.text, '--u-muted': palette.muted, '--u-border': palette.border, '--u-hero-text': palette.heroText || '#f5ece4' }}
     >
       {/* Navbar floats above the hero */}
-      <Navbar universeMode universeId={universeId} />
+      <Navbar universeMode heroOverImage />
 
       {/* ── 1. Universe Hero ── */}
       <section

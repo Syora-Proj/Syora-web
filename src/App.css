@@ -2818,6 +2818,9 @@
 
 /* ── Utilities ── */
 .pdp2-desktop-only { display: none !important; }
+/* Thumbnails are desktop-only by their own rule (not the legacy !important utility,
+   which forced display:block and flattened the vertical column into a row). */
+.pdp2-gallery__thumbs { display: none; }
 .pdp2-mobile-only { display: block !important; }
 
 /* ══════════════════════════════════════════════
@@ -2882,10 +2885,13 @@
   display: flex;
   gap: 4px;
 }
+.pdp2-info__breadcrumb a,
 .pdp2-info__breadcrumb span {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.pdp2-info__breadcrumb a:hover { color: #171615; }
+.pdp2-info__breadcrumb span[aria-current] { text-decoration: none; color: #171615; }
 .pdp2-info__breadcrumb-sep {
   text-decoration: none !important;
   margin: 0 2px;
@@ -3179,6 +3185,20 @@
 }
 .pdp2-product-share { font-size: 0.82rem; }
 .pdp2-product-rating { font-size: 0.8rem; white-space: nowrap; }
+.pdp2-product-rating--empty { cursor: default; margin: 0; color: #767677; }
+
+/* Product facts: each fact is only rendered when it has a value. */
+.pdp2-details__inner { max-width: 1124px; margin-inline: auto; }
+.pdp2-details__facts { padding: 8px 0 24px; border-bottom: 1px solid #e8e3dc; }
+.pdp2-details__facts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px 32px;
+  margin: 0;
+}
+.pdp2-fact { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.pdp2-fact__label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6a62; }
+.pdp2-fact__value { margin: 0; font-size: 0.9rem; color: #171615; line-height: 1.5; }
 .pdp2-product-rating__stars { display: inline-flex; gap: 1px; color: #bdbdbd; }
 .pdp2-product-rating__stars .is-filled { color: #59654d; }
 .pdp2-styling {
@@ -3407,6 +3427,8 @@
 
 /* ── Size Picker ── */
 .pdp2-info__field { margin-bottom: 24px; padding: 0; }
+.pdp2-info__divider { height: 1px; background: #e8e3dc; margin: 0 0 24px; }
+.pdp2-info__label { font-size: 0.8rem; margin: 0; color: #000; }
 .pdp2-size__header {
   display: flex;
   align-items: center;
@@ -3449,6 +3471,7 @@
   background: #000;
   color: #fff;
 }
+.pdp2-sizes--error { outline: 1px solid #c0392b; outline-offset: 4px; }
 .pdp2-size__error {
   color: #c0392b;
   font-size: 0.8rem;
@@ -3472,26 +3495,53 @@
 /* ── CTA Row ── */
 .pdp2-cta-row {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 24px;
 }
+.pdp2-cta-stack {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .pdp2-cta-buy {
-  flex: 1;
+  width: 100%;
   background: #000;
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
   padding: 16px 20px;
-  border: none;
+  border: 1px solid #000;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  text-align: left;
+  transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
 .pdp2-cta-buy__arrow { font-size: 1.1rem; }
+/* Secondary action: same shape as the primary, outlined (mirrors the wishlist button). */
+.pdp2-cta-buy--secondary { background: #fff; color: #000; }
+.pdp2-cta-buy--secondary:hover:not(:disabled) { background: #000; color: #fff; }
+.pdp2-cta-buy--done { background: #3a4a33; border-color: #3a4a33; }
+.pdp2-cta-buy:disabled { opacity: 0.5; cursor: not-allowed; }
+.pdp2-cta-buy:focus-visible,
+.pdp2-cta-wishlist:focus-visible,
+.pdp2-size-btn:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+.pdp2-cta-secondary-row { display: flex; gap: 10px; }
+.pdp2-cta-secondary-row .pdp2-cta-buy { flex: 1; width: auto; min-width: 0; }
+.pdp2-cta-feedback {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #c0392b;
+}
+/* In the info panel the row sits under the sizes: no page-level rule/padding. */
+.pdp2-info .pdp2-cta-row--panel { margin: 20px 0 0; padding: 0; border-top: 0; max-width: none; }
 
 .pdp2-cta-wishlist {
-  width: 52px; height: 52px;
+  width: 56px; height: 56px;
   border: 1px solid #000;
   background: #fff;
   color: #000;
@@ -3500,6 +3550,7 @@
   cursor: pointer;
   flex-shrink: 0;
 }
+.pdp2-cta-wishlist--active { color: #5a1717; }
 
 /* Trust list (mobile) */
 .pdp2-trust-list {
@@ -3552,12 +3603,17 @@
 .pdp2-accordion__body {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
+  transition: grid-template-rows 0.3s ease, visibility 0s linear 0.3s;
   overflow: hidden;
+  /* closed panels must not be readable/focusable */
+  visibility: hidden;
 }
-.pdp2-accordion__body--open { grid-template-rows: 1fr; }
+.pdp2-accordion__body--open { grid-template-rows: 1fr; visibility: visible; transition-delay: 0s; }
 .pdp2-accordion__body > div {
   min-height: 0;
+  /* Without this the grid item overflowed its 0fr row, so the first line of every
+     closed panel (Shipping, Composition, Brand, Reviews) peeked out under its header. */
+  overflow: hidden;
 }
 .pdp2-accordion__body p {
   padding: 0 0 20px 0;
@@ -3722,6 +3778,10 @@
     grid-template-areas:
       "gallery info-top"
       "gallery info-bottom";
+    /* The gallery spans both rows at 100vh; with two `auto` rows the extra height was
+       shared equally and opened a ~200px gap between the price and the size picker.
+       `1fr` on the second row keeps the info column tight to the top. */
+    grid-template-rows: auto 1fr;
     align-items: start;
   }
   .pdp2-gallery {
@@ -3744,8 +3804,7 @@
   .pdp2-gallery__thumbs {
     position: absolute;
     left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 80px;   /* sits inside the photo frame, above the dots row */
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -3753,6 +3812,8 @@
   }
   .pdp2-gallery__thumb { width: 50px; height: 50px; border: 1px solid transparent; background: #fff; cursor: pointer; }
   .pdp2-gallery__thumb--active { border-color: #000; }
+  .pdp2-gallery__thumb:focus-visible,
+  .pdp2-gallery__arrow:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
   .pdp2-gallery__thumb img { width: 100%; height: 100%; object-fit: contain; }
 
   .pdp2-related__grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -3778,6 +3839,7 @@
   padding: 8px 0;
 }
 .pdp2-feature-stories,
+.pdp2-size-guidance,
 .pdp2-description,
 .pdp2-product-panels,
 .pdp2-benefits,
@@ -3790,6 +3852,7 @@
 }
 .pdp2-feature-stories,
 .pdp2-styling,
+.pdp2-size-guidance,
 .pdp2-description,
 .pdp2-product-panels {
   width: 100%;
