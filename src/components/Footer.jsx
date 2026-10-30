@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
-import { CATEGORIES, SOCIAL, SITE } from '../config/site';
 
 // Shop column is derived from the single source of truth for universes.
 const shopLinks = UNIVERSE_ORDER.map((id) => ({
@@ -11,8 +10,15 @@ const shopLinks = UNIVERSE_ORDER.map((id) => ({
 const serviceLinks = ['Contact Us', 'Shipping & Delivery', 'Returns & Refunds', 'Size Guide', 'FAQs'];
 // 'Our Story' routes to the homepage Our Journey section. The former
 // 'Craftsmanship' entry had no destination (href="#") and was removed.
-const aboutLinks   = ['Sustainability', 'Privacy Policy', 'Terms & Conditions'];
+const aboutLinks   = ['Our Story', 'Sustainability', 'Privacy Policy', 'Terms & Conditions'];
 
+// Real social profile URLs are not in the repository and must not be invented.
+// Add the URL for each network here and its icon will appear automatically.
+const SOCIAL_LINKS = [
+  { name: 'Instagram', url: '' },
+  { name: 'Pinterest', url: '' },
+  { name: 'Facebook',  url: '' },
+];
 
 export default function Footer() {
   const [activeService, setActiveService] = useState(null);
@@ -91,40 +97,61 @@ export default function Footer() {
   };
 
   return (
-    <footer className="sy-footer">
-      <div className="sy-container">
-        <div className="sy-footer__top">
-          <div>
-            <span className="sy-footer__logo">SYORA</span>
-            <p className="sy-footer__tag">Contemporary, design-led women’s footwear.</p>
-            {SOCIAL.some(({ url }) => url) && (
-              <ul style={{ display: 'flex', gap: 16, marginTop: 16 }}>
-                {SOCIAL.filter(({ url }) => url).map(({ name: s, url }) => (
-                  <li key={s}><a href={url} target="_blank" rel="noopener noreferrer">{s}</a></li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <nav aria-label="Universes">
-            <h3>Universes</h3>
-            <ul>{shopLinks.map((l) => <li key={l.label}><Link to={l.path}>{l.label}</Link></li>)}
-              <li><Link to="/shop">Shop all</Link></li></ul>
-          </nav>
-          <nav aria-label="Categories">
-            <h3>Categories</h3>
-            <ul>{CATEGORIES.map((c) => <li key={c.id}><Link to={`/shop/${c.id}`}>{c.name}</Link></li>)}</ul>
-          </nav>
-          <nav aria-label="Help">
-            <h3>Help</h3>
-            <ul>
-              {serviceLinks.map((l) => <li key={l}><button type="button" onClick={() => setActiveService(l)}>{l}</button></li>)}
-              {aboutLinks.map((l) => <li key={l}><button type="button" onClick={() => setActiveService(l)}>{l}</button></li>)}
-            </ul>
-          </nav>
+    <footer className="footer">
+      <div className="footer__top">
+        {/* Brand */}
+        <div className="footer__brand">
+          <span className="footer__logo">SYORA</span>
+          <p className="footer__tagline">WALK YOUR WAY</p>
+          <p className="footer__about">
+            Premium Indian women's footwear.<br />
+            Handcrafted tradition, contemporary design.
+          </p>
+          {SOCIAL_LINKS.some(({ url }) => url) && <div className="footer__socials">
+            {SOCIAL_LINKS.filter(({ url }) => url).map(({ name: s, url }) => (
+              <a key={s} href={url} className="footer__social" aria-label={s} target="_blank" rel="noopener noreferrer">
+                {s === 'Instagram' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                )}
+                {s === 'Pinterest' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.65 7.86 6.39 9.29-.09-.78-.17-1.98.04-2.83.18-.77 1.22-5.17 1.22-5.17s-.31-.62-.31-1.54c0-1.45.84-2.53 1.88-2.53.89 0 1.32.67 1.32 1.47 0 .9-.57 2.24-.87 3.49-.25 1.04.52 1.88 1.54 1.88 1.85 0 3.09-2.36 3.09-5.16 0-2.13-1.44-3.76-4.07-3.76-2.97 0-4.82 2.22-4.82 4.7 0 .85.25 1.44.64 1.9.18.21.2.3.14.54-.05.17-.15.59-.2.75-.06.24-.25.33-.47.24-1.31-.54-1.92-1.98-1.92-3.6 0-2.67 2.25-5.87 6.71-5.87 3.58 0 5.93 2.59 5.93 5.37 0 3.67-2.03 6.41-5.02 6.41-.97 0-1.87-.52-2.18-1.13l-.6 2.39c-.22.85-.8 1.91-1.19 2.56.89.28 1.84.43 2.82.43 5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                )}
+                {s === 'Facebook' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                )}
+              </a>
+            ))}
+          </div>}
         </div>
-        <div className="sy-footer__bottom">
-          <span>© {new Date().getFullYear()} SYORA. All rights reserved.</span>
-          <a href={`mailto:${SITE.email}`} style={{ color: 'inherit' }}>{SITE.email}</a>
+
+        {/* Shop */}
+        <div className="footer__col">
+          <h3 className="footer__col-title">SHOP</h3>
+          <ul>{shopLinks.map(l => <li key={l.label}><Link to={l.path}>{l.label}</Link></li>)}</ul>
+        </div>
+
+        {/* Customer Service */}
+        <div className="footer__col">
+          <h3 className="footer__col-title">CUSTOMER SERVICE</h3>
+          <ul>{serviceLinks.map(l => <li key={l}><button type="button" className="footer__service-button" onClick={() => setActiveService(l)}>{l}</button></li>)}</ul>
+        </div>
+
+        {/* About */}
+        <div className="footer__col">
+          <h3 className="footer__col-title">ABOUT</h3>
+          <ul>{aboutLinks.map(l => <li key={l}>{['Sustainability', 'Privacy Policy', 'Terms & Conditions'].includes(l)
+            ? <button type="button" className="footer__service-button" onClick={() => setActiveService(l)}>{l}</button>
+            : <Link to="/#about">{l}</Link>}</li>)}</ul>
+        </div>
+      </div>
+
+      {/* Payment */}
+      <div className="footer__bottom">
+        <p className="footer__copy">© {new Date().getFullYear()} SYORA. All rights reserved.</p>
+        <div className="footer__payments">
+          {['VISA', 'MC', 'UPI', 'GPAY', 'COD'].map(p => (
+            <span key={p} className="payment-badge">{p}</span>
+          ))}
         </div>
       </div>
       {activeService && (

@@ -1,21 +1,16 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import './index.css';
-import './styles/tokens.css';
-import './styles/ds.css';
+import './App.css';
 import './shopify.css';
-import Home from './pages/Home';
+import MultiverseEntry from './components/MultiverseEntry';
 import CartDrawer from './components/CartDrawer';
 
 // Route-level chunks keep product and legacy-shop code out of the homepage load.
-const Pages = () => import('./pages/CollectionPages');
-const UniversePage = lazy(() => Pages().then((m) => ({ default: m.UniversePage })));
-const CategoryPage = lazy(() => Pages().then((m) => ({ default: m.CategoryPage })));
-const ShopPage = lazy(() => Pages().then((m) => ({ default: m.ShopPage })));
-const SearchPage = lazy(() => Pages().then((m) => ({ default: m.SearchPage })));
+const UniversePage = lazy(() => import('./components/UniversePage'));
 const ProductPage = lazy(() => import('./components/ProductPage'));
 const OrderConfirmation = lazy(() => import('./components/OrderConfirmation'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+const LegacyHome = lazy(() => import('./components/LegacyHome'));
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -40,24 +35,36 @@ function ProductPageWrapper() {
 }
 
 export default function App() {
+  useLayoutEffect(() => {
+    document.getElementById('initial-hero')?.remove();
+  }, []);
+
   return (
     <>
       <CartDrawer />
       <ScrollToTop />
       <Suspense fallback={<div className="route-loading" role="status" aria-label="Loading page" />}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* ── Multiverse Entry ── */}
+          <Route path="/" element={<MultiverseEntry />} />
+
+          {/* ── Universe Pages ── */}
           <Route path="/universe/icon"     element={<UniversePage universe="icon" />} />
           <Route path="/universe/heritage" element={<UniversePage universe="heritage" />} />
           <Route path="/universe/everyday" element={<UniversePage universe="everyday" />} />
           <Route path="/universe/motion"   element={<UniversePage universe="motion" />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/shop/:category" element={<CategoryPage />} />
-          <Route path="/search" element={<SearchPage />} />
+          {/* ── Product Detail Pages ── */}
           <Route path="/product/:handle" element={<ProductPageWrapper />} />
-          <Route path="/home" element={<Navigate to="/" replace />} />
+
+          {/* ── Legacy Shop / Home ── */}
+          <Route path="/home" element={<LegacyHome />} />
+          <Route path="/shop" element={<LegacyHome />} />
+
+          {/* ── Order Confirmation (Shopify checkout return) ── */}
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          <Route path="*" element={<NotFound />} />
+
+          {/* ── Fallback ── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </>

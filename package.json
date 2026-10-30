@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/sitemap.mjs",
+    "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -19,7 +19,6 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
-    "sharp": "^0.35.5",
     "vite": "^8.3.0"
   }
 }

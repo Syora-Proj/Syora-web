@@ -36,21 +36,6 @@ export default function CartDrawer() {
     prevOpenRef.current = cartOpen;
   }, [cartOpen, cart]);
 
-  // Keyboard: Escape closes; focus moves into the bag on open and returns to the opener on close.
-  const closeRef = useRef(null);
-  const openerRef = useRef(null);
-  useEffect(() => {
-    if (!cartOpen) return undefined;
-    openerRef.current = document.activeElement;
-    closeRef.current?.focus();
-    const onKey = (e) => { if (e.key === 'Escape') closeCart(); };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      openerRef.current?.focus?.();
-    };
-  }, [cartOpen, closeCart]);
-
   return (
     <>
       {/* ── Backdrop ── */}
@@ -66,7 +51,6 @@ export default function CartDrawer() {
         aria-label="Shopping bag"
         aria-modal="true"
         aria-hidden={!cartOpen}
-        inert={!cartOpen}
         role="dialog"
       >
         {/* Header */}
@@ -78,7 +62,6 @@ export default function CartDrawer() {
             )}
           </h2>
           <button
-            ref={closeRef}
             className="cart-drawer__close"
             onClick={closeCart}
             aria-label="Close bag"
