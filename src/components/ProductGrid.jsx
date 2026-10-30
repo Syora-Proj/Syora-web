@@ -1,76 +1,79 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useWishlisted } from '../lib/wishlist';
 
 /**
  * SYORA — Reusable Product Card
+ *
+ * Structure (valid, keyboard-friendly markup):
+ *   <article>
+ *     image  -> <Link> (decorative duplicate of the title link, removed from tab order)
+ *     badge, wishlist <button>  (siblings of the link, never nested inside it)
+ *     title  -> <Link> (the one accessible tab stop for the card)
+ *     price
+ * Previously the whole card was an <article role="link"> that CONTAINED a button,
+ * which is invalid nested-interactive markup.
  */
 export function ProductCard({ product }) {
-  const navigate = useNavigate();
-  const [wishlisted, setWishlisted] = useState(false);
   const productHandle = product.handle || product.id;
   const productPath = `/product/${encodeURIComponent(productHandle)}`;
+  const [wishlisted, toggleWishlist] = useWishlisted(productHandle);
 
-  function openProduct() {
-    if (productHandle) navigate(productPath);
-  }
+  // Only show a "was" price when Shopify genuinely has a higher compare-at price.
+  const hasRealDiscount =
+    Number(product.originalPriceRaw) > 0 &&
+    Number(product.originalPriceRaw) > Number(product.priceRaw || 0);
+  const soldOut = product.availableForSale === false;
+  const badge = soldOut ? 'SOLD OUT' : product.badge;
 
   return (
-    <article
-      className="product-card"
-      aria-label={product.name}
-      onClick={openProduct}
-      onKeyDown={(event) => {
-        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-          event.preventDefault();
-          openProduct();
-        }
-      }}
-      role="link"
-      tabIndex={0}
-      style={{ cursor: 'pointer' }}
-    >
+    <article className={`product-card${soldOut ? ' product-card--soldout' : ''}${product.imgHover ? ' product-card--has-hover' : ''}`}>
       <div className="product-card__img-wrap">
-        {product.badge && (
-          <span className="product-card__badge">{product.badge}</span>
-        )}
-        <img
-          src={product.img}
-          alt={product.imgAlt || product.name}
-          className="product-card__img"
-          loading="lazy"
-        />
-        {product.imgHover && (
+        {badge && <span className="product-card__badge">{badge}</span>}
+        <Link to={productPath} className="product-card__media" tabIndex={-1} aria-hidden="true">
           <img
-            src={product.imgHover}
-            alt={`${product.name} worn on foot`}
-            className="product-card__img product-card__img--hover"
+            src={product.img}
+            alt=""
+            className="product-card__img"
             loading="lazy"
-            aria-hidden="true"
+            decoding="async"
           />
-        )}
+          {product.imgHover && (
+            <img
+              src={product.imgHover}
+              alt=""
+              className="product-card__img product-card__img--hover"
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          <span className="product-card__overlay">
+            <span className="product-card__quick">VIEW PRODUCT</span>
+          </span>
+        </Link>
         <button
+          type="button"
           className={`product-card__wish ${wishlisted ? 'active' : ''}`}
-          onClick={(e) => { e.stopPropagation(); setWishlisted(!wishlisted); }}
-          aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          onClick={toggleWishlist}
+          aria-pressed={wishlisted}
+          aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         >
           <svg width="16" height="16" viewBox="0 0 24 24"
             fill={wishlisted ? 'currentColor' : 'none'}
-            stroke="currentColor" strokeWidth="1.8">
+            stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
         </button>
-        <div className="product-card__overlay">
-          <button
-            className="product-card__quick"
-            onClick={(e) => { e.stopPropagation(); openProduct(); }}
-          >
-            VIEW PRODUCT
-          </button>
-        </div>
       </div>
       <div className="product-card__info">
-        <p className="product-card__name">{product.name}</p>
-        <p className="product-card__price">{product.price}</p>
+        <h3 className="product-card__name">
+          <Link to={productPath} className="product-card__link">{product.name}</Link>
+        </h3>
+        <p className="product-card__price">
+          {hasRealDiscount && (
+            <s className="product-card__price-was" aria-label={`Original price ${product.originalPrice}`}>{product.originalPrice}</s>
+          )}
+          <span>{product.price}</span>
+        </p>
       </div>
     </article>
   );

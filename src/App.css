@@ -574,7 +574,7 @@
 }
 
 /* Product Card */
-.product-card { cursor: pointer; }
+.product-card { display: flex; flex-direction: column; min-width: 0; }
 .product-card__img-wrap {
   position: relative;
   overflow: hidden;
@@ -592,6 +592,11 @@
   padding: 4px 8px;
   font-weight: 600;
   z-index: 2;
+}
+.product-card__media {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
 .product-card__img {
   width: 100%;
@@ -614,10 +619,14 @@
   z-index: 3;
   transition: color 0.25s, background 0.25s, transform 0.25s;
 }
+.product-card__wish::before { content: ''; position: absolute; inset: -6px; } /* 44px touch target */
 .product-card__wish:hover { color: var(--brand-primary); transform: scale(1.1); }
+.product-card__wish:focus-visible,
+.product-card__link:focus-visible { outline: 2px solid var(--u-accent, var(--brand-primary)); outline-offset: 2px; }
 .product-card__wish.active { color: var(--brand-primary); }
 
 .product-card__overlay {
+  display: block;
   position: absolute;
   bottom: 0; left: 0; right: 0;
   background: rgba(48,43,49,0.85);
@@ -638,6 +647,7 @@
 
 .product-card__info {
   padding: 14px 4px 4px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -645,14 +655,31 @@
 .product-card__name {
   font-size: 0.8rem;
   font-weight: 400;
+  line-height: 1.4;
   color: var(--text-main);
   letter-spacing: 0.02em;
+  /* Predictable wrapping: never more than two lines. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
+.product-card__link { color: inherit; }
 .product-card__price {
+  /* Anchored to the bottom of the (row-stretched) card, so prices line up across a
+     row whatever the name length, with no reserved empty space under short names. */
+  margin-top: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--brand-primary);
 }
+.product-card__price-was { font-weight: 400; color: var(--text-muted); }
+.product-card--soldout .product-card__img { opacity: 0.55; }
+.product-card--soldout .product-card__badge { background: var(--text-main); }
 
 .best-of__tagline {
   text-align: center;
@@ -1804,9 +1831,18 @@
 .product-grid__view-all:hover { letter-spacing: 0.18em; }
 
 .product-grid__cards {
+  /* Explicit columns (4 / 3 / 2) instead of auto-fill, so the same catalogue always
+     reads as the same grid and a 5th product never makes a one-card straggler row
+     at some widths and not others. */
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 24px;
+}
+@media (max-width: 1100px) {
+  .product-grid__cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 20px; }
+}
+@media (max-width: 640px) {
+  .product-grid__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
 }
 .universe-page .product-card__img-wrap {
   background: #f5f5f4;
@@ -1820,11 +1856,13 @@
   inset: 0;
   opacity: 0;
 }
-.universe-page .product-card:hover .product-card__img--hover {
+.universe-page .product-card--has-hover:hover .product-card__img--hover {
   opacity: 1;
   transform: none;
 }
-.universe-page .product-card:hover .product-card__img:not(.product-card__img--hover) {
+/* Only fade the primary image out when there IS a second image to reveal;
+   otherwise single-photo products went blank on hover. */
+.universe-page .product-card--has-hover:hover .product-card__img:not(.product-card__img--hover) {
   opacity: 0;
 }
 /* Empty collection ("coming soon") and error states share one treatment so an
@@ -2013,10 +2051,6 @@
    MULTIVERSE — RESPONSIVE ADDITIONS
 ════════════════════════════════════════════════ */
 
-@media (max-width: 1024px) {
-  .product-grid__cards { grid-template-columns: repeat(2, 1fr); }
-}
-
 @media (max-width: 768px) {
   .mv-entry__logo { font-size: clamp(3rem, 14vw, 5rem); }
   .mv-glass { padding: 20px 20px; }
@@ -2057,7 +2091,6 @@
   .explore-more__grid { gap: 12px; }
   .explore-tile { aspect-ratio: 3 / 4; }
 
-  .product-grid__cards { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
   /* (removed: a flat rgba band behind the header; the hero scrim now handles legibility) */
 }
@@ -2077,7 +2110,6 @@
   .explore-tile:last-child .explore-tile__img { object-position: center 30%; }
   .explore-tile__tagline { display: none; }
 
-  .product-grid__cards { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
