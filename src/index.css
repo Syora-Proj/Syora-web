@@ -16,3 +16,8 @@ img { display: block; max-width: 100%; }
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 ul { list-style: none; }
+
+/* Respect the OS "reduce motion" setting for page-level smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

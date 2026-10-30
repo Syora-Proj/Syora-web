@@ -126,19 +126,19 @@ export default function Footer() {
 
         {/* Shop */}
         <div className="footer__col">
-          <h4 className="footer__col-title">SHOP</h4>
+          <h3 className="footer__col-title">SHOP</h3>
           <ul>{shopLinks.map(l => <li key={l.label}><Link to={l.path}>{l.label}</Link></li>)}</ul>
         </div>
 
         {/* Customer Service */}
         <div className="footer__col">
-          <h4 className="footer__col-title">CUSTOMER SERVICE</h4>
+          <h3 className="footer__col-title">CUSTOMER SERVICE</h3>
           <ul>{serviceLinks.map(l => <li key={l}><button type="button" className="footer__service-button" onClick={() => setActiveService(l)}>{l}</button></li>)}</ul>
         </div>
 
         {/* About */}
         <div className="footer__col">
-          <h4 className="footer__col-title">ABOUT</h4>
+          <h3 className="footer__col-title">ABOUT</h3>
           <ul>{aboutLinks.map(l => <li key={l}>{['Sustainability', 'Privacy Policy', 'Terms & Conditions'].includes(l)
             ? <button type="button" className="footer__service-button" onClick={() => setActiveService(l)}>{l}</button>
             : <Link to="/#about">{l}</Link>}</li>)}</ul>

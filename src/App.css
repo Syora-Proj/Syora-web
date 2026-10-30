@@ -1238,7 +1238,7 @@
 ─────────────────────────────────────────────── */
 @media (max-width: 1220px) {
   .navbar { grid-template-columns: auto 1fr auto; padding: 18px 5%; }
-  .nav-hamburger { display: flex; position: relative; z-index: 400; padding: 10px 0; box-sizing: content-box; }
+  .nav-hamburger { display: flex; position: relative; z-index: 400; padding: 15px 12px; margin-left: -12px; box-sizing: content-box; }  /* 48x43 hit area, same visual position */
   .nav-action { min-width: 44px; min-height: 44px; justify-content: center; }
   .nav-left {
     position: fixed;
@@ -1286,6 +1286,13 @@
 }
 
 @media (max-width: 768px) {
+  /* ── Touch targets: text links were 15px tall ── */
+  .footer__col ul { gap: 0; }
+  .footer__col li a,
+  .footer__service-button { display: inline-flex; align-items: center; min-height: 40px; }
+  .pdp2-product-share { min-height: 44px; }
+  .pdp2-info__breadcrumb a { display: inline-block; padding: 8px 0; }
+
   /* ── Navbar (page-level; the drawer/hamburger collapse lives in the 1220px block above) ── */
   .pdp2 > .navbar.navbar--universe {
     position: relative;
@@ -2081,6 +2088,7 @@
   }
   .u-hero .u-hero__actions { gap: 8px; }
   .u-hero .u-cta-btn {
+    min-height: 44px;
     padding: 11px 18px;
     font-size: 0.62rem;
     letter-spacing: 0.12em;
@@ -3448,7 +3456,9 @@
   text-decoration: underline;
   background: none;
   border: none;
-  padding: 0;
+  /* 12px vertical padding gives a 40px+ tap target; the negative margin keeps the layout unchanged */
+  padding: 12px 0;
+  margin: -12px 0;
   cursor: pointer;
 }
 
