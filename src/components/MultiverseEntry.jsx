@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
 import Footer from './Footer';
 
@@ -79,7 +79,11 @@ export default function MultiverseEntry() {
     };
   }, []);
 
-  function handleSelect(id) {
+  // Tiles are real links (middle-click / open-in-new-tab / copy link all work).
+  // A plain left-click keeps the short exit transition before navigating.
+  function handleSelect(event, id) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
     setSelected(id);
     setTimeout(() => navigate(`/universe/${id}`), 320);
   }
@@ -120,10 +124,15 @@ export default function MultiverseEntry() {
             <p className="mv2-hero__sub">One Woman. Infinite Versions.</p>
 
             {/* Animated scroll cue */}
-            <div className="mv2-hero__scroll-cue" aria-hidden="true">
-              <div className="mv2-hero__scroll-line" />
-              <span className="mv2-hero__scroll-text">scroll to explore</span>
-            </div>
+            <button
+              type="button"
+              className="mv2-hero__scroll-cue"
+              onClick={() => document.getElementById('explore-universes')?.scrollIntoView({ behavior: 'smooth' })}
+              aria-label="Scroll to explore the universes"
+            >
+              <span className="mv2-hero__scroll-line" aria-hidden="true" />
+              <span className="mv2-hero__scroll-text" aria-hidden="true">scroll to explore</span>
+            </button>
           </div>
         </div>
       </section>
@@ -154,12 +163,13 @@ export default function MultiverseEntry() {
           {/* Universe tiles grid */}
           <nav className="mv2-explore__grid" aria-label="Choose your universe">
             {universeList.map((u, i) => (
-              <button
+              <Link
                 key={u.id}
                 id={`mv-universe-tile-${u.id}`}
+                to={`/universe/${u.id}`}
                 className={`mv2-tile ${selected === u.id ? 'mv2-tile--selected' : ''}`}
                 style={{ '--tile-delay': `${i * 80}ms` }}
-                onClick={() => handleSelect(u.id)}
+                onClick={(event) => handleSelect(event, u.id)}
                 aria-label={`Enter ${u.name} — ${u.tagline}`}
               >
                 {/* Thumbnail */}
@@ -188,7 +198,7 @@ export default function MultiverseEntry() {
                 <div className="mv2-tile__enter" aria-hidden="true">
                   ENTER →
                 </div>
-              </button>
+              </Link>
             ))}
           </nav>
         </div>
@@ -215,7 +225,8 @@ export default function MultiverseEntry() {
             juttis rooted in tradition and a belief that Indian craft
             deserves to walk into every room with confidence.
           </p>
-          <a href="#craft" className="mv2-about__cta">MEET THE CRAFT →</a>
+          {/* '#craft' had no target on this page. HERITAGE is the juttis/craft universe. */}
+          <Link to="/universe/heritage" className="mv2-about__cta">MEET THE CRAFT →</Link>
           <p className="mv2-about__footer-text">INDIAN CRAFT. GLOBAL STEPS.</p>
         </div>
       </section>

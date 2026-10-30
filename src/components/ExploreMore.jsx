@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
 
 /**
@@ -8,8 +8,6 @@ import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
  * The current universe is automatically excluded from the list.
  */
 export default function ExploreMore({ currentId }) {
-  const navigate = useNavigate();
-
   // Show all universes except the current one, in canonical order
   const others = UNIVERSE_ORDER.filter((id) => id !== currentId);
 
@@ -29,11 +27,11 @@ export default function ExploreMore({ currentId }) {
         {others.map((id) => {
           const u = UNIVERSES[id];
           return (
-            <button
+            <Link
               key={id}
               id={`explore-tile-${id}`}
               className="explore-tile"
-              onClick={() => navigate(`/universe/${id}`)}
+              to={`/universe/${id}`}
               aria-label={`Explore ${u.name} universe — ${u.tagline}`}
             >
               {/* Background image */}
@@ -55,7 +53,7 @@ export default function ExploreMore({ currentId }) {
                 <span className="explore-tile__tagline">{u.tagline}</span>
                 <span className="explore-tile__cta">ENTER →</span>
               </div>
-            </button>
+            </Link>
           );
         })}
       </div>

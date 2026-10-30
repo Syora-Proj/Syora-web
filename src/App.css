@@ -1870,9 +1870,13 @@
 }
 
 .explore-more__grid {
+  /* Always exactly THREE tiles: the four universes minus the current one.
+     Was repeat(4, 1fr), leaving an empty fourth column on every universe page. */
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  max-width: 1100px;
+  margin-inline: auto;
 }
 
 .explore-tile {
@@ -1963,7 +1967,6 @@
 ════════════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
-  .explore-more__grid { grid-template-columns: repeat(2, 1fr); }
   .product-grid__cards { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -2003,7 +2006,7 @@
 
   .u-editorial { padding: 48px 24px; }
 
-  .explore-more__grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .explore-more__grid { gap: 12px; }
   .explore-tile { aspect-ratio: 3 / 4; }
 
   .product-grid__cards { grid-template-columns: repeat(2, 1fr); gap: 14px; }
@@ -2019,8 +2022,11 @@
   .mv-glass__btn { padding: 12px 6px; }
   .mv-glass__btn-name { font-size: 1.25rem; }
 
+  /* Small phones: two tiles on top, the third spans the full width. */
   .explore-more__grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .explore-tile { aspect-ratio: 1 / 1.2; }
+  .explore-tile:last-child { grid-column: 1 / -1; aspect-ratio: 5 / 2; }
+  .explore-tile:last-child .explore-tile__img { object-position: center 30%; }
   .explore-tile__tagline { display: none; }
 
   .product-grid__cards { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -2067,6 +2073,7 @@
   /* Tall enough for the content behind to push over it */
   position: relative;
   height: 100vh;
+  height: 100svh;   /* stable on mobile: no jump when the URL bar collapses */
   min-height: 600px;
 }
 
@@ -2076,6 +2083,7 @@
   top: 0;
   width: 100%;
   height: 100vh;
+  height: 100svh;
   min-height: 600px;
   overflow: hidden;
   display: flex;
@@ -2172,8 +2180,10 @@
   font-style: italic;
 }
 
-/* ── Scroll cue ── */
+/* ── Scroll cue (a real button: scrolls to the universes) ── */
 .mv2-hero__scroll-cue {
+  cursor: pointer;
+  color: inherit;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2187,16 +2197,17 @@
   background: linear-gradient(to bottom, rgba(245,236,228,0.55), transparent);
   animation: mv2-scroll-pulse 2s ease-in-out infinite;
 }
+.mv2-hero__scroll-cue:focus-visible { outline: 1px solid rgba(245,236,228,0.7); outline-offset: 8px; }
 @keyframes mv2-scroll-pulse {
   0%, 100% { opacity: 0.35; transform: scaleY(1); }
   50%       { opacity: 0.85; transform: scaleY(1.2); }
 }
 .mv2-hero__scroll-text {
   font-family: 'Inter', sans-serif;
-  font-size: 0.52rem;
+  font-size: 0.58rem;
   letter-spacing: 0.32em;
   text-indent: 0.32em;
-  color: rgba(245, 236, 228, 0.30);
+  color: rgba(245, 236, 228, 0.55);
   font-weight: 500;
   text-transform: uppercase;
 }
@@ -2265,6 +2276,10 @@
 }
 
 .mv2-explore__inner {
+  /* Above the frosted glass-edge (z-index 2): the strip is a backdrop effect for the
+     panel's top edge and was blurring the heading text sitting inside it. */
+  position: relative;
+  z-index: 3;
   padding: clamp(64px, 9vh, 96px) clamp(20px, 5%, 72px) clamp(64px, 10vh, 96px);
 }
 
@@ -2277,7 +2292,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.6rem;
   letter-spacing: 0.32em;
-  color: rgba(245, 236, 228, 0.40);
+  color: rgba(245, 236, 228, 0.62);
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -2294,7 +2309,7 @@
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(0.85rem, 1.6vw, 1rem);
   font-style: italic;
-  color: rgba(245, 236, 228, 0.45);
+  color: rgba(245, 236, 228, 0.62);
   font-weight: 300;
   letter-spacing: 0.12em;
 }
@@ -2302,9 +2317,13 @@
 /* ── Universe tiles grid ── */
 .mv2-explore__grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* Four universes (src/data/universes.js). Was repeat(5, 1fr) from the OFF-DUTY era,
+     which left a permanent empty fifth column. */
+  grid-template-columns: repeat(4, 1fr);
   gap: clamp(12px, 1.8vw, 22px);
   width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
 }
 
 
@@ -2313,6 +2332,7 @@
 ══════════════════════════════════════════ */
 .mv2-tile {
   position: relative;
+  display: block;         /* tiles are <a> links */
   aspect-ratio: 3 / 4;    /* portrait — tall cards */
   border: none;
   padding: 0;
@@ -2427,9 +2447,9 @@
 }
 .mv2-tile__tagline {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(0.52rem, 0.75vw, 0.65rem);
+  font-size: clamp(0.62rem, 0.8vw, 0.7rem);
   letter-spacing: 0.06em;
-  color: rgba(245, 236, 228, 0.42);
+  color: rgba(245, 236, 228, 0.72);
   font-weight: 400;
   text-align: center;
   line-height: 1.3;
@@ -2524,8 +2544,8 @@
 
 .mv2-about__text {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(0.78rem, 1vw, 0.88rem);
-  color: rgba(235, 220, 195, 0.52);
+  font-size: clamp(0.85rem, 1.05vw, 0.95rem);
+  color: rgba(235, 220, 195, 0.68);
   line-height: 1.75;
   margin-bottom: 16px;
 }
@@ -2574,17 +2594,17 @@
 /* ══════════════════════════════════════════
    MV2 RESPONSIVE
 ══════════════════════════════════════════ */
-@media (max-width: 1200px) {
-  .mv2-explore__grid { grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 1024px) {
+  .mv2-hero__wordmark { font-size: clamp(4.5rem, 14vw, 9rem); }
 }
 
-@media (max-width: 1024px) {
+/* Four tiles: 4-up on desktop, balanced 2x2 below 900px (never 3+1). */
+@media (max-width: 900px) {
   .mv2-explore__grid {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 760px;
-    margin: 0 auto;
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 640px;
+    gap: 14px;
   }
-  .mv2-hero__wordmark { font-size: clamp(4.5rem, 14vw, 9rem); }
 }
 
 @media (max-width: 768px) {
@@ -2593,12 +2613,6 @@
     letter-spacing: 0.38em;
   }
   .mv2-hero__sub { font-size: 0.72rem; letter-spacing: 0.22em; }
-
-  .mv2-explore__grid {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 480px;
-    gap: 12px;
-  }
 
   .mv2-about {
     grid-template-columns: 1fr;
@@ -2615,18 +2629,14 @@
     text-indent: 0.28em;
   }
   .mv2-explore__inner {
-    padding: 40px 16px 56px;
+    padding: 56px 16px 56px;
   }
+  /* Reserve two caption lines so icon + name align across all four cards. */
+  .mv2-tile__tagline { min-height: 2.6em; display: flex; align-items: flex-start; justify-content: center; }
   .mv2-explore__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
-  /* 5th tile spans full width on very small screens */
-  .mv2-tile:nth-child(5) {
-    grid-column: 1 / -1;
-    aspect-ratio: 5 / 2;
-  }
-  .mv2-tile:nth-child(5) .mv2-tile__img { object-position: center 30%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
