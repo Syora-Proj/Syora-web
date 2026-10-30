@@ -1,0 +1,18 @@
+:root {
+  /* SYORA Champagne-Ivory Global Palette */
+  --bg-primary: #F5E6D2;      /* Primary warm background */
+  --bg-secondary: #EEDCC7;    /* Slightly darker cream */
+  --card-bg: #F8EBDD;         /* Soft warm cream for overlays */
+  --brand-primary: #5A1717;   /* Deep burgundy for accents/CTAs */
+  --border-color: #D8C2AA;    /* Borders/dividers */
+  --text-main: #171311;       /* Near-black primary text */
+  --text-muted: rgba(23, 19, 17, 0.65); /* Muted near-black */
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-main); overflow-x: hidden; }
+img { display: block; max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+ul { list-style: none; }
