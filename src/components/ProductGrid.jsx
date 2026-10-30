@@ -1,143 +1,52 @@
 import { Link } from 'react-router-dom';
 import { useWishlisted } from '../lib/wishlist';
+import { imgUrl, imgSrcSet } from '../lib/shopify/images';
 
-/**
- * SYORA — Reusable Product Card
- *
- * Structure (valid, keyboard-friendly markup):
- *   <article>
- *     image  -> <Link> (decorative duplicate of the title link, removed from tab order)
- *     badge, wishlist <button>  (siblings of the link, never nested inside it)
- *     title  -> <Link> (the one accessible tab stop for the card)
- *     price
- * Previously the whole card was an <article role="link"> that CONTAINED a button,
- * which is invalid nested-interactive markup.
- */
-export function ProductCard({ product }) {
-  const productHandle = product.handle || product.id;
-  const productPath = `/product/${encodeURIComponent(productHandle)}`;
-  const [wishlisted, toggleWishlist] = useWishlisted(productHandle);
-
-  // Only show a "was" price when Shopify genuinely has a higher compare-at price.
-  const hasRealDiscount =
-    Number(product.originalPriceRaw) > 0 &&
-    Number(product.originalPriceRaw) > Number(product.priceRaw || 0);
+export function ProductCard({ product, priority = false }) {
+  const [wished, toggle] = useWishlisted(product.handle);
   const soldOut = product.availableForSale === false;
-  const badge = soldOut ? 'SOLD OUT' : product.badge;
-
+  const alt = product.imgHover ? ' sy-card--alt' : '';
+  const sizes = '(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw';
+  const img = (url, cls) => (
+    <img
+      className={`sy-card__img ${cls}`} src={imgUrl(url, 640)} srcSet={imgSrcSet(url, [320, 480, 640, 960])} sizes={sizes}
+      alt={cls.includes('alt') ? '' : product.imgAlt || product.name} width={product.imgW || 640} height={product.imgH || 800}
+      loading={priority ? 'eager' : 'lazy'} decoding="async"
+    />
+  );
   return (
-    <article className={`product-card${soldOut ? ' product-card--soldout' : ''}${product.imgHover ? ' product-card--has-hover' : ''}`}>
-      <div className="product-card__img-wrap">
-        {badge && <span className="product-card__badge">{badge}</span>}
-        <Link to={productPath} className="product-card__media" tabIndex={-1} aria-hidden="true">
-          <img
-            src={product.img}
-            alt=""
-            className="product-card__img"
-            loading="lazy"
-            decoding="async"
-          />
-          {product.imgHover && (
-            <img
-              src={product.imgHover}
-              alt=""
-              className="product-card__img product-card__img--hover"
-              loading="lazy"
-              decoding="async"
-            />
-          )}
-          <span className="product-card__overlay">
-            <span className="product-card__quick">VIEW PRODUCT</span>
-          </span>
-        </Link>
-        <button
-          type="button"
-          className={`product-card__wish ${wishlisted ? 'active' : ''}`}
-          onClick={toggleWishlist}
-          aria-pressed={wishlisted}
-          aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24"
-            fill={wishlisted ? 'currentColor' : 'none'}
-            stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-        </button>
-      </div>
-      <div className="product-card__info">
-        <h3 className="product-card__name">
-          <Link to={productPath} className="product-card__link">{product.name}</Link>
-        </h3>
-        <p className="product-card__price">
-          {hasRealDiscount && (
-            <s className="product-card__price-was" aria-label={`Original price ${product.originalPrice}`}>{product.originalPrice}</s>
-          )}
+    <li className={`sy-card${alt}${soldOut ? ' sy-card--soldout' : ''}`}>
+      <Link to={`/product/${product.handle}`} className="sy-card__plate" tabIndex={-1} aria-hidden="true">
+        {product.img && img(product.img, 'sy-card__img--main')}
+        {product.imgHover && img(product.imgHover, 'sy-card__img--alt')}
+      </Link>
+      {(soldOut || product.badge) && <span className="sy-card__tag">{soldOut ? 'Sold out' : product.badge}</span>}
+      <button type="button" className="sy-card__wish" onClick={toggle} aria-pressed={wished} aria-label={`${wished ? 'Remove' : 'Save'} ${product.name} ${wished ? 'from' : 'to'} wishlist`}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg>
+      </button>
+      <div className="sy-card__body">
+        <h3 className="sy-card__name"><Link to={`/product/${product.handle}`}>{product.name}</Link></h3>
+        <p className="sy-card__price">
           <span>{product.price}</span>
+          {product.originalPriceRaw > product.priceRaw && <s className="sy-card__was">{product.originalPrice}</s>}
         </p>
       </div>
-    </article>
+    </li>
   );
 }
 
-/**
- * SYORA — Product Grid
- * Renders a header + responsive grid of ProductCards.
- *
- * `viewAllHref` is optional: the "view all" link is only rendered when the
- * caller supplies a destination that differs from the current page. (On universe
- * pages the grid already IS the collection, so a link back to the same route was
- * a dead control.)
- *
- * Empty collections render a deliberate "coming soon" state instead of a blank
- * grid; `onExploreOthers` adds a way onward to the other universes.
- */
-export default function ProductGrid({
-  title,
-  products = [],
-  viewAllLabel = 'VIEW ALL →',
-  viewAllHref,
-  universeId,
-  onExploreOthers,
-}) {
+export default function ProductGrid({ products, label = 'Products' }) {
   return (
-    <section className="product-grid" aria-labelledby={`grid-title-${universeId}-${slug(title)}`}>
-      <div className="product-grid__header">
-        <h2 id={`grid-title-${universeId}-${slug(title)}`} className="product-grid__title">{title}</h2>
-        {viewAllHref && (
-          <Link
-            className="product-grid__view-all"
-            to={viewAllHref}
-            aria-label={`${viewAllLabel} for ${title}`}
-          >
-            {viewAllLabel}
-          </Link>
-        )}
-      </div>
-
-      {products.length > 0 ? (
-        <div className="product-grid__cards">
-          {products.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={{ ...p, imgHover: p.imgSecond || p.imgHover }}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="product-grid__empty" role="status">
-          <p className="product-grid__empty-eyebrow">COMING SOON</p>
-          <p className="product-grid__empty-title">Universe in creation, personalised for you</p>
-          {onExploreOthers && (
-            <button type="button" className="product-grid__empty-cta" onClick={onExploreOthers}>
-              EXPLORE OTHER UNIVERSES ↓
-            </button>
-          )}
-        </div>
-      )}
-    </section>
+    <ul className="sy-grid" aria-label={label} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {products.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
+    </ul>
   );
 }
 
-function slug(text = '') {
-  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+export function GridSkeleton({ count = 8 }) {
+  return (
+    <ul className="sy-grid" aria-hidden="true" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {Array.from({ length: count }, (_, i) => <li key={i}><div className="sy-skel" /></li>)}
+    </ul>
+  );
 }

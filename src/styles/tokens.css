@@ -1,0 +1,61 @@
+/* ═══════════════════════════════════════════════════════════
+   SYORA — Design tokens (Stage C1: "The Lookbook")
+   Single source of truth. Every value was contrast-checked
+   (WCAG AA, lowest text pair 5.1:1). Do not add raw hex values
+   to component CSS; add a token here instead.
+═══════════════════════════════════════════════════════════ */
+:root {
+  /* Colour */
+  --paper:    #F7F1E8;   /* primary background            */
+  --sand:     #EDE2D1;   /* secondary background, plates  */
+  --espresso: #1B130E;   /* dark sections, footer         */
+  --ink:      #1E1611;   /* primary text, primary button  */
+  --ink-2:    #6A5B4E;   /* secondary text, control edges */
+  --line:     #D9CBB8;   /* hairlines (decorative)        */
+  --burgundy: #5A1717;   /* default accent                */
+  --error:    #A63227;
+  --ok:       #3A4A33;
+
+  /* Universe accents (one per universe page) */
+  --accent-icon:     #5A1717;
+  --accent-heritage: #8A4527;
+  --accent-everyday: #594A42;
+  --accent-motion:   #6F5B49;
+  --accent: var(--burgundy);
+
+  /* On-dark text */
+  --on-dark:   var(--paper);
+  --on-dark-2: #CDBFAE;
+  --line-dark: rgba(247, 241, 232, 0.18);
+
+  /* Type */
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --fs-display: clamp(3.5rem, 9vw, 8rem);
+  --fs-h1: clamp(2.5rem, 5.5vw, 4.75rem);
+  --fs-h2: clamp(1.875rem, 3.4vw, 3rem);
+  --fs-h3: 1.5rem;
+  --fs-lead: 1.125rem;
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+  --fs-label: 0.75rem;
+
+  /* Layout */
+  --container: 1360px;
+  --container-wide: 1520px;
+  --gutter: clamp(20px, 4vw, 56px);
+  --grid-gap: clamp(16px, 2vw, 32px);
+  --section: clamp(72px, 10vw, 136px);
+  --header-h: 60px;
+  --btn-h: 48px;
+  --radius: 0;
+  --focus: 2px solid var(--burgundy);
+}
+@media (min-width: 1221px) { :root { --header-h: 72px; } }
+
+/* Universe scopes: one accent per page */
+[data-universe='icon']     { --accent: var(--accent-icon); }
+[data-universe='heritage'] { --accent: var(--accent-heritage); }
+[data-universe='everyday'] { --accent: var(--accent-everyday); }
+[data-universe='motion']   { --accent: var(--accent-motion); }

@@ -1,2 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /search
+Disallow: /order-confirmation
+
+Sitemap: https://www.syora.co.in/sitemap.xml
