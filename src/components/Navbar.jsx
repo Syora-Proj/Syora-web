@@ -13,7 +13,7 @@ import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
  * Nav items: THE MULTIVERSE followed by the four active universes, in the
  * canonical order from src/data/universes.js (single source of truth).
  */
-export default function Navbar({ universeMode = false }) {
+export default function Navbar({ universeMode = false, universeId = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { totalQuantity, openCart } = useCart();
@@ -39,7 +39,7 @@ export default function Navbar({ universeMode = false }) {
 
   return (
     <>
-      <header className={`navbar ${lightMode ? 'navbar--light' : ''} ${universeMode ? 'navbar--universe' : ''} ${menuOpen ? 'navbar--menu-open' : ''}`}>
+      <header className={`navbar ${lightMode ? 'navbar--light' : ''} ${universeMode ? 'navbar--universe' : ''} ${universeId ? 'navbar--hero' : ''} ${menuOpen ? 'navbar--menu-open' : ''}`}>
         {/* Mobile hamburger */}
         <button
           className="nav-hamburger"

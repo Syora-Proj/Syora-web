@@ -1627,8 +1627,30 @@
   position: relative;
   z-index: 3;
   padding: clamp(48px, 8vw, 96px) clamp(24px, 6%, 80px) clamp(64px, 10vh, 96px);
-  max-width: 620px;
+  /* 620px of TEXT column. The old max-width: 620px included the side padding
+     (border-box), leaving ~460px, which forced headlines like "BEST HEEL." and
+     "GLOW-UP." to break and made the hero content taller than the viewport. */
+  max-width: calc(620px + 2 * clamp(24px, 6%, 80px));
 }
+
+/* Light edge scrims keep the (blend-mode) header and the lower copy legible over
+   bright photography. Kept deliberately subtle; the imagery is unchanged. */
+.u-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(12, 6, 3, 0.50) 0, rgba(12, 6, 3, 0) 180px),
+    linear-gradient(to top, rgba(12, 6, 3, 0.58) 0, rgba(12, 6, 3, 0) 58%);
+}
+
+/* On universe heroes the header sits on a known, scrimmed photograph, so it uses
+   its plain (white) colours. `difference` blending only reads well on very dark
+   or very light backdrops and left the logo/nav nearly invisible on the beige
+   HERITAGE and EVERYDAY photos. Product/other pages keep the blend. */
+.navbar--hero { mix-blend-mode: normal; }
 .u-hero__eyebrow {
   font-family: 'Inter', sans-serif;
   font-size: 0.62rem;
@@ -1636,11 +1658,11 @@
   color: var(--u-hero-text, rgba(245, 236, 228, 0.55));
   font-weight: 600;
   margin-bottom: 20px;
-  opacity: 0.7;
+  opacity: 0.9;
 }
 .u-hero__headline {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(3rem, 7vw, 6rem);
+  font-size: clamp(3rem, 6.4vw, 5.6rem);
   font-weight: 400;
   line-height: 1;
   color: var(--u-hero-text, #f5ece4);
@@ -1655,10 +1677,10 @@
   font-size: clamp(1rem, 2vw, 1.4rem);
   font-style: italic;
   color: var(--u-hero-text, rgba(245, 236, 228, 0.75));
-  font-weight: 300;
+  font-weight: 400;   /* 300 was too thin to read over bright photography */
   margin-bottom: 32px;
   letter-spacing: 0.04em;
-  opacity: 0.9;
+  opacity: 1;
 }
 .u-hero__actions {
   display: flex;
@@ -1805,31 +1827,56 @@
 .universe-page .product-card:hover .product-card__img:not(.product-card__img--hover) {
   opacity: 0;
 }
+/* Empty collection ("coming soon") and error states share one treatment so an
+   empty universe reads as a finished page, not a broken one. Colours come from the
+   universe palette variables, so each universe keeps its own identity. */
 .product-grid__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: clamp(260px, 36vh, 380px);
+  padding: 48px 24px;
   text-align: center;
-  padding: 64px 24px;
-  border: 1px dashed rgba(72,41,31,0.2);
-  border-radius: 2px;
+  border: 1px solid var(--u-border, rgba(72,41,31,0.2));
+}
+.product-grid__empty-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  font-weight: 600;
+  color: var(--u-accent, var(--brand-primary));
 }
 .product-grid__empty-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.8rem;
+  font-size: clamp(1.35rem, 3.2vw, 1.8rem);
   color: var(--u-text, var(--text-main));
-  margin-bottom: 16px;
   font-weight: 300;
   letter-spacing: 0.15em;
+  line-height: 1.35;
+  max-width: 26ch;
 }
-.product-grid__empty-msg {
-  font-size: 0.82rem;
-  color: var(--u-muted, var(--text-muted));
-  line-height: 1.7;
+.product-grid__empty-cta {
+  margin-top: 6px;
+  min-height: 44px;
+  padding: 14px 28px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--u-accent, var(--brand-primary));
+  background: transparent;
+  border: 1px solid var(--u-accent, var(--brand-primary));
+  cursor: pointer;
+  transition: background 0.28s ease, color 0.28s ease;
 }
-.product-grid__empty-msg code {
-  font-size: 0.75rem;
-  background: rgba(72,41,31,0.08);
-  padding: 1px 6px;
-  border-radius: 2px;
+.product-grid__empty-cta:hover,
+.product-grid__empty-cta:focus-visible {
+  background: var(--u-accent, var(--brand-primary));
+  color: var(--u-bg, #fff);
 }
+.product-grid--state { padding: 0 clamp(20px, 5%, 60px); }
 
 
 /* ════════════════════════════════════════════════
@@ -1983,22 +2030,23 @@
   .u-cta-btn { text-align: center; }
   .u-hero__watermark { display: none; }
 
-  .u-hero--icon .u-hero__content { padding: 18px 20px 40px; }
-  .u-hero--icon .u-hero__eyebrow {
+  /* Compact mobile treatment (previously ICON-only) now applies to every universe hero. */
+  .u-hero .u-hero__content { padding: 18px 20px 40px; }
+  .u-hero .u-hero__eyebrow {
     margin-bottom: 10px;
     letter-spacing: 0.18em;
   }
-  .u-hero--icon .u-hero__headline {
+  .u-hero .u-hero__headline {
     margin-bottom: 10px;
     line-height: 0.92;
     letter-spacing: 0.01em;
   }
-  .u-hero--icon .u-hero__tagline {
+  .u-hero .u-hero__tagline {
     margin-bottom: 16px;
     letter-spacing: 0.015em;
   }
-  .u-hero--icon .u-hero__actions { gap: 8px; }
-  .u-hero--icon .u-cta-btn {
+  .u-hero .u-hero__actions { gap: 8px; }
+  .u-hero .u-cta-btn {
     padding: 11px 18px;
     font-size: 0.62rem;
     letter-spacing: 0.12em;
@@ -2011,7 +2059,7 @@
 
   .product-grid__cards { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
-  .navbar--light.navbar--universe { background: rgba(10,5,3,0.2); }
+  /* (removed: a flat rgba band behind the header; the hero scrim now handles legibility) */
 }
 
 @media (max-width: 480px) {

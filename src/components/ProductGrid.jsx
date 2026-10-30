@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 /**
  * SYORA — Reusable Product Card
@@ -79,22 +79,36 @@ export function ProductCard({ product }) {
 /**
  * SYORA — Product Grid
  * Renders a header + responsive grid of ProductCards.
- * Shows a placeholder message when products array is empty.
+ *
+ * `viewAllHref` is optional: the "view all" link is only rendered when the
+ * caller supplies a destination that differs from the current page. (On universe
+ * pages the grid already IS the collection, so a link back to the same route was
+ * a dead control.)
+ *
+ * Empty collections render a deliberate "coming soon" state instead of a blank
+ * grid; `onExploreOthers` adds a way onward to the other universes.
  */
-export default function ProductGrid({ title, products = [], viewAllLabel = 'VIEW ALL →', universeId }) {
-  const navigate = useNavigate();
-
+export default function ProductGrid({
+  title,
+  products = [],
+  viewAllLabel = 'VIEW ALL →',
+  viewAllHref,
+  universeId,
+  onExploreOthers,
+}) {
   return (
-    <section className="product-grid" aria-labelledby={`grid-title-${universeId}`}>
+    <section className="product-grid" aria-labelledby={`grid-title-${universeId}-${slug(title)}`}>
       <div className="product-grid__header">
-        <h2 id={`grid-title-${universeId}`} className="product-grid__title">{title}</h2>
-        <button
-          className="product-grid__view-all"
-          onClick={() => navigate(`/universe/${universeId}`)}
-          aria-label={`${viewAllLabel} for ${title}`}
-        >
-          {viewAllLabel}
-        </button>
+        <h2 id={`grid-title-${universeId}-${slug(title)}`} className="product-grid__title">{title}</h2>
+        {viewAllHref && (
+          <Link
+            className="product-grid__view-all"
+            to={viewAllHref}
+            aria-label={`${viewAllLabel} for ${title}`}
+          >
+            {viewAllLabel}
+          </Link>
+        )}
       </div>
 
       {products.length > 0 ? (
@@ -107,10 +121,20 @@ export default function ProductGrid({ title, products = [], viewAllLabel = 'VIEW
           ))}
         </div>
       ) : (
-        <div className="product-grid__empty">
+        <div className="product-grid__empty" role="status">
+          <p className="product-grid__empty-eyebrow">COMING SOON</p>
           <p className="product-grid__empty-title">Universe in creation, personalised for you</p>
+          {onExploreOthers && (
+            <button type="button" className="product-grid__empty-cta" onClick={onExploreOthers}>
+              EXPLORE OTHER UNIVERSES ↓
+            </button>
+          )}
         </div>
       )}
     </section>
   );
+}
+
+function slug(text = '') {
+  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }

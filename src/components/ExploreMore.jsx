@@ -12,7 +12,7 @@ export default function ExploreMore({ currentId }) {
   const others = UNIVERSE_ORDER.filter((id) => id !== currentId);
 
   return (
-    <section className="explore-more" aria-labelledby="explore-more-title">
+    <section id="explore-more" className="explore-more" aria-labelledby="explore-more-title">
       <div className="explore-more__header">
         <p className="explore-more__eyebrow">— THE MULTIVERSE</p>
         <h2 id="explore-more-title" className="explore-more__title">

@@ -9,7 +9,7 @@ import { useShopifyCollection } from '../hooks/useShopifyCollection';
 /**
  * SYORA — Universe Page
  *
- * Shared template for all five universe pages.
+ * Shared template for the four universe pages.
  * Universe-specific content and colours come from src/data/universes.js.
  *
  * Page structure (per spec):
@@ -122,34 +122,40 @@ export default function UniversePage({ universe: universeId }) {
       {/* ── 3. Featured Products ── */}
       <section id={`products-${universeId}`} className="u-products">
         {loading ? (
-          <div className="u-products-loading" aria-label="Loading products">
+          <div className="u-products-loading" role="status" aria-label="Loading products">
             <div className="u-loading-spinner" />
           </div>
         ) : error ? (
-          <div className="u-products-error">
-            <p>Could not load products. Please refresh to try again.</p>
+          <div className="product-grid product-grid--state">
+            <div className="product-grid__empty" role="alert">
+              <p className="product-grid__empty-title">We couldn't load these products</p>
+              <button type="button" className="product-grid__empty-cta" onClick={() => window.location.reload()}>
+                TRY AGAIN
+              </button>
+            </div>
           </div>
         ) : (
           <ProductGrid
             title={`THE ${u.name} EDIT`}
             products={shopifyProducts}
-            viewAllLabel="VIEW FULL COLLECTION →"
             universeId={universeId}
+            onExploreOthers={() => {
+              document.getElementById('explore-more')?.scrollIntoView({ behavior: 'smooth' });
+            }}
           />
         )}
       </section>
 
-      {/* ── 4. Universe Bestsellers ── */}
-      <section className="u-bestsellers">
-        {!loading && !error && shopifyBestsellers.length > 0 && (
+      {/* ── 4. Universe Bestsellers (only rendered when there are any) ── */}
+      {!loading && !error && shopifyBestsellers.length > 0 && (
+        <section className="u-bestsellers">
           <ProductGrid
             title={`${u.name} BESTSELLERS`}
             products={shopifyBestsellers}
-            viewAllLabel="ALL BESTSELLERS →"
             universeId={universeId}
           />
-        )}
-      </section>
+        </section>
+      )}
 
       {/* ── 5 & 6. Bottom Section: Explore More & Footer ── */}
       <div className={universeId === 'icon' ? 'icon-dark-bottom' : ''}>
