@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
 import Footer from './Footer';
+import Navbar from './Navbar';
 
 const VIDEO_SRC = '/syora-home-loop.mp4';
 
@@ -47,12 +48,17 @@ export default function MultiverseEntry() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
   const [exploreRevealed, setExploreRevealed] = useState(false);
+  const [introPassed, setIntroPassed] = useState(false);
   const [shouldPlayHeroVideo, setShouldPlayHeroVideo] = useState(() => {
     if (typeof window === 'undefined') return false;
     return !window.matchMedia('(max-width: 767px)').matches
       && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
+  const introRef = useRef(null);
   const exploreRef = useRef(null);
+  const transitionLockRef = useRef(false);
+  const wheelGestureConsumedRef = useRef(false);
+  const wheelIdleTimerRef = useRef(null);
 
   useEffect(() => {
     // Keep the full-bleed video off mobile connections and honor reduced motion.
@@ -79,6 +85,70 @@ export default function MultiverseEntry() {
     };
   }, []);
 
+  useEffect(() => {
+    const introSection = introRef.current;
+    if (!introSection) return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      setIntroPassed(!(entry.isIntersecting && entry.intersectionRatio > 0.05));
+    }, { rootMargin: '-52px 0px 0px 0px', threshold: [0, 0.05] });
+    observer.observe(introSection);
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToExplore = useCallback(() => {
+    const section = exploreRef.current;
+    if (!section || transitionLockRef.current) return;
+
+    const scrollMarginTop = parseFloat(window.getComputedStyle(section).scrollMarginTop) || 0;
+    const destination = Math.max(0, window.scrollY + section.getBoundingClientRect().top - scrollMarginTop);
+    if (Math.abs(window.scrollY - destination) <= 1) return;
+
+    transitionLockRef.current = true;
+    window.scrollTo({
+      top: destination,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
+  }, []);
+
+  useEffect(() => {
+    const markWheelGestureConsumed = () => {
+      wheelGestureConsumedRef.current = true;
+      window.clearTimeout(wheelIdleTimerRef.current);
+      // WheelEvent has no standardized gesture-end event. Treat a quiet gap as
+      // the end of the input burst; this is separate from the scroll lock.
+      wheelIdleTimerRef.current = window.setTimeout(() => {
+        wheelGestureConsumedRef.current = false;
+        wheelIdleTimerRef.current = null;
+      }, 200);
+    };
+    const onScrollEnd = () => {
+      if (!transitionLockRef.current) return;
+      // scrollend releases the animation lock. The wheel-burst guard remains
+      // active until the input itself has gone quiet.
+      transitionLockRef.current = false;
+    };
+    const onWheel = (event) => {
+      if (event.deltaY <= 0) return;
+      if (wheelGestureConsumedRef.current || transitionLockRef.current) {
+        event.preventDefault();
+        markWheelGestureConsumed();
+        return;
+      }
+      if (window.scrollY <= 4) {
+        event.preventDefault();
+        markWheelGestureConsumed();
+        scrollToExplore();
+      }
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('scrollend', onScrollEnd);
+    return () => {
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('scrollend', onScrollEnd);
+      window.clearTimeout(wheelIdleTimerRef.current);
+    };
+  }, [scrollToExplore]);
+
   // Tiles are real links (middle-click / open-in-new-tab / copy link all work).
   // A plain left-click keeps the short exit transition before navigating.
   function handleSelect(event, id) {
@@ -97,7 +167,8 @@ export default function MultiverseEntry() {
           STICKY VIDEO HERO — 100vh, stays behind
           Only SYORA wordmark is shown here
       ══════════════════════════════════════════ */}
-      <section className="mv2-hero" aria-label="SYORA — The Multiverse">
+      <section ref={introRef} className="mv2-hero" aria-label="SYORA — The Multiverse">
+        <Navbar heroOverImage introTransition introPassed={introPassed} />
 
         {/* Sticky container so video stays put while explore slides over */}
         <div className="mv2-hero__sticky">
@@ -127,7 +198,7 @@ export default function MultiverseEntry() {
             <button
               type="button"
               className="mv2-hero__scroll-cue"
-              onClick={() => document.getElementById('explore-universes')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={scrollToExplore}
               aria-label="Scroll to explore the universes"
             >
               <span className="mv2-hero__scroll-line" aria-hidden="true" />
@@ -148,16 +219,13 @@ export default function MultiverseEntry() {
         id="explore-universes"
         aria-labelledby="explore-heading"
       >
-        {/* Frosted glass top-edge transition bar */}
-        <div className="mv2-explore__glass-edge" />
-
         <div className="mv2-explore__inner">
           <div className="mv2-explore__header">
-            <p className="mv2-explore__eyebrow">— THE MULTIVERSE</p>
+            
             <h2 id="explore-heading" className="mv2-explore__heading">
-              EXPLORE THE UNIVERSES
+              THE SYORA WORLD
             </h2>
-            <p className="mv2-explore__sub">Different Worlds. Same You.</p>
+            <p className="mv2-explore__sub">A World of Your Own.</p>
           </div>
 
           {/* Universe tiles grid */}
@@ -208,26 +276,32 @@ export default function MultiverseEntry() {
           ABOUT US
       ══════════════════════════════════════════ */}
       <section className="mv2-about" id="about" aria-labelledby="mv2-about-title">
-        <div className="mv2-about__copy">
-          <p className="mv2-about__eyebrow">
-            <span className="mv2-about__eyebrow-line" />
-            OUR JOURNEY
-          </p>
-          <h2 id="mv2-about-title" className="mv2-about__heading">
-            FROM<br />THREADS<br />TO YOUR<br />STORY ♡
-          </h2>
-          <p className="mv2-about__text mv2-about__text--lead">
-            A journey of many hands,<br />for your next steps.
-          </p>
-          <p className="mv2-about__text">
-            Every SYORA piece carries a story — of skilled artisans,
-            thoughtful details and a whole lot of heart. We started with
-            juttis rooted in tradition and a belief that Indian craft
-            deserves to walk into every room with confidence.
-          </p>
-          {/* '#craft' had no target on this page. HERITAGE is the juttis/craft universe. */}
-          <Link to="/universe/heritage" className="mv2-about__cta">MEET THE CRAFT →</Link>
-          <p className="mv2-about__footer-text">INDIAN CRAFT. GLOBAL STEPS.</p>
+        <div className="mv2-about__layout">
+          <div className="mv2-about__intro">
+            <p className="mv2-about__eyebrow">
+              <span className="mv2-about__eyebrow-line" />
+              OUR JOURNEY
+            </p>
+            <h2 id="mv2-about-title" className="mv2-about__heading">
+              FROM<br />THREADS<br />TO YOUR<br />STORY ♡
+            </h2>
+            <p className="mv2-about__text mv2-about__text--lead">
+              A journey of many hands,<br />for your next steps.
+            </p>
+          </div>
+
+          <div className="mv2-about__story">
+            <p className="mv2-about__text">
+              Every SYORA piece carries a story of skilled artisans,
+              thoughtful details and a whole lot of heart. We started with
+              juttis rooted in tradition and a belief that Indian craft
+              deserves to walk into every room with confidence.
+            </p>
+            {/* HERITAGE is the existing juttis and craft destination. */}
+            <Link to="/universe/heritage" className="mv2-about__cta">MEET THE CRAFT →</Link>
+            <p className="mv2-about__footer-text">INDIAN CRAFT. GLOBAL STEPS.</p>
+          </div>
+
         </div>
       </section>
 
