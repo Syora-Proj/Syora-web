@@ -12,13 +12,12 @@ import { useShopifyCollection } from '../hooks/useShopifyCollection';
  * Shared template for the four universe pages.
  * Universe-specific content and colours come from src/data/universes.js.
  *
- * Page structure (per spec):
- * 1. Universe Hero
- * 2. Editorial intro
- * 3. Featured products
- * 4. Universe bestsellers
- * 5. Explore More Universes
- * 6. Footer
+ * Page structure:
+ * 1. Compact collection header band (title, tagline, product count, hero crop)
+ * 2. Sticky filter / sort bar + product grid
+ * 3. Universe bestsellers
+ * 4. Explore More Universes
+ * 5. Footer
  */
 export default function UniversePage({ universe: universeId }) {
   const navigate = useNavigate();
@@ -37,89 +36,15 @@ export default function UniversePage({ universe: universeId }) {
 
   const { palette } = u;
 
-  // Parse headline with \n into <br /> elements
-  const headlineLines = u.headline.split('\n');
-
   return (
     <div
       className="universe-page"
       style={{ '--u-bg': palette.bg, '--u-accent': palette.accent, '--u-text': palette.text, '--u-muted': palette.muted, '--u-border': palette.border, '--u-hero-text': palette.heroText || '#f5ece4' }}
     >
-      {/* Navbar floats above the hero */}
-      <Navbar universeMode heroOverImage />
+      {/* Solid navbar: the collection page leads with the products, not a full-screen hero. */}
+      <Navbar universeMode solid />
 
-      {/* ── 1. Universe Hero ── */}
-      <section
-        className={`u-hero${universeId === 'icon' ? ' u-hero--icon' : ''}`}
-        aria-labelledby={`u-hero-title-${universeId}`}
-      >
-        {/* Background image */}
-        <div className="u-hero__img-wrap">
-          <picture>
-            {u.heroImageMobile && (
-              <source media="(max-width: 768px)" srcSet={u.heroImageMobile} />
-            )}
-            <img
-              src={u.heroImage}
-              alt={u.heroImageAlt}
-              className="u-hero__img"
-            />
-          </picture>
-          <div className="u-hero__overlay" style={{ background: palette.heroOverlay }} />
-        </div>
-
-        {/* Gradient side-fade for text legibility */}
-        <div className="u-hero__gradient" style={{ background: palette.heroGradient }} />
-
-        {/* Hero content */}
-        <div className="u-hero__content">
-          <p className="u-hero__eyebrow">— THE MULTIVERSE / {u.name}</p>
-          <h1
-            id={`u-hero-title-${universeId}`}
-            className="u-hero__headline"
-          >
-            {headlineLines.map((line, i) => (
-              <span key={i} className="u-hero__headline-line">{line}</span>
-            ))}
-          </h1>
-          <p className="u-hero__tagline">{u.tagline}</p>
-          <div className="u-hero__actions">
-            <button
-              id={`u-hero-cta-${universeId}`}
-              className="u-cta-btn u-cta-btn--primary"
-              onClick={() => {
-                document.getElementById(`products-${universeId}`)?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              {u.cta}
-            </button>
-            <button
-              className="u-cta-btn u-cta-btn--ghost"
-              onClick={() => navigate('/')}
-            >
-              ← THE MULTIVERSE
-            </button>
-          </div>
-        </div>
-
-        {/* Universe name watermark */}
-        <div className="u-hero__watermark" aria-hidden="true">{u.name}</div>
-      </section>
-
-      {/* ── 2. Editorial Intro ── */}
-      <section className="u-editorial" aria-label={`${u.name} editorial`}>
-        <div className="u-editorial__inner">
-          <div className="u-editorial__line" />
-          <blockquote className="u-editorial__quote">
-            {u.editorial}
-          </blockquote>
-          <div className="u-editorial__meta">
-            <span className="u-editorial__universe-tag">THE MULTIVERSE / {u.name}</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 3. Featured Products ── */}
+      {/* ── Collection: header band + filters + grid ── */}
       <section id={`products-${universeId}`} className="u-products">
         {loading ? (
           <div className="u-products-loading" role="status" aria-label="Loading products">
@@ -136,7 +61,14 @@ export default function UniversePage({ universe: universeId }) {
           </div>
         ) : (
           <ProductGrid
-            title={`THE ${u.name} EDIT`}
+            browse
+            title={`The ${titleCase(u.name)} Edit`}
+            description={u.tagline}
+            band={{
+              eyebrow: `${titleCase(u.name)} Collection`,
+              image: u.heroImage,
+              position: u.bandPosition,
+            }}
             products={shopifyProducts}
             universeId={universeId}
             onExploreOthers={() => {
@@ -146,22 +78,27 @@ export default function UniversePage({ universe: universeId }) {
         )}
       </section>
 
-      {/* ── 4. Universe Bestsellers (only rendered when there are any) ── */}
+      {/* ── Universe bestsellers (only rendered when there are any) ── */}
       {!loading && !error && shopifyBestsellers.length > 0 && (
         <section className="u-bestsellers">
           <ProductGrid
-            title={`${u.name} BESTSELLERS`}
+            title={`${titleCase(u.name)} Bestsellers`}
             products={shopifyBestsellers}
             universeId={universeId}
           />
         </section>
       )}
 
-      {/* ── 5 & 6. Bottom Section: Explore More & Footer ── */}
+      {/* ── Explore More & Footer ── */}
       <div className={universeId === 'icon' ? 'icon-dark-bottom' : ''}>
         <ExploreMore currentId={universeId} />
         <Footer />
       </div>
     </div>
   );
+}
+
+/** 'OFF-DUTY' -> 'Off-Duty' (names are stored upper-case for the hero treatment). */
+function titleCase(text = '') {
+  return String(text).toLowerCase().replace(/(^|[\s-])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
 }

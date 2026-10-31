@@ -57,6 +57,24 @@ const PRODUCT_CARD_FRAGMENT = `
       }
     }
     tags
+    productType
+    createdAt
+    # Option + variant data powers the collection filters (size / colour / stock).
+    options {
+      name
+      values
+    }
+    variants(first: 30) {
+      edges {
+        node {
+          availableForSale
+          selectedOptions {
+            name
+            value
+          }
+        }
+      }
+    }
   }
 `;
 

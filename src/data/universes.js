@@ -26,7 +26,7 @@ export const UNIVERSES = {
     cta: 'SHOP HEELS',
     // Colour palette for ICON universe (Light Burgundy Theme)
     palette: {
-      bg: '#fcfaf8',
+      bg: '#faf5ee',
       accent: '#5a1717',
       text: '#3e0f0f',
       muted: 'rgba(90, 23, 23, 0.65)',
@@ -36,6 +36,8 @@ export const UNIVERSES = {
       heroText: '#ffffff',
     },
     heroImage: '/hero-icon.jpg',
+    // Where the collection header band crops the hero photo (feet / shoes in frame).
+    bandPosition: '60% 86%',
     heroImageMobile: '/hero-icon-mobile-new.png',
     heroImageAlt: 'Model in a burgundy evening gown and heels in a warmly lit, luxurious interior',
     products: [
@@ -56,7 +58,7 @@ export const UNIVERSES = {
     editorial: 'HERITAGE is where Indian craft meets contemporary confidence. Each jutti is a conversation between the hands that made it and the woman who wears it — cultural character, re-imagined.',
     cta: 'SHOP JUTTIS',
     palette: {
-      bg: '#faf5f0',
+      bg: '#faf5ee',
       accent: '#a0522d',
       text: '#2a170e',
       muted: 'rgba(42,23,14,0.6)',
@@ -66,6 +68,8 @@ export const UNIVERSES = {
       heroText: '#ffffff',
     },
     heroImage: '/hero-heritage.jpg',
+    // Where the collection header band crops the hero photo (feet / shoes in frame).
+    bandPosition: '62% 84%',
     heroImageMobile: '/hero-heritage-mobile.png',
     heroImageAlt: 'SYORA HERITAGE juttis',
     products: [
@@ -87,7 +91,7 @@ export const UNIVERSES = {
     editorial: 'EVERYDAY is the universe for the woman who moves through life with understated elegance. Flats and loafers that do not compromise — refined enough for the office, relaxed enough for everything else.',
     cta: 'SHOP FLATS & LOAFERS',
     palette: {
-      bg: '#f8f4f0',
+      bg: '#faf5ee',
       accent: '#594a42',
       text: '#1a1412',
       muted: 'rgba(26,20,18,0.6)',
@@ -97,6 +101,8 @@ export const UNIVERSES = {
       heroText: '#ffffff',
     },
     heroImage: '/hero-everyday.jpg',
+    // Where the collection header band crops the hero photo (feet / shoes in frame).
+    bandPosition: '82% 80%',
     heroImageMobile: '/hero-everyday-mobile.png',
     heroImageAlt: 'SYORA EVERYDAY flats and loafers',
     products: [
@@ -116,7 +122,7 @@ export const UNIVERSES = {
     editorial: 'MOTION is for the woman who owns the city. Sneakers that match her energy — independent, expressive and built for every version of her day, from sunrise runs to late-night plans.',
     cta: 'SHOP SNEAKERS',
     palette: {
-      bg: '#f8efe6', // lighter shade of footer #eedcc7
+      bg: '#faf5ee', // lighter shade of footer #eedcc7
       accent: '#8c7662',
       text: '#2a221a',
       muted: 'rgba(42,34,26,0.6)',
@@ -126,6 +132,8 @@ export const UNIVERSES = {
       heroText: '#ffffff',
     },
     heroImage: '/hero-motion.jpg',
+    // Where the collection header band crops the hero photo (feet / shoes in frame).
+    bandPosition: '55% 84%',
     heroImageMobile: '/hero-motion-mobile.png',
     heroImageAlt: 'SYORA MOTION sneakers',
     // No sneaker product images in current assets — placeholder grid below

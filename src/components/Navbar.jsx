@@ -10,7 +10,7 @@ const COLLECTION_MARKS = {
   motion: '↗',
 };
 
-export default function Navbar({ universeMode = false, heroOverImage = false, introTransition = false, introPassed = true }) {
+export default function Navbar({ universeMode = false, heroOverImage = false, solid = false, introTransition = false, introPassed = true }) {
   const location = useLocation();
   const { totalQuantity, openCart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,7 +57,7 @@ export default function Navbar({ universeMode = false, heroOverImage = false, in
   return (
     <>
     <div className={`nav-collections-backdrop ${collectionsOpen ? 'is-visible' : ''}`} aria-hidden="true" />
-    <header ref={navRef} className={`navbar navbar--redesign ${lightMode ? 'navbar--light' : ''} ${universeMode ? 'navbar--universe' : ''} ${heroOverImage ? 'navbar--hero' : ''} ${menuOpen ? 'navbar--menu-open' : ''} ${introTransition ? (introPassed ? 'navbar--intro-passed' : 'navbar--intro-hidden') : ''}`}>
+    <header ref={navRef} className={`navbar navbar--redesign ${lightMode ? 'navbar--light' : ''} ${universeMode ? 'navbar--universe' : ''} ${heroOverImage ? 'navbar--hero' : ''} ${solid ? 'navbar--solid' : ''} ${menuOpen ? 'navbar--menu-open' : ''} ${introTransition ? (introPassed ? 'navbar--intro-passed' : 'navbar--intro-hidden') : ''}`}>
       <Link className="nav-logo" to="/" aria-label="SYORA — Return to home">SYORA</Link>
 
       <button

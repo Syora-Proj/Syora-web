@@ -88,6 +88,30 @@ export function normaliseProductCard(node) {
   const badgeTag = (node.tags || []).find((t) => t.toLowerCase().startsWith('badge:'));
   const badge    = badgeTag ? badgeTag.split(':')[1].trim().toUpperCase() : null;
 
+  // ── Facets for collection filtering (size / colour / category / stock) ──
+  const optionNamed = (re) => (node.options || []).find((o) => re.test(o.name || ''));
+  const variantNodes = (node.variants?.edges || []).map((e) => e.node).filter(Boolean);
+  const facetValues = (re) => {
+    const opt = optionNamed(re);
+    if (!opt) return { all: [], available: [] };
+    const available = new Set();
+    variantNodes.forEach((v) => {
+      if (v.availableForSale === false) return;
+      const sel = (v.selectedOptions || []).find((s) => s.name === opt.name);
+      if (sel?.value) available.add(sel.value);
+    });
+    // With no variant data, don't claim anything is unavailable.
+    const values = opt.values || [];
+    return { all: values, available: variantNodes.length ? values.filter((x) => available.has(x)) : values };
+  };
+  const sizeFacet = facetValues(/size/i);
+  const colourFacet = facetValues(/colou?r/i);
+  const tagValue = (prefix) => {
+    const t = (node.tags || []).find((x) => x.toLowerCase().startsWith(`${prefix}:`));
+    return t ? t.slice(prefix.length + 1).trim() : '';
+  };
+  const category = (node.productType || '').trim() || tagValue('category') || tagValue('heel');
+
   return {
     // Public product routes use the handle; retain the GraphQL ID for API use.
     id:              node.handle,
@@ -108,6 +132,12 @@ export function normaliseProductCard(node) {
     discountPercent: computeDiscountPercent(price, compareAt),
     badge,
     availableForSale: node.availableForSale,
+    // Filter facets
+    category,
+    createdAt:       node.createdAt || '',
+    sizes:           sizeFacet.all,
+    sizesAvailable:  sizeFacet.available,
+    colours:         colourFacet.all,
   };
 }
 

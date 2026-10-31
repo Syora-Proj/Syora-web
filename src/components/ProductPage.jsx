@@ -1,13 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { ProductCard } from './ProductGrid';
 import { useShopifyProduct } from '../hooks/useShopifyProduct';
+import { useShopifyCollection } from '../hooks/useShopifyCollection';
 import { useCart } from '../context/CartContext';
 import { UNIVERSES } from '../data/universes';
 import { useWishlisted } from '../lib/wishlist';
 import { getCheckoutUrl } from '../lib/shopify/cart';
 import { trackViewItem, trackAddToCart } from '../lib/analytics';
+import '../pdp.css';
+
+/**
+ * SYORA — Product Detail Page
+ *
+ * One continuous editorial scroll, mobile-first, widening to a two-column hero and a
+ * "heading | content" rhythm on desktop:
+ *
+ *   gallery + buy box (colour, size, bag, trust)
+ *   → A closer look → Style it → Find your fit → Complete the look
+ *   → Product information → Reviews → FAQ → You may also like
+ *   → assurances → collection banner → footer
+ *
+ * Everything shown comes from the Shopify product (or the existing per-product detail
+ * imagery). Sections whose data does not exist (reviews, complete-the-look, FAQ…) are
+ * simply not rendered — nothing is fabricated.
+ */
 
 // Existing Shopify gallery views, curated by product so each feature card
 // shows the same kind of detail across the Everyday collection.
@@ -25,11 +44,139 @@ const EVERYDAY_FEATURE_GALLERY_INDEX = {
 // It stays off until it can be wired to a real service; the UI code is kept intact.
 const SHOW_PIN_CHECKER = false;
 
+// products.js falls back to this when a colour name is not in its known list.
+const UNKNOWN_HEX = '#d8d1c8';
+
+const SIZE_CHART = [
+  [35, 2, 5, '22.5'], [36, 3, 6, '23'], [37, 4, 7, '24'], [38, 5, 8, '24.5'],
+  [39, 6, 9, '25'], [40, 7, 10, '25.5'], [41, 8, 11, '26'], [42, 9, 12, '26.5'],
+];
+
+const ICONS = {
+  truck: <><path d="M3 6h11v10H3z" /><path d="M14 9h4l3 3v4h-7z" /><circle cx="7" cy="18" r="1.8" /><circle cx="17" cy="18" r="1.8" /></>,
+  exchange: <><path d="M4 9a8 8 0 0 1 14-3l2 2" /><path d="M20 4v4h-4" /><path d="M20 15a8 8 0 0 1-14 3l-2-2" /><path d="M4 20v-4h4" /></>,
+  shield: <><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z" /><path d="m8.5 12 2.5 2.5 4.5-5" /></>,
+  layers: <><path d="m12 3 9 5-9 5-9-5z" /><path d="m3 13 9 5 9-5" /><path d="m3 17.5 9 5 9-5" opacity="0" /></>,
+  tag: <><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.3" /></>,
+  info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5v.5" /></>,
+  doc: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 11h7M9 15h7" /></>,
+  heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />,
+  share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" /></>,
+  bag: <><path d="M6 8h12l1 13H5z" /><path d="M9 9V6a3 3 0 0 1 6 0v3" /></>,
+  expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
+  chevL: <path d="M15 18l-6-6 6-6" />,
+  chevR: <path d="M9 18l6-6-6-6" />,
+  close: <path d="M5 5l14 14M19 5L5 19" />,
+  arrow: <path d="M4 12h16M14 6l6 6-6 6" />,
+  pin: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>,
+};
+function Icon({ name, size = 20, stroke = 1.5 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {ICONS[name]}
+    </svg>
+  );
+}
+
+const titleCase = (text = '') => String(text).toLowerCase().replace(/(^|[\s-])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
+const firstSentence = (text = '') => (String(text).match(/^[^.!?]+[.!?]/)?.[0] || String(text)).trim();
+const availableFact = (value) => value && !/^(—|-|n\/a)$/i.test(String(value).trim());
+
+function Stars({ value }) {
+  return (
+    <span className="pdp-stars" aria-label={`${value} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((star) => {
+        const fill = Math.max(0, Math.min(1, Number(value) - star + 1));
+        return (
+          <span
+            key={star}
+            style={{
+              background: `linear-gradient(90deg, currentColor ${fill * 100}%, rgba(31,20,14,0.2) ${fill * 100}%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >★</span>
+        );
+      })}
+    </span>
+  );
+}
+
+/** One editorial block: a heading column plus content. Stacks on mobile. */
+function Section({ id, eyebrow, title, intro, action, className = '', children, labelId }) {
+  return (
+    <section id={id} className={`pdp-section ${className}`} aria-labelledby={labelId}>
+      <div className="pdp-wrap pdp-section__grid">
+        <header className="pdp-section__head">
+          {eyebrow && <p className="pdp-eyebrow">{eyebrow}</p>}
+          <h2 id={labelId} className="pdp-h2">{title}</h2>
+          {intro && <p className="pdp-section__intro">{intro}</p>}
+          {action}
+        </header>
+        <div className="pdp-section__body">{children}</div>
+      </div>
+    </section>
+  );
+}
+
+/** Full-screen image viewer: Escape closes, arrow keys navigate, page scroll is locked. */
+function Lightbox({ name, src, position, total, onClose, onMove }) {
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowRight') onMove(1);
+      else if (e.key === 'ArrowLeft') onMove(-1);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = prevOverflow; document.removeEventListener('keydown', onKey); };
+  }, [onClose, onMove]);
+
+  return (
+    <div className="pdp-lightbox" role="dialog" aria-modal="true" aria-label={`${name} images`} onClick={onClose}>
+      <button type="button" className="pdp-lightbox__close" onClick={onClose} aria-label="Close"><Icon name="close" size={22} /></button>
+      {total > 1 && (
+        <button type="button" className="pdp-lightbox__nav pdp-lightbox__nav--prev" onClick={(e) => { e.stopPropagation(); onMove(-1); }} aria-label="Previous image"><Icon name="chevL" size={26} /></button>
+      )}
+      <img src={src} alt={`${name} — view ${position + 1}`} onClick={(e) => e.stopPropagation()} />
+      {total > 1 && (
+        <button type="button" className="pdp-lightbox__nav pdp-lightbox__nav--next" onClick={(e) => { e.stopPropagation(); onMove(1); }} aria-label="Next image"><Icon name="chevR" size={26} /></button>
+      )}
+      <p className="pdp-lightbox__count">{position + 1} / {total}</p>
+    </div>
+  );
+}
+
+const TRUST = [
+  { icon: 'truck', title: '5–7 Days Delivery', note: 'Across India' },
+  { icon: 'exchange', title: 'Easy Exchanges', note: 'Within 48 hours' },
+  { icon: 'shield', title: 'Secure Payments', note: 'Cards, UPI & COD' },
+];
+function TrustRow({ className = '' }) {
+  return (
+    <ul className={`pdp-trust ${className}`}>
+      {TRUST.map((t) => (
+        <li key={t.title}>
+          <Icon name={t.icon} size={26} stroke={1.3} />
+          <span className="pdp-trust__text">
+            <strong>{t.title}</strong>
+            <small>{t.note}</small>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function ProductPage({ handle }) {
   const navigate = useNavigate();
 
   // Fetch the Shopify product by the handle captured from /product/:handle.
   const { product, loading: productLoading, error: productError, retry } = useShopifyProduct(handle);
+
+  // "You may also like": real products from the same collection (universe).
+  const { products: collectionProducts } = useShopifyCollection(product?.universeId);
 
   // Cart operations
   const { addToCart, cartLoading, cartError } = useCart();
@@ -39,24 +186,33 @@ export default function ProductPage({ handle }) {
   const [selectedSize, setSize]           = useState(null);
   const [selectedVariantId, setVariantId] = useState(null);
   const [sizeError, setSizeError]         = useState(false);
-  const [wishlisted, toggleWishlist]    = useWishlisted(handle);
+  const [wishlisted, toggleWishlist]      = useWishlisted(handle);
   const [addedToCart, setAddedToCart]     = useState(false);
   const [cartFeedback, setCartFeedback]   = useState(null); // 'added' | 'error'
   const [pinCode, setPinCode]             = useState('');
   const [pinResult, setPinResult]         = useState(null);
   const [pinLoading, setPinLoading]       = useState(false);
-  const [openAccordion, setAccordion]     = useState(null);
-  const [openProductPanel, setProductPanel] = useState(null);
-  const [shareFeedback, setShareFeedback] = useState('');
+  const [openInfo, setOpenInfo]           = useState(null);
   const [openFaq, setOpenFaq]             = useState(null);
+  const [shareFeedback, setShareFeedback] = useState('');
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [lightbox, setLightbox]           = useState(false);
+  const [reviewIndex, setReviewIndex]     = useState(0);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const [brokenImages, setBrokenImages]   = useState(() => new Set());
 
-  const heroRef     = useRef(null);
-  const sizeGuideRef = useRef(null);
+  const actionsRef  = useRef(null);
+  const endRef      = useRef(null);
   const touchStartX = useRef(null);
 
   useEffect(() => {
     setColour(0);
     setActiveImg(product?.colours?.[0]?.galleryIndices?.[0] ?? product?.colours?.[0]?.imageIndex ?? 0);
+    setSize(null);
+    setVariantId(null);
+    setOpenInfo(null);
+    setReviewIndex(0);
+    setSizeGuideOpen(false);
   }, [product?.handle]);
 
   // Cycle product photos every five seconds on mobile/tablet layouts.
@@ -65,7 +221,7 @@ export default function ProductPage({ handle }) {
   // pauses while the tab is hidden and resumes when it becomes visible.
   useEffect(() => {
     const imageCount = product?.images?.length ?? 0;
-    if (imageCount < 2 || product?.colours?.length > 1) return;
+    if (imageCount < 2 || product?.colours?.length > 1 || lightbox) return;
 
     const mobileQuery = window.matchMedia('(max-width: 1023px)');
     let timerId;
@@ -87,12 +243,29 @@ export default function ProductPage({ handle }) {
       mobileQuery.removeEventListener('change', scheduleNextImage);
       document.removeEventListener('visibilitychange', scheduleNextImage);
     };
-  }, [product?.images?.length, product?.colours?.length, activeImg]);
+  }, [product?.images?.length, product?.colours?.length, activeImg, lightbox]);
 
   // Fire view_item analytics event when product loads
   useEffect(() => {
     if (product) trackViewItem(product);
   }, [product]);
+
+  // Sticky buy bar (mobile/tablet): shown once the main buy box has scrolled away,
+  // and tucked away again when the page end (assurances / footer) is reached.
+  useEffect(() => {
+    const actionsEl = actionsRef.current;
+    const endEl = endRef.current;
+    if (!actionsEl || !endEl || typeof IntersectionObserver === 'undefined') return undefined;
+    let actionsOut = false;
+    let atEnd = false;
+    const sync = () => setStickyVisible(actionsOut && !atEnd);
+    const a = new IntersectionObserver(([e]) => { actionsOut = !e.isIntersecting && e.boundingClientRect.top < 0; sync(); });
+    // At the end once the marker is on screen OR already scrolled above it (the footer is tall).
+    const b = new IntersectionObserver(([e]) => { atEnd = e.isIntersecting || e.boundingClientRect.top < 0; sync(); });
+    a.observe(actionsEl);
+    b.observe(endEl);
+    return () => { a.disconnect(); b.disconnect(); };
+  }, [product?.handle]);
 
   // When a size is selected, find the corresponding Shopify variant ID
   function handleSizeSelect(size) {
@@ -121,13 +294,18 @@ export default function ProductPage({ handle }) {
   const isGlitterFlatBurgundy = handle === 'glitter-flat'
     && product?.colours?.[selectedColour]?.name?.toLowerCase() === 'burgundy';
 
+  const relatedProducts = useMemo(
+    () => (collectionProducts || []).filter((p) => p.handle !== handle).slice(0, 4),
+    [collectionProducts, handle],
+  );
+
   // Loading state
   if (productLoading) {
     return (
-      <div className="pdp2-loading-state">
-        <Navbar />
-        <div className="pdp2-loading-inner">
-          <div className="pdp2-loading-spinner" />
+      <div className="pdp pdp-state">
+        <Navbar universeMode solid />
+        <div className="pdp-state__inner">
+          <div className="pdp-spinner" />
           <p>Loading product…</p>
         </div>
       </div>
@@ -137,28 +315,29 @@ export default function ProductPage({ handle }) {
   // Error or not found
   if (productError || !product) {
     return (
-      <div className="pdp2-not-found">
-        <Navbar />
-        <div className="pdp2-error-content" role="alert">
-          <p className="pdp2-section-eyebrow">{productError ? 'PRODUCT UNAVAILABLE' : 'PRODUCT NOT FOUND'}</p>
-          <h1 className="pdp2-section-heading">
+      <div className="pdp pdp-state">
+        <Navbar universeMode solid />
+        <div className="pdp-state__inner" role="alert">
+          <p className="pdp-eyebrow">{productError ? 'Product unavailable' : 'Product not found'}</p>
+          <h1 className="pdp-h2">
             {productError ? 'We could not load this product.' : 'This product could not be found.'}
           </h1>
           <p>{productError || 'The Shopify product handle may be incorrect, or the product may no longer be published.'}</p>
-          <div className="pdp2-error-actions">
-            {productError && <button onClick={retry}>TRY AGAIN</button>}
-            <button onClick={() => navigate(-1)}>← GO BACK</button>
-            <button onClick={() => navigate('/')}>THE MULTIVERSE</button>
+          <div className="pdp-state__actions">
+            {productError && <button type="button" className="pdp-btn pdp-btn--primary" onClick={retry}>Try again</button>}
+            <button type="button" className="pdp-btn pdp-btn--ghost" onClick={() => navigate(-1)}>← Go back</button>
+            <button type="button" className="pdp-btn pdp-btn--ghost" onClick={() => navigate('/')}>The Multiverse</button>
           </div>
         </div>
-
-
-      <Footer />
+        <Footer />
       </div>
     );
   }
 
+  const universe = UNIVERSES[product.universeId];
   const galleryImageIndices = getColourGalleryIndices();
+  const activePosition = Math.max(0, galleryImageIndices.indexOf(activeImg));
+
   function moveGalleryImage(direction) {
     setActiveImg((current) => {
       const currentPosition = galleryImageIndices.indexOf(current);
@@ -169,7 +348,7 @@ export default function ProductPage({ handle }) {
 
   function requireSize() {
     setSizeError(true);
-    document.getElementById('pdp2-sizes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('pdp-sizes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => setSizeError(false), 3200);
   }
 
@@ -232,30 +411,18 @@ export default function ProductPage({ handle }) {
   function onTouchEnd(e) {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 50) {
-      const galleryIndices = getColourGalleryIndices();
-      setActiveImg((current) => {
-        const currentPosition = galleryIndices.indexOf(current);
-        const start = currentPosition < 0 ? 0 : currentPosition;
-        const direction = dx < 0 ? 1 : -1;
-        return galleryIndices[(start + direction + galleryIndices.length) % galleryIndices.length];
-      });
-    }
+    if (Math.abs(dx) > 50) moveGalleryImage(dx < 0 ? 1 : -1);
     touchStartX.current = null;
   }
 
-  // Related products — not yet populated from Shopify; will be empty initially
-  const related = [];
-
-  // Stage 2A audit fix: this block previously hardcoded a fabricated 4.2-star /
-  // 5-review summary and five fake "Demo review" entries for handle === 'glitter-flat',
-  // shown to real customers as if genuine. Removed — ratings/reviews now always come
-  // from real Shopify product data only, with an honest empty state when none exist.
+  /* ── Real ratings / reviews only (Shopify exposes none natively) ── */
   const reviewCount   = product.reviewCount || 0;
   const displayRating = product.rating;
   const hasRating = Number.isFinite(Number(displayRating)) && Number(displayRating) > 0 && reviewCount > 0;
-  const realReviews = Array.isArray(product.reviews) ? product.reviews : [];
-  const reviewList = realReviews;
+  const reviewList = Array.isArray(product.reviews) ? product.reviews : [];
+  const currentReview = reviewList.length ? reviewList[reviewIndex % reviewList.length] : null;
+
+  /* ── Styling looks ── */
   const categoryText = `${handle} ${product.title || ''} ${product.category || ''}`.toLowerCase();
   const stylingUniverse = /boot/.test(categoryText)
     ? 'boots'
@@ -312,7 +479,10 @@ export default function ProductPage({ handle }) {
       { image: 'lehenga-style.png', title: 'Festive', note: 'A modern contrast for statement dressing.' },
     ],
     }[stylingUniverse] || [];
+  const visibleLooks = stylingLooks.filter((look) => !brokenImages.has(`look:${look.image}`));
+  const markBroken = (key) => setBrokenImages((prev) => new Set(prev).add(key));
 
+  /* ── "A closer look": ONE list, whichever product supplies the detail imagery ── */
   const isEverydayFlat = stylingUniverse === 'everyday'
     && /\bflats?\b/.test(categoryText)
     && handle !== 'glitter-flat';
@@ -334,42 +504,86 @@ export default function ProductPage({ handle }) {
     if (image) usedEverydayImages.add(image.url);
     return image;
   };
-  const availableFact = (value) => value && !/^(—|-|n\/a)$/i.test(String(value).trim());
   const cushionFact = product.benefits?.find(({ text = '' }) => /cushion|foam|footbed|insole/i.test(text))?.text
     || (availableFact(product.soleType) && /cushion|foam|footbed|insole/i.test(product.soleType) ? product.soleType : null)
     || (availableFact(product.comfortProfile?.cushioning) ? `${product.comfortProfile.cushioning} cushioning` : null);
   const comfortFact = availableFact(product.comfortProfile?.bestForHours)
     ? `Comfort profile: ${product.comfortProfile.bestForHours}.`
     : (availableFact(product.soleType) ? `${product.soleType}.` : null);
+
+  const detail = (src, alt, width, height, style) => ({ src, alt, width, height, style });
+  let closerLook = [];
+  if (handle === 'glitter-flat') {
+    const b = isGlitterFlatBurgundy;
+    closerLook = [
+      { title: 'Footbed feel', copy: 'A closer view of the footbed, framed by the glossy strap.',
+        image: detail(b ? '/images/product-details/glitter-flat-burgundy-footbed-feel.png' : '/images/product-details/glitter-flat-footbed-feel.png',
+          b ? 'Close-up of the Burgundy Glitter Flat footbed with the gold SYORA wordmark' : 'Close-up showing the cushioned burgundy footbed beneath the glossy black strap', 1130, 1392) },
+      { title: 'Finish & stitching', copy: 'The smooth patent finish and fine edge detail up close.',
+        image: detail(b ? '/images/product-details/glitter-flat-burgundy-finish-stitching.png' : '/images/product-details/glitter-flat-texture.jpg',
+          b ? 'Macro detail of the Burgundy patent upper and stitched edge' : 'Macro detail of the glossy black upper and stitched edge', 962, 1200) },
+      { title: 'Heel height & base', copy: 'A side view of the low block heel and its broad base.',
+        image: detail(b ? '/images/product-details/glitter-flat-burgundy-heel-base.png' : '/images/product-details/glitter-flat-heel.jpg',
+          b ? 'Side close-up of the Burgundy Glitter Flat heel and base' : "Side close-up showing the shoe's broad low block heel", 962, 1200) },
+    ];
+  } else if (handle === 'black-pumps') {
+    closerLook = [
+      { title: 'Cushioned insole', copy: 'A close-up of the soft burgundy footbed and its gentle cushioning.',
+        image: detail('/images/product-details/black-pumps-cushioning.png', 'Close-up of the Black Pumps cushioned burgundy footbed, pressed to show its padding', 1254, 1254) },
+      { title: 'Finish & stitching', copy: 'Look closely at the glossy patent finish and neatly stitched edge.',
+        image: detail('/images/product-details/black-pumps-stitching.png', 'Macro detail of the Black Pumps glossy black finish and fine stitched edge', 1254, 1254) },
+      { title: 'Block height', copy: 'A side view of the heel height and the shape of its base.',
+        image: detail(product.images?.[3] || product.images?.[0], 'Fourth gallery view of the Black Pumps showing the block heel height and base', 1200, 1200) },
+    ];
+  } else if (handle === 'black-pump') {
+    closerLook = [
+      { title: 'Cushioned insole', copy: 'A close-up of the soft footbed and its gentle cushioning.',
+        image: detail('/images/product-details/black-pump-cushioning.png', "Close-up of the Black Pump's cushioned black footbed being pressed to show its padding", 1656, 1110) },
+      { title: 'Finish & stitching', copy: 'Look closely at the glossy patent finish and neatly stitched edge.',
+        image: detail('/images/product-details/black-pump-stitching.png', "Macro detail of the Black Pump's glossy patent finish and fine stitched edge", 1536, 1024) },
+      { title: 'Heel height & base', copy: 'A closer view of the slingback heel and its base.',
+        image: detail(product.images?.[3] || product.images?.[0], 'Close-up from the fourth Black Pump gallery image, focused on the slingback heel and heel base', 1200, 1200,
+          { objectPosition: 'left center', transform: 'scale(1.25)', transformOrigin: 'left center' }) },
+    ];
+  } else if (isEverydayFlat && everydayGallery.length > 0) {
+    closerLook = [
+      { title: 'Cushioning', image: chooseEverydayImage(/footbed|insole|cushion|foam|interior/i, everydayFeatureIndices.cushioning),
+        copy: cushionFact || `A close look at the footbed of ${product.name}.` },
+      { title: 'Stitching & finish', image: chooseEverydayImage(/stitch|seam|texture|upper|finish|close.?up|detail/i, everydayFeatureIndices.finish),
+        copy: availableFact(product.material)
+          ? `A closer look at the ${product.material} upper and its visible finish.`
+          : `A close-up of the upper finish, edge detailing, and stitching on ${product.name}.` },
+      { title: 'Comfort & sole', image: chooseEverydayImage(/sole|outsole|side|profile|base|comfort|wear/i, everydayFeatureIndices.sole),
+        copy: comfortFact || `A side or outsole view of ${product.name}, showing its sole profile.` },
+    ].filter((item) => item.image).map((item) => ({
+      title: item.title,
+      copy: item.copy,
+      image: detail(item.image.url, item.image.altText || `${product.name} — product gallery view ${(item.image.index ?? 0) + 1}`, item.image.width || undefined, item.image.height || undefined),
+    }));
+  }
+
+  /* ── Product information (accordion) ── */
   const productFacts = [
     ['Material', product.material],
     ['Closure', product.closureType],
     ['Sole', product.soleType],
     ['Best for', product.bestForOccasion],
   ].filter(([, value]) => availableFact(value));
-  const everydayCloserLook = isEverydayFlat && everydayGallery.length > 0 ? [
-    {
-      title: 'Cushioning',
-      image: chooseEverydayImage(/footbed|insole|cushion|foam|interior/i, everydayFeatureIndices.cushioning),
-      copy: cushionFact || `A close look at the footbed of ${product.name}.`,
+  const tagline = product.oneLineHook || firstSentence(product.description);
+  const infoItems = [
+    product.description && product.description.trim() !== tagline.trim() && {
+      id: 'description', title: 'Description', icon: 'doc',
+      content: <p>{product.description}</p>,
     },
-    {
-      title: 'Stitching & finish',
-      image: chooseEverydayImage(/stitch|seam|texture|upper|finish|close.?up|detail/i, everydayFeatureIndices.finish),
-      copy: availableFact(product.material)
-        ? `A closer look at the ${product.material} upper and its visible finish.`
-        : `A close-up of the upper finish, edge detailing, and stitching on ${product.name}.`,
+    product.benefits?.length > 0 && {
+      id: 'benefits', title: "Why you'll love it", icon: 'heart',
+      content: <ul className="pdp-bullets">{product.benefits.map((b, i) => <li key={i}>{b.text}</li>)}</ul>,
     },
+    ...(product.accordion || []).map((item, i) => ({
+      id: `acc-${i}`, title: item.title, icon: 'info', content: <p>{item.content}</p>,
+    })),
     {
-      title: 'Comfort & sole',
-      image: chooseEverydayImage(/sole|outsole|side|profile|base|comfort|wear/i, everydayFeatureIndices.sole),
-      copy: comfortFact || `A side or outsole view of ${product.name}, showing its sole profile.`,
-    },
-  ] : [];
-
-  const policyPanels = [
-    {
-      title: 'SHIPPING & EXCHANGE',
+      id: 'shipping', title: 'Shipping, Delivery & Exchange', icon: 'truck',
       content: (
         <>
           <p>We ship across India to serviceable PIN codes. Estimated delivery is 5–7 business days.</p>
@@ -380,7 +594,7 @@ export default function ProductPage({ handle }) {
       ),
     },
     {
-      title: 'COMPOSITION & CARE',
+      id: 'care', title: 'Composition & Care', icon: 'layers',
       content: (
         <>
           {availableFact(product.material) && <p><strong>Composition:</strong> {product.material}</p>}
@@ -388,27 +602,32 @@ export default function ProductPage({ handle }) {
         </>
       ),
     },
-    {
-      title: 'BRAND DETAILS',
+    productFacts.length > 0 && {
+      id: 'specs', title: 'Product Specifications', icon: 'tag',
       content: (
-        <>
-          <p><strong>Brand:</strong> {product.vendor || 'SYORA'}</p>
-        </>
+        <dl className="pdp-facts">
+          {productFacts.map(([label, value]) => (
+            <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+          ))}
+        </dl>
       ),
     },
-  ];
+    {
+      id: 'brand', title: 'Brand Details', icon: 'info',
+      content: <p><strong>Brand:</strong> {product.vendor || 'SYORA'}</p>,
+    },
+  ].filter(Boolean);
 
-  /* CTA labels */
+  /* ── Purchase state ── */
   const isProcessing = cartLoading;
   const bagLabel = isProcessing
     ? 'ADDING…'
     : addedToCart
       ? '✓ ADDED TO BAG'
       : selectedSize
-        ? `ADD TO BAG — SIZE ${selectedSize}`
+        ? `ADD TO BAG · SIZE ${selectedSize}`
         : 'ADD TO BAG';
 
-  /* Variant availability */
   function isSizeAvailable(size) {
     const variant = product.variantMap?.[size];
     if (!variant) return false;
@@ -417,896 +636,536 @@ export default function ProductPage({ handle }) {
   const productSoldOut = product.availableForSale === false
     || (product.sizes?.length > 0 && !product.sizes.some(isSizeAvailable));
 
-  /* Purchase actions: ONE definition rendered next to the size picker (where the
-     decision is made) and again after the editorial content. Previously the only
-     buy button was a "BUY NOW" at the very bottom of the page, and there was no
-     Add to Bag at all (handleAddToCart existed but nothing called it). */
-  const renderPurchaseActions = (variant, suffix) => (
-    <div className={`pdp2-cta-row pdp2-cta-row--${variant}`} role="group" aria-label="Purchase options">
-      <div className="pdp2-cta-stack">
-        <button
-          type="button"
-          id={`pdp2-add-to-bag-${suffix}`}
-          className={`pdp2-cta-buy ${addedToCart ? 'pdp2-cta-buy--done' : ''} ${!selectedSize && !productSoldOut ? 'pdp2-cta-buy--unselected' : ''}`}
-          onClick={handleAddToCart}
-          disabled={productSoldOut || isProcessing}
-        >
-          <span>{productSoldOut ? 'SOLD OUT' : bagLabel}</span>
-          {!addedToCart && !productSoldOut && <span className="pdp2-cta-buy__arrow" aria-hidden="true">→</span>}
-        </button>
-        <div className="pdp2-cta-secondary-row">
-          {!productSoldOut && (
-            <button
-              type="button"
-              id={`pdp2-buy-now-${suffix}`}
-              className="pdp2-cta-buy pdp2-cta-buy--secondary"
-              onClick={handleBuyNow}
-              disabled={isProcessing}
-            >
-              <span>BUY NOW</span>
-              <span className="pdp2-cta-buy__arrow" aria-hidden="true">→</span>
-            </button>
-          )}
-          <button
-            type="button"
-            className={`pdp2-cta-wishlist ${wishlisted ? 'pdp2-cta-wishlist--active' : ''}`}
-            onClick={toggleWishlist}
-            aria-pressed={wishlisted}
-            aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          >
-            <span aria-hidden="true">{wishlisted ? '♥' : '♡'}</span>
-          </button>
-        </div>
-        {cartFeedback === 'error' && (
-          <p className="pdp2-cta-feedback" role="alert">
-            {cartError || "We couldn't update your bag just now. Please try again."}
-          </p>
-        )}
-      </div>
-    </div>
+  const hasDiscount = product.originalPrice > 0 && product.originalPrice > product.price;
+  const selectedColourName = product.colours?.[selectedColour]?.name;
+  const sizeCols = product.sizes.length <= 8 ? Math.max(product.sizes.length, 1) : 6;
+
+  const addToBagButton = (id) => (
+    <button
+      type="button"
+      id={id}
+      className={`pdp-btn pdp-btn--primary${addedToCart ? ' is-done' : ''}`}
+      onClick={handleAddToCart}
+      disabled={productSoldOut || isProcessing}
+    >
+      <Icon name="bag" size={20} />
+      <span>{productSoldOut ? 'SOLD OUT' : bagLabel}</span>
+    </button>
+  );
+  const wishlistButton = (
+    <button
+      type="button"
+      className={`pdp-btn pdp-btn--icon${wishlisted ? ' is-on' : ''}`}
+      onClick={toggleWishlist}
+      aria-pressed={wishlisted}
+      aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">{ICONS.heart}</svg>
+    </button>
   );
 
   return (
-    <div className="pdp2">
+    <div className="pdp">
       <title>{product.pageTitle}</title>
       <meta name="description" content={product.pageDescription} />
 
-      <Navbar universeMode />
+      <Navbar universeMode solid />
 
-      {/* ═══════════ OFFER BANNER ═══════════ */}
       {product.offerBanner && (
-        <div className="pdp2-offer-banner" role="banner">
-          <span>🎁</span>
+        <div className="pdp-offer" role="note">
+          <span aria-hidden="true">🎁</span>
           <span>{product.offerBanner}</span>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════
-          HERO — CSS places the gallery before product details on mobile;
-          the desktop grid keeps the split gallery and information layout.
-      ═══════════════════════════════════════════════ */}
-      <section className="pdp2-hero" ref={heroRef}>
-
-          {/* Product name and price follow the gallery in the mobile reading order. */}
-        <div className="pdp2-info-top pdp2-info">
-          {/* Mobile: breadcrumb / universe label */}
-          <nav className="pdp2-info__breadcrumb" aria-label="Breadcrumb">
+      <main>
+        {/* ═══════════ HERO: gallery + buy box ═══════════ */}
+        <div className="pdp-wrap">
+          <nav className="pdp-crumbs" aria-label="Breadcrumb">
             <Link to="/">Home</Link>
-            {UNIVERSES[product.universeId] && (
+            {universe && (
               <>
-                <span className="pdp2-info__breadcrumb-sep" aria-hidden="true">/</span>
-                <Link to={`/universe/${product.universeId}`}>{UNIVERSES[product.universeId].name}</Link>
+                <span aria-hidden="true">/</span>
+                <Link to={`/universe/${product.universeId}`}>{titleCase(universe.name)}</Link>
               </>
             )}
-            <span className="pdp2-info__breadcrumb-sep" aria-hidden="true">/</span>
+            <span aria-hidden="true">/</span>
             <span aria-current="page">{product.name}</span>
           </nav>
 
-          {/* Badge */}
-          {product.badge && (
-            <span className="pdp2-info__badge">{product.badge}</span>
-          )}
-
-          {/* Rating — only rendered when real review data exists. The old block showed
-              "✦ New Arrival" for every product with zero reviews, which is not a fact. */}
-          {hasRating && (
-            <div className="pdp2-info__rating">
-              <span className="pdp2-info__rating-num">{Number(displayRating).toFixed(1)}</span>
-              <div className="pdp2-stars" aria-label={`${displayRating} out of 5 stars`}>
-                {[1,2,3,4,5].map(star => {
-                  const fill = Math.max(0, Math.min(1, Number(displayRating) - star + 1));
-                  return <span
-                    key={star}
-                    className={`pdp2-star ${fill === 1 ? 'pdp2-star--filled' : fill > 0 ? 'pdp2-star--half' : ''}`}
-                    style={{
-                      background: `linear-gradient(90deg, #1a1412 ${fill * 100}%, #bdbdbd ${fill * 100}%)`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >★</span>;
-                })}
-              </div>
-              <button
-                type="button"
-                className="pdp2-info__rating-link"
-                onClick={() => {
-                  setProductPanel('reviews');
-                  document.getElementById('pdp2-product-reviews')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                ({reviewCount})
-              </button>
-            </div>
-          )}
-
-          {/* Name */}
-          <h1 className="pdp2-info__name">{product.name}</h1>
-
-          {/* Price row */}
-          <div className="pdp2-info__price-row">
-            <span className="pdp2-info__price">
-              {product.price ? `₹${product.price.toLocaleString('en-IN')}` : ''}
-            </span>
-            {product.originalPrice > 0 && product.originalPrice > product.price && (
-              <span className="pdp2-info__original-price">
-                ₹{product.originalPrice.toLocaleString('en-IN')}
-              </span>
-            )}
-            {product.discountPercent > 0 && (
-              <span className="pdp2-info__discount">{product.discountPercent}% OFF</span>
-            )}
-          </div>
-          <p className="pdp2-info__tax-note">Inclusive of all taxes</p>
-
-          {/* Desktop-only: offer pill */}
-          {product.offerBanner && (
-            <div className="pdp2-info__offer-pill pdp2-desktop-only">
-              <span>🎁</span> {product.offerBanner}
-            </div>
-          )}
-        </div>
-
-        {/* ── Gallery (renders SECOND = below top info on mobile) ── */}
-        <div
-          className="pdp2-gallery"
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          {/* Main image */}
-          <div className="pdp2-gallery__main">
-            <img
-              key={activeImg}
-              src={product.images[activeImg]}
-              alt={`${product.name} — view ${activeImg + 1}`}
-              className="pdp2-gallery__img"
-            />
-            <button
-              className="pdp2-gallery__arrow pdp2-gallery__arrow--prev"
-              onClick={() => moveGalleryImage(-1)}
-              aria-label="Previous image"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
-            <button
-              className="pdp2-gallery__arrow pdp2-gallery__arrow--next"
-              onClick={() => moveGalleryImage(1)}
-              aria-label="Next image"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
-          </div>
-
-          {/* Thumbnail strip */}
-          <div className="pdp2-gallery__thumbs" role="list" aria-label="Product images">
-            {galleryImageIndices.map((imageIndex, i) => (
-              <button
-                key={imageIndex}
-                className={`pdp2-gallery__thumb ${imageIndex === activeImg ? 'pdp2-gallery__thumb--active' : ''}`}
-                onClick={() => setActiveImg(imageIndex)}
-                aria-label={`View image ${i + 1}`}
-                role="listitem"
-              >
-                <img src={product.images[imageIndex]} alt={`Thumbnail ${i + 1}`} />
-              </button>
-            ))}
-          </div>
-
-          {/* Dot nav — mobile */}
-          <div className="pdp2-gallery__dots" aria-hidden="true">
-            {galleryImageIndices.map((imageIndex) => (
-              <button
-                key={imageIndex}
-                type="button"
-                tabIndex={-1}
-                className={`pdp2-gallery__dot ${imageIndex === activeImg ? 'pdp2-gallery__dot--active' : ''}`}
-                onClick={() => setActiveImg(imageIndex)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {product.colours?.length > 0 && (
-          <div className="pdp2-mobile-colours pdp2-mobile-only">
-            <p className="pdp2-mobile-colours__label">Colours</p>
-            <div className="pdp2-mobile-colours__grid">
-              {product.colours.map((colour, index) => (
-                <button
-                  key={colour.name}
-                  className={`pdp2-mobile-colour-thumb ${index === selectedColour ? 'pdp2-mobile-colour-thumb--active' : ''}`}
-                  onClick={() => handleColourSelect(index)}
-                  aria-label={`Select colour: ${colour.name}`}
-                  aria-pressed={index === selectedColour}
-                >
-                  {colour.image
-                    ? <img className="pdp2-colour-image" src={colour.image} alt="" />
-                    : <span className="pdp2-mobile-colour-thumb__swatch" style={{ background: colour.hex }} />}
-                  <span className="pdp2-mobile-colour-thumb__name">
-                    <span className="pdp2-colour-indicator" style={{ backgroundColor: colour.hex }} aria-hidden="true" />
-                    {colour.name}
-                  </span>
+          <section className="pdp-hero" aria-label="Product">
+            {/* ── Gallery ── */}
+            <div className="pdp-gallery">
+              <div className="pdp-gallery__stage" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                <img
+                  key={activeImg}
+                  src={product.images[activeImg]}
+                  alt={`${product.name} — view ${activePosition + 1}`}
+                  className="pdp-gallery__img"
+                />
+                <button type="button" className="pdp-gallery__expand" onClick={() => setLightbox(true)} aria-label="View image full screen">
+                  <Icon name="expand" size={18} />
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Info panel BOTTOM (renders THIRD = below gallery on mobile) ── */}
-        <div className="pdp2-info-bottom pdp2-info">
-
-          {/* We keep this divider to separate gallery and the bottom section on mobile,
-              but on desktop it separates top and bottom. Wait, on desktop we'll handle with padding/borders. */}
-          <div className="pdp2-info__divider" />
-
-          {/* ── Colour picker ── */}
-          {product.colours && product.colours.length >= 1 && (
-            <div className="pdp2-info__field pdp2-desktop-colours">
-              <p className="pdp2-info__label pdp2-info__label--bold">
-                Colours
-              </p>
-              <div className="pdp2-colour-swatches">
-                {product.colours.map((c, i) => (
-                  <button
-                    key={i}
-                    className={`pdp2-swatch ${i === selectedColour ? 'pdp2-swatch--active' : ''}`}
-                    onClick={() => handleColourSelect(i)}
-                    title={c.name}
-                    aria-label={`Select colour: ${c.name}`}
-                    aria-pressed={i === selectedColour}
-                  >
-                    {c.image
-                      ? <img className="pdp2-colour-image" src={c.image} alt="" />
-                      : <span className="pdp2-colour-swatch__fill" style={{ background: c.hex }} />}
-                    <span className="pdp2-swatch__name">
-                      <span className="pdp2-colour-indicator" style={{ backgroundColor: c.hex }} aria-hidden="true" />
-                      {c.name}
-                    </span>
-                  </button>
-                ))}
+                {galleryImageIndices.length > 1 && (
+                  <>
+                    <button type="button" className="pdp-gallery__arrow pdp-gallery__arrow--prev" onClick={() => moveGalleryImage(-1)} aria-label="Previous image"><Icon name="chevL" size={20} /></button>
+                    <button type="button" className="pdp-gallery__arrow pdp-gallery__arrow--next" onClick={() => moveGalleryImage(1)} aria-label="Next image"><Icon name="chevR" size={20} /></button>
+                  </>
+                )}
               </div>
-            </div>
-          )}
 
-          {/* ── Size picker ── */}
-          <div className="pdp2-info__field">
-            <div className="pdp2-size__header">
-              <p className="pdp2-info__label pdp2-info__label--bold">Sizes</p>
-              <button
-                className="pdp2-size__guide-link"
-                onClick={() => sizeGuideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                aria-label="Open size guide"
-                aria-controls="pdp2-size-guidance"
-              >
-                Size guide
-              </button>
-            </div>
-
-            <div id="pdp2-sizes" className={`pdp2-sizes ${sizeError ? 'pdp2-sizes--error' : ''}`}>
-              {product.sizes.map(sz => {
-                const available = isSizeAvailable(sz);
-                return (
-                  <button
-                    key={sz}
-                    id={`pdp2-size-${sz}`}
-                    className={`pdp2-size-btn ${selectedSize === sz ? 'pdp2-size-btn--active' : ''} ${!available ? 'pdp2-size-btn--soldout' : ''}`}
-                    type="button"
-                    onClick={() => available && handleSizeSelect(sz)}
-                    aria-pressed={selectedSize === sz}
-                    aria-label={available ? `Size ${sz}` : `Size ${sz} — sold out`}
-                    disabled={!available}
-                    title={!available ? 'Sold out' : undefined}
-                  >
-                    {sz}
-                  </button>
-                );
-              })}
-            </div>
-
-            {sizeError && (
-              <p className="pdp2-size__error" role="alert">Please select a size to continue.</p>
-            )}
-
-            {/* Fit note box */}
-            {product.fitNote && product.fitNote !== 'Not known yet' && (
-              <div className="pdp2-fit-note-box">
-                <span className="pdp2-fit-note-box__icon">ⓘ</span>
-                <p><strong>{product.fitNote}.</strong> We recommend ordering your usual size.</p>
-              </div>
-            )}
-          </div>
-
-          {/* ── Purchase actions: directly under the size picker ── */}
-          {renderPurchaseActions('panel', 'panel')}
-
-          {/* ── Delivery PIN checker (off: see SHOW_PIN_CHECKER) ── */}
-          {SHOW_PIN_CHECKER && <div className="pdp2-pin-checker pdp2-desktop-only">
-            <p className="pdp2-pin-checker__label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Check delivery to your PIN code
-            </p>
-            <div className="pdp2-pin-checker__row">
-              <input
-                id="pdp2-pin-input"
-                className="pdp2-pin-input"
-                type="tel"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="Enter PIN code"
-                value={pinCode}
-                onChange={e => { setPinCode(e.target.value.replace(/\D/g, '')); setPinResult(null); }}
-                onKeyDown={e => e.key === 'Enter' && handlePinCheck()}
-                aria-label="PIN code for delivery check"
-              />
-              <button className="pdp2-pin-btn" onClick={handlePinCheck} disabled={pinLoading}>
-                {pinLoading ? '...' : 'Check'}
-              </button>
-            </div>
-            {pinResult && !pinResult.error && (
-              <p className="pdp2-pin-result pdp2-pin-result--ok">
-                ✓ Delivery in <strong>{pinResult.date}</strong>
-                {pinResult.cod && <span className="pdp2-cod-badge">COD available</span>}
-              </p>
-            )}
-            {pinResult?.error && (
-              <p className="pdp2-pin-result pdp2-pin-result--err">{pinResult.error}</p>
-            )}
-          </div>}
-
-        </div>
-
-      </section>
-
-            {everydayCloserLook.length > 0 && (
-              <section className="pdp2-feature-stories" aria-labelledby="pdp2-everyday-stories-title">
-                <h2 id="pdp2-everyday-stories-title">A closer look</h2>
-                <div className="pdp2-feature-stories__grid">
-                  {everydayCloserLook.map((story, index) => (
-                    <article className="pdp2-feature-card" key={`${product.handle}-everyday-detail-${index}`}>
-                      <div className="pdp2-feature-card__image">
-                        <img
-                          src={story.image.url}
-                          alt={story.image.altText || `${product.name} — product gallery view ${(story.image.index ?? 0) + 1}`}
-                          width={story.image.width || undefined}
-                          height={story.image.height || undefined}
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                      <div className="pdp2-feature-card__copy">
-                        <span>{String(index + 1).padStart(2, '0')}</span>
-                        <h3>{story.title}</h3>
-                        <p>{story.copy}</p>
-                      </div>
-                    </article>
+              {galleryImageIndices.length > 1 && (
+                <ul className="pdp-gallery__thumbs" aria-label="Product images">
+                  {galleryImageIndices.map((imageIndex, i) => (
+                    <li key={imageIndex}>
+                      <button
+                        type="button"
+                        className={`pdp-gallery__thumb${imageIndex === activeImg ? ' is-active' : ''}`}
+                        onClick={() => setActiveImg(imageIndex)}
+                        aria-label={`View image ${i + 1}`}
+                        aria-current={imageIndex === activeImg}
+                      >
+                        <img src={product.images[imageIndex]} alt="" loading="lazy" />
+                      </button>
+                    </li>
                   ))}
-                </div>
-              </section>
-            )}
-
-            {handle === 'glitter-flat' && (
-              <section className="pdp2-feature-stories" aria-labelledby="pdp2-feature-stories-title">
-                <h2 id="pdp2-feature-stories-title">A closer look</h2>
-                <div className="pdp2-feature-stories__grid">
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src={isGlitterFlatBurgundy
-                          ? '/images/product-details/glitter-flat-burgundy-footbed-feel.png'
-                          : '/images/product-details/glitter-flat-footbed-feel.png'}
-                        alt={isGlitterFlatBurgundy
-                          ? 'Close-up of the Burgundy Glitter Flat footbed with the gold SYORA wordmark'
-                          : 'Close-up showing the cushioned burgundy footbed beneath the glossy black strap'}
-                        width="1130"
-                        height="1392"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>01</span>
-                      <h3>Footbed feel</h3>
-                      <p>A closer view of the footbed, framed by the glossy strap.</p>
-                    </div>
-                  </article>
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src={isGlitterFlatBurgundy
-                          ? '/images/product-details/glitter-flat-burgundy-finish-stitching.png'
-                          : '/images/product-details/glitter-flat-texture.jpg'}
-                        alt={isGlitterFlatBurgundy
-                          ? 'Macro detail of the Burgundy patent upper and stitched edge'
-                          : 'Macro detail of the glossy black upper and stitched edge'}
-                        width="962"
-                        height="1200"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>02</span>
-                      <h3>Finish &amp; stitching</h3>
-                      <p>The smooth patent finish and fine edge detail up close.</p>
-                    </div>
-                  </article>
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src={isGlitterFlatBurgundy
-                          ? '/images/product-details/glitter-flat-burgundy-heel-base.png'
-                          : '/images/product-details/glitter-flat-heel.jpg'}
-                        alt={isGlitterFlatBurgundy
-                          ? 'Side close-up of the Burgundy Glitter Flat heel and base'
-                          : "Side close-up showing the shoe's broad low block heel"}
-                        width="962"
-                        height="1200"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>03</span>
-                      <h3>Heel height &amp; base</h3>
-                      <p>A side view of the low block heel and its broad base.</p>
-                    </div>
-                  </article>
-                </div>
-              </section>
-            )}
-
-            {handle === 'black-pumps' && (
-              <section className="pdp2-feature-stories" aria-labelledby="pdp2-feature-stories-title">
-                <h2 id="pdp2-feature-stories-title">A closer look</h2>
-                <div className="pdp2-feature-stories__grid">
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src="/images/product-details/black-pumps-cushioning.png"
-                        alt="Close-up of the Black Pumps cushioned burgundy footbed, pressed to show its padding"
-                        width="1254"
-                        height="1254"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>01</span>
-                      <h3>Cushioned insole</h3>
-                      <p>A close-up of the soft burgundy footbed and its gentle cushioning.</p>
-                    </div>
-                  </article>
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src="/images/product-details/black-pumps-stitching.png"
-                        alt="Macro detail of the Black Pumps glossy black finish and fine stitched edge"
-                        width="1254"
-                        height="1254"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>02</span>
-                      <h3>Finish &amp; stitching</h3>
-                      <p>Look closely at the glossy patent finish and neatly stitched edge.</p>
-                    </div>
-                  </article>
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src={product.images?.[3] || product.images?.[0]}
-                        alt="Fourth gallery view of the Black Pumps showing the block heel height and base"
-                        width="1200"
-                        height="1200"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>03</span>
-                      <h3>Block height</h3>
-                      <p>A side view of the heel height and the shape of its base.</p>
-                    </div>
-                  </article>
-                </div>
-              </section>
-            )}
-
-            {handle === 'black-pump' && (
-              <section className="pdp2-feature-stories" aria-labelledby="pdp2-feature-stories-title">
-                <h2 id="pdp2-feature-stories-title">A closer look</h2>
-                <div className="pdp2-feature-stories__grid">
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src="/images/product-details/black-pump-cushioning.png"
-                        alt="Close-up of the Black Pump's cushioned black footbed being pressed to show its padding"
-                        width="1656"
-                        height="1110"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>01</span>
-                      <h3>Cushioned insole</h3>
-                      <p>A close-up of the soft footbed and its gentle cushioning.</p>
-                    </div>
-                  </article>
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src="/images/product-details/black-pump-stitching.png"
-                        alt="Macro detail of the Black Pump's glossy patent finish and fine stitched edge"
-                        width="1536"
-                        height="1024"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>02</span>
-                      <h3>Finish &amp; stitching</h3>
-                      <p>Look closely at the glossy patent finish and neatly stitched edge.</p>
-                    </div>
-                  </article>
-                  <article className="pdp2-feature-card">
-                    <div className="pdp2-feature-card__image">
-                      <img
-                        src={product.images?.[3] || product.images?.[0]}
-                        alt="Close-up from the fourth Black Pump gallery image, focused on the slingback heel and heel base"
-                        width="1200"
-                        height="1200"
-                        loading="lazy"
-                        decoding="async"
-                        style={{
-                          objectPosition: 'left center',
-                          transform: 'scale(1.25)',
-                          transformOrigin: 'left center',
-                        }}
-                      />
-                    </div>
-                    <div className="pdp2-feature-card__copy">
-                      <span>03</span>
-                      <h3>Heel height &amp; base</h3>
-                      <p>A closer view of the slingback heel and its base.</p>
-                    </div>
-                  </article>
-                </div>
-              </section>
-            )}
-
-            {stylingLooks.length > 0 && (
-              <section className="pdp2-styling" aria-labelledby="pdp2-styling-title">
-                <p className="pdp2-styling__eyebrow">STYLING</p>
-                <h2 id="pdp2-styling-title">Pairs beautifully with {footwearLabel}</h2>
-                <div className="pdp2-styling__grid">
-                  {stylingLooks.map((look, index) => (
-                    <article
-                      className={`pdp2-styling-card${stylingUniverse === 'icon' ? ' pdp2-styling-card--model' : ''}`}
-                      key={look.image}
-                    >
-                      <img
-                        src={`/images/styling/${look.image}`}
-                        alt={look.alt || `${look.title} outfit styling illustration`}
-                        width="600"
-                        height="750"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div className="pdp2-styling-card__copy">
-                        <span>{String(index + 1).padStart(2, '0')}</span>
-                        <h3>{look.title}</h3>
-                        <p>{look.note}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            )}
-
-      <section
-        id="pdp2-size-guidance"
-        ref={sizeGuideRef}
-        className="pdp2-size-guidance"
-        aria-labelledby="pdp2-size-guidance-title"
-      >
-        <div className="pdp2-size-guidance__tabbar">
-          <h2 id="pdp2-size-guidance-title">WOMEN</h2>
-        </div>
-        <div className="pdp2-size-guidance__table-wrap">
-          <table className="pdp2-size-guidance__table">
-            <thead>
-              <tr><th scope="col">EU/IND</th><th scope="col">UK</th><th scope="col">US</th><th scope="col">CM</th></tr>
-            </thead>
-            <tbody>
-              {[
-                [35, 2, 5, '22.5'],
-                [36, 3, 6, '23'],
-                [37, 4, 7, '24'],
-                [38, 5, 8, '24.5'],
-                [39, 6, 9, '25'],
-                [40, 7, 10, '25.5'],
-                [41, 8, 11, '26'],
-                [42, 9, 12, '26.5'],
-              ].map(([eu, uk, us, cm]) => (
-                <tr key={eu}><td>{eu}</td><td>{uk}</td><td>{us}</td><td>{cm}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="pdp2-size-guidance__note">
-          <strong>Foot Length:</strong> Measure from the tip of your longest toe to the back of your heel.
-        </p>
-        <img
-          className="pdp2-size-guidance__illustration"
-          src="/images/product-details/foot-measurement-guide.png"
-          alt="Foot measurement guide showing side and sole views"
-          width="560"
-          height="576"
-          loading="lazy"
-          decoding="async"
-        />
-      </section>
-
-      {renderPurchaseActions('page pdp2-cta-row--after-guide', 'after-guide')}
-
-      <section className="pdp2-description" aria-label="Product description">
-        <p className="pdp2-description__eyebrow">PRODUCT DESCRIPTION</p>
-        <p className="pdp2-description__text">{product.description || 'Product description will be available soon.'}</p>
-      </section>
-
-
-
-      {/* ═══════════ WHY YOU'LL LOVE IT ═══════════ */}
-      {(product.oneLineHook || product.benefits?.length > 0) && (
-        <section className="pdp2-benefits" aria-label="Why you'll love it">
-          <div className="pdp2-benefits__inner">
-            <p className="pdp2-section-eyebrow">WHY YOU'LL LOVE IT</p>
-            {product.oneLineHook && <h2 className="pdp2-section-heading">{product.oneLineHook}</h2>}
-            {product.benefits?.length > 0 && (
-              <div className="pdp2-benefits__grid">
-                {product.benefits.map((b, i) => (
-                  <div key={i} className="pdp2-benefit-card">
-                    <span className="pdp2-benefit-card__icon">{b.icon}</span>
-                    <p className="pdp2-benefit-card__text">{b.text}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════ PRODUCT DETAILS ═══════════
-          Each fact renders only when it has a real value (no empty labels or dashes).
-          The block is ready to fill in as soon as Shopify metafields are mapped. */}
-      {(productFacts.length > 0 || product.accordion?.length > 0) && (
-        <section className="pdp2-details" aria-label="Product details">
-          <div className="pdp2-details__inner">
-            {productFacts.length > 0 && (
-              <div className="pdp2-details__facts">
-                <p className="pdp2-section-eyebrow" style={{marginBottom:16}}>PRODUCT DETAILS</p>
-                <dl className="pdp2-details__facts-grid">
-                  {productFacts.map(([label, value]) => (
-                    <div className="pdp2-fact" key={label}>
-                      <dt className="pdp2-fact__label">{label}</dt>
-                      <dd className="pdp2-fact__value">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
-
-            {/* Accordions */}
-            {(product.accordion || []).map((item, i) => (
-              <div key={i} className="pdp2-accordion__item">
-                <button
-                  type="button"
-                  className="pdp2-accordion__trigger"
-                  onClick={() => setAccordion(openAccordion === i ? null : i)}
-                  aria-expanded={openAccordion === i}
-                >
-                  <span>{item.title}</span>
-                  <span className="pdp2-accordion__icon" aria-hidden="true">{openAccordion === i ? '−' : '+'}</span>
-                </button>
-                <div className={`pdp2-accordion__body ${openAccordion === i ? 'pdp2-accordion__body--open' : ''}`}>
-                  <p>{item.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════ COMPLETE THE LOOK ═══════════ */}
-      {product.completeTheLook && product.completeTheLook.length > 0 && (
-        <section className="pdp2-look" aria-label="Complete the look">
-          <div className="pdp2-look__header">
-            <h2 className="pdp2-look__big-heading">COMPLETE THE LOOK</h2>
-            {product.stylingNote && (
-              <p className="pdp2-look__styling-note">{product.stylingNote}</p>
-            )}
-          </div>
-          <div className="pdp2-look__scroll">
-            <div className="pdp2-look__grid">
-              {product.completeTheLook.map((item, i) => (
-                <div key={i} className="pdp2-look-card">
-                  <div className="pdp2-look-card__img">
-                    <img src={item.img} alt={item.label} />
-                    <button className="pdp2-look-card__wish" aria-label={`Wishlist ${item.label}`}>♡</button>
-                  </div>
-                  <p className="pdp2-look-card__price">{item.price}</p>
-                  <p className="pdp2-look-card__label">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════ FAQ ═══════════ */}
-      {product.productSpecificQuestions && product.productSpecificQuestions.length > 0 && (
-        <section className="pdp2-faq" aria-label="Frequently asked questions">
-          <div className="pdp2-faq__inner">
-            <p className="pdp2-section-eyebrow">COMMON QUESTIONS</p>
-            <h2 className="pdp2-section-heading">Frequently Asked</h2>
-            <div className="pdp2-faq__list">
-              {product.productSpecificQuestions.map((faq, i) => (
-                <div key={i} className="pdp2-faq__item">
-                  <button
-                    className="pdp2-faq__trigger"
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    aria-expanded={openFaq === i}
-                  >
-                    <span>{faq.q}</span>
-                    <span className="pdp2-faq__icon">{openFaq === i ? '−' : '+'}</span>
-                  </button>
-                  <div className={`pdp2-faq__body ${openFaq === i ? 'pdp2-faq__body--open' : ''}`}>
-                    <p>{faq.a}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════ YOU MAY ALSO LIKE ═══════════ */}
-      {related.length > 0 && (
-        <section className="pdp2-related" aria-label="You may also like">
-          <div className="pdp2-related__inner">
-            <h2 className="pdp2-related__big-heading">YOU MAY ALSO LIKE</h2>
-            <div className="pdp2-related__grid">
-              {related.map(p => (
-                <button
-                  key={p.id}
-                  className="pdp2-related-card"
-                  onClick={() => navigate(`/product/${p.id}`)}
-                  aria-label={`View ${p.name}`}
-                >
-                  <div className="pdp2-related-card__img">
-                    <img src={p.images[0]} alt={p.name} />
-                    <button
-                      className="pdp2-related-card__wish"
-                      onClick={e => e.stopPropagation()}
-                      aria-label={`Wishlist ${p.name}`}
-                    >♡</button>
-                    <div className="pdp2-related-card__overlay"><span>VIEW →</span></div>
-                  </div>
-                  <div className="pdp2-related-card__info">
-                    <div className="pdp2-related-card__price-row">
-                      <span className="pdp2-related-card__price">₹{p.price.toLocaleString('en-IN')}</span>
-                      <span className="pdp2-related-card__orig">₹{p.originalPrice.toLocaleString('en-IN')} Original price</span>
-                      <span className="pdp2-related-card__disc">–{p.discountPercent}%</span>
-                    </div>
-                    <p className="pdp2-related-card__name">{p.name}</p>
-                    <p className="pdp2-related-card__cat">{p.universeName}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-          <div className="pdp2-product-panels" aria-label="Product information and policies">
-            {policyPanels.map((panel, index) => (
-              <div key={panel.title} className="pdp2-accordion__item">
-                <button
-                  className="pdp2-accordion__trigger"
-                  onClick={() => setProductPanel(openProductPanel === index ? null : index)}
-                  aria-expanded={openProductPanel === index}
-                >
-                  <span>{panel.title}</span>
-                  <span className="pdp2-accordion__icon">{openProductPanel === index ? '−' : '+'}</span>
-                </button>
-                <div className={`pdp2-accordion__body ${openProductPanel === index ? 'pdp2-accordion__body--open' : ''}`}>
-                  <div className="pdp2-product-panel__content">{panel.content}</div>
-                </div>
-              </div>
-            ))}
-
-
-
-
-
-            <div className="pdp2-product-social">
-              <button className="pdp2-product-share" onClick={handleShareProduct}>
-                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>
-                {shareFeedback || 'SHARE'}
-              </button>
-              {hasRating || reviewList.length > 0 ? (
-              <button
-                type="button"
-                className="pdp2-product-rating"
-                onClick={() => setProductPanel(openProductPanel === 'reviews' ? null : 'reviews')}
-                aria-expanded={openProductPanel === 'reviews'}
-                aria-controls="pdp2-product-reviews"
-              >
-                <span className="pdp2-product-rating__stars" aria-label={hasRating ? `${displayRating} out of 5 stars` : 'No rating yet'}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      className={hasRating ? 'is-filled' : ''}
-                      style={hasRating ? {
-                        background: `linear-gradient(90deg, #59654d ${Math.max(0, Math.min(1, Number(displayRating) - star + 1)) * 100}%, #bdbdbd ${Math.max(0, Math.min(1, Number(displayRating) - star + 1)) * 100}%)`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      } : undefined}
-                    >★</span>
-                  ))}
-                </span>
-                <span>{hasRating ? `${reviewCount} reviews | ${Number(displayRating).toFixed(1)}` : `${reviewCount} reviews`}</span>
-              </button>
-              ) : (
-                <p className="pdp2-product-rating pdp2-product-rating--empty">No reviews yet</p>
+                </ul>
               )}
             </div>
-            {(hasRating || reviewList.length > 0) && <div
-              id="pdp2-product-reviews"
-              className={`pdp2-accordion__body ${openProductPanel === 'reviews' ? 'pdp2-accordion__body--open' : ''}`}
-            >
-              <div className="pdp2-product-panel__content">
-                {reviewList.length ? reviewList.map((review) => (
-                  <article key={review.id} className="pdp2-review-card">
-                    <div className="pdp2-review-card__header">
-                      <span className="pdp2-review-card__author">{review.author}</span>
-                      <span className="pdp2-review-card__date">{review.date}</span>
-                    </div>
-                    {Number.isFinite(Number(review.rating)) && (
-                      <div className="pdp2-review-card__stars" aria-label={`${review.rating} out of 5 stars`}>
-                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-                      </div>
-                    )}
-                    <p className="pdp2-review-card__text">{review.text}</p>
-                  </article>
-                )) : <p>Review details are not available yet.</p>}
-              </div>
-            </div>}
-          </div>
 
-      {renderPurchaseActions('page', 'end')}
+            {/* ── Buy box ── */}
+            <div className="pdp-buy">
+              <p className="pdp-buy__eyebrow">
+                {universe ? `${titleCase(universe.name)} Collection` : 'SYORA'}
+                {product.badge && <span className="pdp-buy__badge">{product.badge}</span>}
+              </p>
+              <h1 className="pdp-buy__name">{product.name}</h1>
+              {tagline && <p className="pdp-buy__tagline">{tagline}</p>}
+
+              {hasRating && (
+                <a className="pdp-buy__rating" href="#pdp-reviews">
+                  <Stars value={Number(displayRating)} />
+                  <span>{Number(displayRating).toFixed(1)} ({reviewCount})</span>
+                </a>
+              )}
+
+              <div className="pdp-buy__price">
+                <span className="pdp-buy__price-now">{product.price ? `₹${product.price.toLocaleString('en-IN')}` : ''}</span>
+                {hasDiscount && <span className="pdp-buy__price-was">₹{product.originalPrice.toLocaleString('en-IN')}</span>}
+                {product.discountPercent > 0 && <span className="pdp-buy__price-off">{product.discountPercent}% OFF</span>}
+              </div>
+              <p className="pdp-buy__tax">Inclusive of all taxes</p>
+
+              {product.colours?.length > 0 && (
+                <div className="pdp-field pdp-field--colour">
+                  <p className="pdp-field__label">
+                    Colour{selectedColourName && <>: <span className="pdp-field__value">{selectedColourName}</span></>}
+                  </p>
+                  <ul className="pdp-swatches">
+                    {product.colours.map((c, i) => (
+                      <li key={c.name}>
+                        <button
+                          type="button"
+                          className={`pdp-swatch${i === selectedColour ? ' is-active' : ''}`}
+                          onClick={() => handleColourSelect(i)}
+                          title={c.name}
+                          aria-label={`Select colour: ${c.name}`}
+                          aria-pressed={i === selectedColour}
+                        >
+                          {/* Solid colour when the name is recognised; the variant photo otherwise. */}
+                          {c.image && (!c.hex || c.hex === UNKNOWN_HEX)
+                            ? <img src={c.image} alt="" />
+                            : <span style={{ background: c.hex }} />}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="pdp-field">
+                <div className="pdp-field__row">
+                  <p className="pdp-field__label">Select size</p>
+                  <button
+                    type="button"
+                    className="pdp-link"
+                    onClick={() => {
+                      setSizeGuideOpen(true);
+                      window.setTimeout(() => document.getElementById('pdp-size-guidance')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
+                    }}
+                    aria-controls="pdp-size-guidance"
+                  >
+                    Size Guide <Icon name="arrow" size={13} />
+                  </button>
+                </div>
+
+                <div id="pdp-sizes" className={`pdp-sizes${sizeError ? ' has-error' : ''}`} style={{ '--pdp-size-cols': sizeCols }} role="group" aria-label="Sizes">
+                  {product.sizes.map((sz) => {
+                    const available = isSizeAvailable(sz);
+                    return (
+                      <button
+                        key={sz}
+                        id={`pdp-size-${sz}`}
+                        className={`pdp-size${selectedSize === sz ? ' is-active' : ''}${!available ? ' is-soldout' : ''}`}
+                        type="button"
+                        onClick={() => available && handleSizeSelect(sz)}
+                        aria-pressed={selectedSize === sz}
+                        aria-label={available ? `Size ${sz}` : `Size ${sz} — sold out`}
+                        disabled={!available}
+                        title={!available ? 'Sold out' : undefined}
+                      >
+                        {sz}
+                      </button>
+                    );
+                  })}
+                </div>
+                {sizeError && <p className="pdp-size-error" role="alert">Please select a size to continue.</p>}
+
+                {product.fitNote && product.fitNote !== 'Not known yet' && (
+                  <p className="pdp-fitnote">
+                    <Icon name="info" size={18} />
+                    <span><strong>{product.fitNote}.</strong> We recommend ordering your usual size.</span>
+                  </p>
+                )}
+              </div>
+
+              {/* ── Purchase actions ── */}
+              <div className="pdp-actions" id="pdp-actions" ref={actionsRef} role="group" aria-label="Purchase options">
+                <div className="pdp-actions__row">
+                  {addToBagButton('pdp-add-to-bag')}
+                  {wishlistButton}
+                </div>
+                {!productSoldOut && (
+                  <button type="button" id="pdp-buy-now" className="pdp-btn pdp-btn--ghost" onClick={handleBuyNow} disabled={isProcessing}>
+                    <span>BUY NOW</span>
+                    <Icon name="arrow" size={16} />
+                  </button>
+                )}
+                {cartFeedback === 'error' && (
+                  <p className="pdp-feedback" role="alert">
+                    {cartError || "We couldn't update your bag just now. Please try again."}
+                  </p>
+                )}
+              </div>
+
+              {/* ── Delivery PIN checker (off: see SHOW_PIN_CHECKER) ── */}
+              {SHOW_PIN_CHECKER && (
+                <div className="pdp-pin">
+                  <p className="pdp-field__label"><Icon name="pin" size={14} /> Check delivery to your PIN code</p>
+                  <div className="pdp-pin__row">
+                    <input
+                      id="pdp-pin-input"
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter PIN code"
+                      value={pinCode}
+                      onChange={(e) => { setPinCode(e.target.value.replace(/\D/g, '')); setPinResult(null); }}
+                      onKeyDown={(e) => e.key === 'Enter' && handlePinCheck()}
+                      aria-label="PIN code for delivery check"
+                    />
+                    <button type="button" className="pdp-btn pdp-btn--ghost" onClick={handlePinCheck} disabled={pinLoading}>
+                      {pinLoading ? '...' : 'Check'}
+                    </button>
+                  </div>
+                  {pinResult && !pinResult.error && (
+                    <p className="pdp-pin__ok">✓ Delivery in <strong>{pinResult.date}</strong>{pinResult.cod && <span> · COD available</span>}</p>
+                  )}
+                  {pinResult?.error && <p className="pdp-pin__err">{pinResult.error}</p>}
+                </div>
+              )}
+
+              <TrustRow className="pdp-trust--buy" />
+
+              <button type="button" className="pdp-link pdp-share" onClick={handleShareProduct}>
+                <Icon name="share" size={16} /> {shareFeedback || 'Share'}
+              </button>
+            </div>
+          </section>
+        </div>
+
+        {/* ═══════════ A CLOSER LOOK ═══════════ */}
+        {closerLook.length > 0 && (
+          <Section
+            labelId="pdp-closer-title"
+            className="pdp-closer"
+            eyebrow="The details"
+            title="A Closer Look"
+            intro="Thoughtfully designed for all-day elegance, with refined details that make a difference."
+          >
+            <div className="pdp-closer__grid">
+              {closerLook.map((item) => (
+                <article className="pdp-closer__item" key={item.title}>
+                  <div className="pdp-media">
+                    <img
+                      src={item.image.src}
+                      alt={item.image.alt}
+                      width={item.image.width}
+                      height={item.image.height}
+                      style={item.image.style}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <div className="pdp-caption">
+                    <h3>{item.title}</h3>
+                    <p>{item.copy}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ═══════════ STYLE IT ═══════════ */}
+        {visibleLooks.length > 0 && (
+          <Section
+            labelId="pdp-styling-title"
+            className="pdp-style"
+            eyebrow="Style it"
+            title="Pairs Beautifully With"
+            intro={`Versatile looks for your ${footwearLabel}, from work to evenings and everything in between.`}
+          >
+            <div className="pdp-style__grid">
+              {visibleLooks.map((look) => (
+                <article className="pdp-style__item" key={look.image}>
+                  <div className="pdp-media pdp-media--tall">
+                    <img
+                      src={`/images/styling/${look.image}`}
+                      alt={look.alt || `${look.title} outfit styling illustration`}
+                      width="600"
+                      height="750"
+                      loading="lazy"
+                      decoding="async"
+                      onError={() => markBroken(`look:${look.image}`)}
+                    />
+                  </div>
+                  <div className="pdp-caption">
+                    <h3>{look.title}</h3>
+                    <p>{look.note}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ═══════════ FIND YOUR FIT ═══════════ */}
+        <Section
+          id="pdp-size-guidance"
+          labelId="pdp-fit-title"
+          className={`pdp-fit${sizeGuideOpen ? ' is-open' : ''}`}
+          eyebrow="Size & fit"
+          title="Find Your Fit"
+          intro="Use the size guide to find your perfect size."
+          action={
+            <button
+              type="button"
+              className="pdp-btn pdp-btn--outline pdp-fit__toggle"
+              onClick={() => setSizeGuideOpen((o) => !o)}
+              aria-expanded={sizeGuideOpen}
+              aria-controls="pdp-fit-content"
+            >
+              <span>{sizeGuideOpen ? 'Hide Size Guide' : 'View Size Guide'}</span>
+              <Icon name="arrow" size={16} />
+            </button>
+          }
+        >
+          <div id="pdp-fit-content" className="pdp-fit__content">
+            <figure className="pdp-fit__figure">
+              <img
+                src="/images/product-details/foot-measurement-guide.png"
+                alt="Foot measurement guide showing side and sole views"
+                width="560"
+                height="576"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption><strong>Foot length:</strong> measure from the tip of your longest toe to the back of your heel.</figcaption>
+            </figure>
+            <div className="pdp-fit__table">
+              <table>
+                <caption>Women's size conversion</caption>
+                <thead>
+                  <tr><th scope="col">EU / IND</th><th scope="col">UK</th><th scope="col">US</th><th scope="col">CM</th></tr>
+                </thead>
+                <tbody>
+                  {SIZE_CHART.map(([eu, uk, us, cm]) => (
+                    <tr key={eu}><td>{eu}</td><td>{uk}</td><td>{us}</td><td>{cm}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Section>
+
+        {/* ═══════════ COMPLETE THE LOOK ═══════════ */}
+        {product.completeTheLook?.length > 0 && (
+          <Section
+            labelId="pdp-look-title"
+            className="pdp-look"
+            title="Complete the Look"
+            intro={product.stylingNote || 'Discover pieces that pair seamlessly with this style.'}
+          >
+            <ul className="pdp-rail">
+              {product.completeTheLook.map((item, i) => (
+                <li key={i} className="pdp-rail__item">
+                  <div className="pdp-media pdp-media--square"><img src={item.img} alt={item.label} loading="lazy" /></div>
+                  <p className="pdp-rail__name">{item.label}</p>
+                  <p className="pdp-rail__price">{item.price}</p>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+
+        {/* ═══════════ PRODUCT INFORMATION ═══════════ */}
+        <Section labelId="pdp-info-title" className="pdp-info" title="Product Information">
+          <ul className="pdp-acc">
+            {infoItems.map((item) => {
+              const open = openInfo === item.id;
+              return (
+                <li key={item.id} className={`pdp-acc__item${open ? ' is-open' : ''}`}>
+                  <h3>
+                    <button
+                      type="button"
+                      className="pdp-acc__trigger"
+                      onClick={() => setOpenInfo(open ? null : item.id)}
+                      aria-expanded={open}
+                      aria-controls={`pdp-acc-${item.id}`}
+                    >
+                      <Icon name={item.icon} size={22} stroke={1.3} />
+                      <span>{item.title}</span>
+                      <span className="pdp-acc__plus" aria-hidden="true" />
+                    </button>
+                  </h3>
+                  <div id={`pdp-acc-${item.id}`} className="pdp-acc__panel" role="region" hidden={!open}>
+                    <div className="pdp-acc__content">{item.content}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
+
+        {/* ═══════════ CUSTOMER REVIEWS (real data only) ═══════════ */}
+        {(hasRating || reviewList.length > 0) && (
+          <section id="pdp-reviews" className="pdp-section pdp-reviews" aria-labelledby="pdp-reviews-title">
+            <div className="pdp-wrap pdp-reviews__grid">
+              <div className="pdp-reviews__summary">
+                <p className="pdp-eyebrow">Reviews</p>
+                <h2 id="pdp-reviews-title" className="pdp-h2">Customer Reviews</h2>
+                {hasRating && (
+                  <div className="pdp-reviews__score">
+                    <span className="pdp-reviews__num">{Number(displayRating).toFixed(1)}<small> / 5</small></span>
+                    <span className="pdp-reviews__meta"><Stars value={Number(displayRating)} /> <span>({reviewCount} reviews)</span></span>
+                  </div>
+                )}
+              </div>
+              {currentReview ? (
+                <figure className="pdp-reviews__quote">
+                  <blockquote>“{currentReview.text}”</blockquote>
+                  <figcaption>
+                    <span>{currentReview.author}</span>
+                    {currentReview.date && <span className="pdp-reviews__date">{currentReview.date}</span>}
+                    {Number.isFinite(Number(currentReview.rating)) && <Stars value={Number(currentReview.rating)} />}
+                  </figcaption>
+                  {reviewList.length > 1 && (
+                    <div className="pdp-reviews__nav">
+                      <button type="button" onClick={() => setReviewIndex((i) => (i - 1 + reviewList.length) % reviewList.length)} aria-label="Previous review"><Icon name="chevL" size={18} /></button>
+                      <span className="pdp-dots" aria-hidden="true">
+                        {reviewList.slice(0, 6).map((_, i) => <i key={i} className={i === reviewIndex % reviewList.length ? 'is-on' : ''} />)}
+                      </span>
+                      <button type="button" onClick={() => setReviewIndex((i) => (i + 1) % reviewList.length)} aria-label="Next review"><Icon name="chevR" size={18} /></button>
+                    </div>
+                  )}
+                </figure>
+              ) : (
+                <p className="pdp-reviews__empty">Review details are not available yet.</p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════ FAQ ═══════════ */}
+        {product.productSpecificQuestions?.length > 0 && (
+          <Section labelId="pdp-faq-title" className="pdp-faq" eyebrow="Common questions" title="Frequently Asked">
+            <ul className="pdp-acc">
+              {product.productSpecificQuestions.map((faq, i) => {
+                const open = openFaq === i;
+                return (
+                  <li key={i} className={`pdp-acc__item${open ? ' is-open' : ''}`}>
+                    <h3>
+                      <button type="button" className="pdp-acc__trigger pdp-acc__trigger--plain" onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open} aria-controls={`pdp-faq-${i}`}>
+                        <span>{faq.q}</span>
+                        <span className="pdp-acc__plus" aria-hidden="true" />
+                      </button>
+                    </h3>
+                    <div id={`pdp-faq-${i}`} className="pdp-acc__panel" role="region" hidden={!open}>
+                      <div className="pdp-acc__content"><p>{faq.a}</p></div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Section>
+        )}
+
+        {/* ═══════════ YOU MAY ALSO LIKE (same collection, real products) ═══════════ */}
+        {relatedProducts.length > 0 && (
+          <Section labelId="pdp-related-title" className="pdp-related" title="You May Also Like">
+            <div className="pdp-related__grid">
+              {relatedProducts.map((p) => (
+                <ProductCard key={p.id} product={{ ...p, imgHover: p.imgSecond || p.imgHover }} />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ═══════════ ASSURANCES + COLLECTION BANNER ═══════════ */}
+        <div className="pdp-wrap">
+          <TrustRow className="pdp-trust--page" />
+        </div>
+        {universe && (
+          <div className="pdp-wrap">
+            <aside className="pdp-banner" aria-label={`${titleCase(universe.name)} collection`}>
+              <div className="pdp-banner__media" aria-hidden="true">
+                <img src={universe.heroImage} alt="" loading="lazy" style={universe.bandPosition ? { objectPosition: universe.bandPosition } : undefined} />
+              </div>
+              <div className="pdp-banner__copy">
+                <p className="pdp-eyebrow">The {titleCase(universe.name)} Edit</p>
+                <p className="pdp-banner__title">{universe.tagline}</p>
+                <p className="pdp-banner__text">{firstSentence(universe.editorial)}</p>
+                <Link to={`/universe/${product.universeId}`} className="pdp-btn pdp-btn--primary pdp-banner__cta">
+                  <span>Explore the Collection</span>
+                  <Icon name="arrow" size={16} />
+                </Link>
+              </div>
+            </aside>
+          </div>
+        )}
+        <div ref={endRef} className="pdp-end" aria-hidden="true" />
+      </main>
+
+      {/* ═══════════ STICKY BUY BAR (mobile / tablet) ═══════════ */}
+      <div className={`pdp-sticky${stickyVisible ? ' is-visible' : ''}`} aria-hidden={!stickyVisible}>
+        <div className="pdp-sticky__inner">
+          {addToBagButton('pdp-add-to-bag-sticky')}
+          {wishlistButton}
+        </div>
+      </div>
+
+      {/* ═══════════ LIGHTBOX ═══════════ */}
+      {lightbox && (
+        <Lightbox
+          name={product.name}
+          src={product.images[activeImg]}
+          position={activePosition}
+          total={galleryImageIndices.length}
+          onClose={() => setLightbox(false)}
+          onMove={moveGalleryImage}
+        />
+      )}
 
       <Footer />
     </div>

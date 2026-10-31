@@ -194,7 +194,6 @@
 
 /* Spinners */
 .cart-spinner,
-.pdp2-loading-spinner,
 .u-loading-spinner {
   width: 28px; height: 28px;
   border: 2px solid rgba(145,95,109,0.2);
@@ -205,22 +204,14 @@
 @keyframes syora-spin { to { transform: rotate(360deg); } }
 
 /* PDP loading */
-.pdp2-loading-state { min-height: 100vh; background: #faf7f4; }
-.pdp2-loading-inner {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 80vh; gap: 20px; font-size: 0.8rem; color: #6b4c52; letter-spacing: 0.1em;
-}
+
 
 /* Universe page loading / error */
 .u-products-loading { display: flex; align-items: center; justify-content: center; padding: 80px 5%; }
 .u-products-error { padding: 60px 5%; text-align: center; font-size: 0.82rem; color: #6b4c52; letter-spacing: 0.05em; }
 
 /* Sold-out size button */
-.pdp2-size-btn--soldout {
-  opacity: 0.4;
-  cursor: not-allowed !important;
-  text-decoration: line-through;
-}
+
 
 /* Order Confirmation Page */
 .order-confirm { min-height: 100vh; background: #faf7f4; display: flex; flex-direction: column; }
