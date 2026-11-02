@@ -7,11 +7,15 @@
  * Instagram, Facebook…) read that HTML without running JavaScript; browsers then boot the React app
  * exactly as before. It also writes sitemap.xml and robots.txt.
  *
- * It never fails the deploy: any problem (no token, API down) logs a warning and leaves the normal
- * SPA build untouched.
+ * Shopify is expected to be reachable at build time. If the Shopify request fails for any reason
+ * (missing/invalid credentials, network error, HTTP error, GraphQL error) the build FAILS LOUDLY
+ * (non-zero exit) instead of silently shipping a deploy with zero product pages and a stale/empty
+ * sitemap — a broken Shopify connection is a build-blocking problem, not a warning to scroll past.
+ * Set PRERENDER_ALLOW_SKIP=true to explicitly opt out of that (e.g. local dev before .env.local
+ * has real credentials yet); this is never set in production/Vercel.
  *
  * Offline testing: PRERENDER_FIXTURE=path/to/products.json (an array of raw Storefront product nodes)
- * skips the network.
+ * skips the network entirely and never fails for Shopify-reachability reasons.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -155,5 +159,13 @@ function injectProduct(template, product, seo, headTags) {
 }
 
 main().catch((err) => {
-  warn(`pre-render skipped — ${err.message}`);
-}).finally(() => process.exit(0));
+  warn(`pre-render FAILED — ${err.message}`);
+  if (process.env.PRERENDER_ALLOW_SKIP === 'true') {
+    warn('PRERENDER_ALLOW_SKIP=true — continuing with an unmodified SPA build (no product pages, no sitemap update).');
+    process.exitCode = 0;
+  } else {
+    warn('Shopify is expected to be reachable at build time. Failing the build instead of shipping a deploy ' +
+      'with zero product pages. Set PRERENDER_ALLOW_SKIP=true to explicitly bypass this (not recommended in production).');
+    process.exitCode = 1;
+  }
+}).finally(() => process.exit(process.exitCode ?? 0));
