@@ -6,7 +6,17 @@
  */
 
 import { shopifyFetch }                            from './client';
+import { PRODUCT_CATALOG, displayName } from '../../data/productCatalog';
 import { SHOP_QUERY, COLLECTION_QUERY, PRODUCT_BY_HANDLE_QUERY } from './queries';
+
+/**
+ * Ask Shopify's image CDN for a web-sized copy (never larger than the original). Only touches
+ * cdn.shopify.com URLs; anything else (local files, other hosts) is returned unchanged.
+ */
+export function sizedImage(url, width) {
+  if (!url || !/^https?:\/\/cdn\.shopify\.com\//i.test(url) || /[?&]width=/.test(url)) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}width=${width}`;
+}
 
 /* ─────────────────────────────────────────────────────────────
    Formatters
@@ -118,12 +128,12 @@ export function normaliseProductCard(node) {
     shopifyId:       node.id,
     handle:          node.handle,
     // ProductCard renders product.img
-    img:             featuredUrl,
-    imgHover:        wearingImage?.url || '',
-    imgSecond:       galleryImages[1] || '',
-    images:          galleryImages,
-    imgAlt:          node.featuredImage?.altText || node.title,
-    name:            node.title,
+    img:             sizedImage(featuredUrl, 800),
+    imgHover:        sizedImage(wearingImage?.url || '', 800),
+    imgSecond:       sizedImage(galleryImages[1] || '', 800),
+    images:          galleryImages.map((u) => sizedImage(u, 800)),
+    imgAlt:          node.featuredImage?.altText || displayName(node.handle, node.title),
+    name:            displayName(node.handle, node.title),
     // ProductCard renders product.price as a string
     price:           formatMoney(price),
     priceRaw:        parsePrice(price?.amount),
@@ -334,19 +344,19 @@ export function normaliseProduct(node) {
 
     /* Core fields — mapped from Shopify */
     id:               node.handle,          // used as URL slug
-    name:             node.title,
+    name:             displayName(node.handle, node.title),
     price:            parsePrice(price?.amount),
     originalPrice:    parsePrice(compareAt?.amount),
     discountPercent,
     availableForSale: node.availableForSale,
 
     /* Images — Shopify CDN URLs */
-    images: images.length ? images : [node.featuredImage?.url].filter(Boolean),
-    detailImages: images.slice(0, 3),
+    images: (images.length ? images : [node.featuredImage?.url].filter(Boolean)).map((u) => sizedImage(u, 1400)),
+    detailImages: images.slice(0, 3).map((u) => sizedImage(u, 1400)),
     imageDetails: images.map((url, index) => {
       const imageNode = imageNodes.find((image) => image.url === url);
       return {
-        url,
+        url: sizedImage(url, 1400),
         index,
         altText: imageNode?.altText || '',
         width: imageNode?.width || null,
@@ -368,7 +378,7 @@ export function normaliseProduct(node) {
     universeId,
 
     /* Fields with Shopify-native values where available, else sensible defaults */
-    colours: [...colourByName.values()],
+    colours: [...colourByName.values()].map((c) => ({ ...c, image: sizedImage(c.image, 400) })),
     videos:  [],
 
     /* Comfort profile — defaults; override via metafields */
@@ -409,8 +419,8 @@ export function normaliseProduct(node) {
     completeTheLook: [],
 
     /* SEO */
-    pageTitle:       node.seo?.title       || `${node.title} — SYORA`,
-    pageDescription: node.seo?.description || node.description || '',
+    pageTitle:       node.seo?.title       || `${displayName(node.handle, node.title)} — SYORA`,
+    pageDescription: node.seo?.description || PRODUCT_CATALOG[node.handle]?.description || node.description || '',
 
     /* Editorial */
     editorialTagline: 'DIFFERENT WORLDS.\nSAME YOU.',

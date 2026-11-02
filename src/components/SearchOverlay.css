@@ -70,3 +70,10 @@
   .srch__sheet, .srch__backdrop { animation: none; }
   .srch__skel span:nth-child(1) { animation: none; }
 }
+
+/* "View all results" stays reachable: results are compact and the button sticks to the sheet bottom */
+.srch__results { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 719px) { .srch__results { grid-template-columns: repeat(2, minmax(0, 1fr)); } .srch__thumb { aspect-ratio: 1 / 1; } }
+@media (min-width: 720px) { .srch__thumb { aspect-ratio: 1 / 1; } }
+.srch__all { position: sticky; bottom: 0; box-shadow: 0 -12px 18px #fbf5ee; }
+.srch__body { padding-bottom: 8px; }

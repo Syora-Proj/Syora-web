@@ -15,7 +15,7 @@ export default function NotFoundPage() {
       <title>Page not found — SYORA</title>
       <meta name="robots" content="noindex" />
       <Navbar universeMode solid />
-      <main className="cp">
+      <main id="main" className="cp">
         <div className="cp__inner cp__nf">
           <p className="cp__nf-code" aria-hidden="true">404</p>
           <h1 className="cp__nf-title">This page has wandered off.</h1>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useWishlisted } from '../lib/wishlist';
+import { productPath as pathFor } from '../data/productCatalog';
 import { colourHex } from '../lib/colours';
 import {
   EMPTY_FILTERS,
@@ -35,7 +36,7 @@ const MAX_SWATCHES = 5;
  */
 export function ProductCard({ product, badge: badgeProp }) {
   const productHandle = product.handle || product.id;
-  const productPath = `/product/${encodeURIComponent(productHandle)}`;
+  const productPath = pathFor(productHandle);
   const [wishlisted, toggleWishlist] = useWishlisted(productHandle);
 
   // The brand is already everywhere on SYORA's own site, so the card leads with the style name.

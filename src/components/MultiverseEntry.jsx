@@ -113,7 +113,7 @@ export default function MultiverseEntry() {
   const universeList = UNIVERSE_ORDER.map((id) => ({ id, ...UNIVERSES[id] }));
 
   return (
-    <div className={`mv2 ${selected ? 'mv2--exit' : ''}`}>
+    <main id="main" className={`mv2 ${selected ? 'mv2--exit' : ''}`}>
 
       {/* ══════════════════════════════════════════
           STICKY VIDEO HERO — 100vh, stays behind
@@ -228,6 +228,6 @@ export default function MultiverseEntry() {
           FOOTER
       ══════════════════════════════════════════ */}
       <Footer />
-    </div>
+    </main>
   );
 }

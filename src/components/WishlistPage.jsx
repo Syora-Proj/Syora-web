@@ -27,7 +27,7 @@ export default function WishlistPage() {
       <meta name="robots" content="noindex" />
       <Navbar universeMode solid />
 
-      <main className="cp">
+      <main id="main" className="cp">
         <div className="cp__inner">
           <header className="cp__head">
             <p className="cp__eyebrow">SAVED FOR LATER</p>

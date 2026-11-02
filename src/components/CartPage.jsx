@@ -6,6 +6,7 @@ import { getBestSellers } from '../lib/shopify/catalog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { trackBeginCheckout, trackViewCart } from '../lib/analytics';
 import { UNIVERSES } from '../data/universes';
+import { productPath } from '../data/productCatalog';
 import { ProductCard } from './ProductGrid';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -47,7 +48,7 @@ export default function CartPage() {
       <meta name="robots" content="noindex" />
       <Navbar universeMode solid />
 
-      <main className="cp">
+      <main id="main" className="cp">
         <div className="cp__inner">
           <header className="cp__head">
             <p className="cp__eyebrow">YOUR BAG</p>
@@ -75,7 +76,7 @@ export default function CartPage() {
                 {lines.map((line) => {
                   const product = line.variant?.product;
                   const opts = (line.variant?.selectedOptions || []).filter((o) => o.name.toLowerCase() !== 'title');
-                  const href = product?.handle ? `/product/${encodeURIComponent(product.handle)}` : '/shop';
+                  const href = product?.handle ? productPath(product.handle) : '/shop';
                   const name = String(product?.title || '').replace(/^syora\s+/i, '') || product?.title;
                   return (
                     <li key={line.id} className="cp__line">

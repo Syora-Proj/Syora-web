@@ -297,3 +297,10 @@
     mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.55) 16%, #000 max(var(--banner-fade, 34%), 38%));
   }
 }
+
+/* Audit: warm banners keep their small caption text readable; Explore-All title never runs over the shoes on tablet */
+.plp-hero[style*="f0dcc3"] .plp-hero__eyebrow, .plp-hero[style*="f0dcc3"] .plp-hero__count, .plp-hero[style*="dcb898"] .plp-hero__eyebrow, .plp-hero[style*="dcb898"] .plp-hero__count { color: #5f3a22; }
+@media (min-width: 640px) and (max-width: 1023px) {
+  .plp-hero__text { width: 46%; }
+  .plp-hero__title { font-size: clamp(1.4rem, 3.1vw, 1.8rem); }
+}

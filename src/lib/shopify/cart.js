@@ -13,6 +13,7 @@
  */
 
 import { shopifyFetch } from './client';
+import { sizedImage } from './products';
 import {
   CART_QUERY,
   CART_CREATE_MUTATION,
@@ -70,7 +71,9 @@ function normaliseCart(cart) {
             id:     line.merchandise?.product?.id,
             title:  line.merchandise?.product?.title,
             handle: line.merchandise?.product?.handle,
-            image:  line.merchandise?.product?.featuredImage,
+            image:  line.merchandise?.product?.featuredImage
+              ? { ...line.merchandise.product.featuredImage, url: sizedImage(line.merchandise.product.featuredImage.url, 320) }
+              : line.merchandise?.product?.featuredImage,
           },
           selectedOptions: line.merchandise?.selectedOptions || [],
         },

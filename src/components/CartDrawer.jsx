@@ -37,6 +37,13 @@ export default function CartDrawer() {
     prevOpenRef.current = cartOpen;
   }, [cartOpen, cart]);
 
+  useEffect(() => {
+    if (!cartOpen) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') closeCart(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [cartOpen, closeCart]);
+
   return (
     <>
       {/* ── Backdrop ── */}

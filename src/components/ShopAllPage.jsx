@@ -27,7 +27,7 @@ export default function ShopAllPage() {
       <meta name="description" content="Shop every SYORA style — heels, juttis, flats and sneakers across ICON, HERITAGE, EVERYDAY and MOTION." />
       <Navbar universeMode solid />
 
-      <section id="products-all" className="u-products">
+      <main id="products-all" className="u-products">
         {loading ? (
           <div className="u-products-loading" role="status" aria-label="Loading products">
             <div className="u-loading-spinner" />
@@ -50,7 +50,7 @@ export default function ShopAllPage() {
             onExploreOthers={() => document.getElementById('explore-more')?.scrollIntoView({ behavior: 'smooth' })}
           />
         )}
-      </section>
+      </main>
 
       <ExploreMore currentId={null} />
       <Footer />

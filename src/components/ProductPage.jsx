@@ -8,6 +8,7 @@ import { useShopifyCollection } from '../hooks/useShopifyCollection';
 import { useCart } from '../context/CartContext';
 import { buildProductSeo, jsonLdString } from '../lib/seo';
 import { useRecentlyViewed } from '../lib/recentlyViewed';
+import { productPath } from '../data/productCatalog';
 import { UNIVERSES } from '../data/universes';
 import { useWishlisted } from '../lib/wishlist';
 import { getCheckoutUrl } from '../lib/shopify/cart';
@@ -463,40 +464,40 @@ export default function ProductPage({ handle }) {
   }[stylingUniverse] || 'flats';
   const stylingLooks = handle === 'black-pump'
     ? [
-      { image: 'black-pump-formals-model.png', title: 'Formals', note: 'A sharp, confident finish for workdays and polished occasions.', alt: 'Model wearing black SYORA slingback heels with tailored formal trousers and a black blazer' },
-      { image: 'black-pump-dress-model.png', title: 'Dress', note: 'A sleek black heel for evening dresses and special plans.', alt: 'Model wearing black SYORA slingback heels with an elegant black evening dress' },
-      { image: 'black-pump-indo-western-model.png', title: 'Indo-western', note: 'Classic black heels bring a refined finish to festive fusion wear.', alt: 'Model wearing black SYORA slingback heels with a black and gold Indo-western outfit' },
+      { image: 'black-pump-formals-model.webp', title: 'Formals', note: 'A sharp, confident finish for workdays and polished occasions.', alt: 'Model wearing black SYORA slingback heels with tailored formal trousers and a black blazer' },
+      { image: 'black-pump-dress-model.webp', title: 'Dress', note: 'A sleek black heel for evening dresses and special plans.', alt: 'Model wearing black SYORA slingback heels with an elegant black evening dress' },
+      { image: 'black-pump-indo-western-model.webp', title: 'Indo-western', note: 'Classic black heels bring a refined finish to festive fusion wear.', alt: 'Model wearing black SYORA slingback heels with a black and gold Indo-western outfit' },
     ]
     : {
     icon: [
-      { image: 'heels-saree-model.png', title: 'Saree', note: 'A graceful saree look for celebrations and evenings.', alt: 'Model wearing SYORA black heels with a sage green saree' },
-      { image: 'heels-western-model.png', title: 'Western', note: 'A polished heel to finish tailored western looks.', alt: 'Model wearing SYORA black heels with a black top and tailored trousers' },
-      { image: 'heels-indo-western-model.png', title: 'Indo-western', note: 'A contemporary fusion look, finished with classic heels.', alt: 'Model wearing SYORA black heels with an embroidered Indo-western outfit' },
+      { image: 'heels-saree-model.webp', title: 'Saree', note: 'A graceful saree look for celebrations and evenings.', alt: 'Model wearing SYORA black heels with a sage green saree' },
+      { image: 'heels-western-model.webp', title: 'Western', note: 'A polished heel to finish tailored western looks.', alt: 'Model wearing SYORA black heels with a black top and tailored trousers' },
+      { image: 'heels-indo-western-model.webp', title: 'Indo-western', note: 'A contemporary fusion look, finished with classic heels.', alt: 'Model wearing SYORA black heels with an embroidered Indo-western outfit' },
     ],
     heritage: [
-      { image: 'lehenga-style.png', title: 'Lehenga', note: 'Traditional craft meets a festive silhouette.' },
-      { image: 'saree-style.png', title: 'Saree', note: 'A considered pairing for zari and mirror details.' },
-      { image: 'anarkali-style.png', title: 'Anarkali', note: 'A graceful choice for daytime celebrations.' },
+      { image: 'lehenga-style.webp', title: 'Lehenga', note: 'Traditional craft meets a festive silhouette.' },
+      { image: 'saree-style.webp', title: 'Saree', note: 'A considered pairing for zari and mirror details.' },
+      { image: 'anarkali-style.webp', title: 'Anarkali', note: 'A graceful choice for daytime celebrations.' },
     ],
     everyday: [
-      { image: 'workwear-flats.png', title: 'Workwear', note: 'A refined finish for office days and plans after.' },
-      { image: 'saree-style.png', title: 'Saree', note: 'An easy way to dress up a simple occasion look.' },
-      { image: 'anarkali-style.png', title: 'Anarkali', note: 'A comfortable, polished pairing for celebrations.' },
+      { image: 'workwear-flats.webp', title: 'Workwear', note: 'A refined finish for office days and plans after.' },
+      { image: 'saree-style.webp', title: 'Saree', note: 'An easy way to dress up a simple occasion look.' },
+      { image: 'anarkali-style.webp', title: 'Anarkali', note: 'A comfortable, polished pairing for celebrations.' },
     ],
     motion: [
-      { image: 'denim-sneakers.png', title: 'Denim', note: 'An easy match for everyday city plans.' },
-      { image: 'workwear-flats.png', title: 'Smart casual', note: 'Keep weekday dressing comfortable and composed.' },
-      { image: 'relaxed-clogs.png', title: 'Relaxed layers', note: 'A laid-back look for slower days.' },
+      { image: 'denim-sneakers.webp', title: 'Denim', note: 'An easy match for everyday city plans.' },
+      { image: 'workwear-flats.webp', title: 'Smart casual', note: 'Keep weekday dressing comfortable and composed.' },
+      { image: 'relaxed-clogs.webp', title: 'Relaxed layers', note: 'A laid-back look for slower days.' },
     ],
     'off-duty': [
-      { image: 'relaxed-clogs.png', title: 'Relaxed layers', note: 'An easy fit for off-duty comfort.' },
-      { image: 'denim-sneakers.png', title: 'Denim', note: 'Casual layers for errands and weekends.' },
-      { image: 'workwear-flats.png', title: 'Smart casual', note: 'A relaxed look that still feels put together.' },
+      { image: 'relaxed-clogs.webp', title: 'Relaxed layers', note: 'An easy fit for off-duty comfort.' },
+      { image: 'denim-sneakers.webp', title: 'Denim', note: 'Casual layers for errands and weekends.' },
+      { image: 'workwear-flats.webp', title: 'Smart casual', note: 'A relaxed look that still feels put together.' },
     ],
     boots: [
-      { image: 'workwear-flats.png', title: 'Tailored layers', note: 'Clean lines bring balance to a strong boot.' },
-      { image: 'denim-sneakers.png', title: 'Denim', note: 'A versatile pairing for everyday wear.' },
-      { image: 'lehenga-style.png', title: 'Festive', note: 'A modern contrast for statement dressing.' },
+      { image: 'workwear-flats.webp', title: 'Tailored layers', note: 'Clean lines bring balance to a strong boot.' },
+      { image: 'denim-sneakers.webp', title: 'Denim', note: 'A versatile pairing for everyday wear.' },
+      { image: 'lehenga-style.webp', title: 'Festive', note: 'A modern contrast for statement dressing.' },
     ],
     }[stylingUniverse] || [];
   const visibleLooks = stylingLooks.filter((look) => !brokenImages.has(`look:${look.image}`));
@@ -537,30 +538,30 @@ export default function ProductPage({ handle }) {
     const b = isGlitterFlatBurgundy;
     closerLook = [
       { title: 'Footbed feel', copy: 'A closer view of the footbed, framed by the glossy strap.',
-        image: detail(b ? '/images/product-details/glitter-flat-burgundy-footbed-feel.png' : '/images/product-details/glitter-flat-footbed-feel.png',
+        image: detail(b ? '/images/product-details/glitter-flat-burgundy-footbed-feel.webp' : '/images/product-details/glitter-flat-footbed-feel.webp',
           b ? 'Close-up of the Burgundy Glitter Flat footbed with the gold SYORA wordmark' : 'Close-up showing the cushioned burgundy footbed beneath the glossy black strap', 1130, 1392) },
       { title: 'Finish & stitching', copy: 'The smooth patent finish and fine edge detail up close.',
-        image: detail(b ? '/images/product-details/glitter-flat-burgundy-finish-stitching.png' : '/images/product-details/glitter-flat-texture.jpg',
+        image: detail(b ? '/images/product-details/glitter-flat-burgundy-finish-stitching.webp' : '/images/product-details/glitter-flat-texture.webp',
           b ? 'Macro detail of the Burgundy patent upper and stitched edge' : 'Macro detail of the glossy black upper and stitched edge', 962, 1200) },
       { title: 'Heel height & base', copy: 'A side view of the low block heel and its broad base.',
-        image: detail(b ? '/images/product-details/glitter-flat-burgundy-heel-base.png' : '/images/product-details/glitter-flat-heel.jpg',
+        image: detail(b ? '/images/product-details/glitter-flat-burgundy-heel-base.webp' : '/images/product-details/glitter-flat-heel.webp',
           b ? 'Side close-up of the Burgundy Glitter Flat heel and base' : "Side close-up showing the shoe's broad low block heel", 962, 1200) },
     ];
   } else if (handle === 'black-pumps') {
     closerLook = [
       { title: 'Cushioned insole', copy: 'A close-up of the soft burgundy footbed and its gentle cushioning.',
-        image: detail('/images/product-details/black-pumps-cushioning.png', 'Close-up of the Black Pumps cushioned burgundy footbed, pressed to show its padding', 1254, 1254) },
+        image: detail('/images/product-details/black-pumps-cushioning.webp', 'Close-up of the Black Pumps cushioned burgundy footbed, pressed to show its padding', 1254, 1254) },
       { title: 'Finish & stitching', copy: 'Look closely at the glossy patent finish and neatly stitched edge.',
-        image: detail('/images/product-details/black-pumps-stitching.png', 'Macro detail of the Black Pumps glossy black finish and fine stitched edge', 1254, 1254) },
+        image: detail('/images/product-details/black-pumps-stitching.webp', 'Macro detail of the Black Pumps glossy black finish and fine stitched edge', 1254, 1254) },
       { title: 'Block height', copy: 'A side view of the heel height and the shape of its base.',
         image: detail(product.images?.[3] || product.images?.[0], 'Fourth gallery view of the Black Pumps showing the block heel height and base', 1200, 1200) },
     ];
   } else if (handle === 'black-pump') {
     closerLook = [
       { title: 'Cushioned insole', copy: 'A close-up of the soft footbed and its gentle cushioning.',
-        image: detail('/images/product-details/black-pump-cushioning.png', "Close-up of the Black Pump's cushioned black footbed being pressed to show its padding", 1656, 1110) },
+        image: detail('/images/product-details/black-pump-cushioning.webp', "Close-up of the Black Pump's cushioned black footbed being pressed to show its padding", 1656, 1110) },
       { title: 'Finish & stitching', copy: 'Look closely at the glossy patent finish and neatly stitched edge.',
-        image: detail('/images/product-details/black-pump-stitching.png', "Macro detail of the Black Pump's glossy patent finish and fine stitched edge", 1536, 1024) },
+        image: detail('/images/product-details/black-pump-stitching.webp', "Macro detail of the Black Pump's glossy patent finish and fine stitched edge", 1536, 1024) },
       { title: 'Heel height & base', copy: 'A closer view of the slingback heel and its base.',
         image: detail(product.images?.[3] || product.images?.[0], 'Close-up from the fourth Black Pump gallery image, focused on the slingback heel and heel base', 1200, 1200,
           { objectPosition: 'left center', transform: 'scale(1.25)', transformOrigin: 'left center' }) },
@@ -697,7 +698,7 @@ export default function ProductPage({ handle }) {
 
       <Navbar universeMode solid />
 
-      <main>
+      <main id="main">
         {/* ═══════════ HERO: gallery + buy box ═══════════ */}
         <div className="pdp-wrap">
           <nav className="pdp-crumbs" aria-label="Breadcrumb">
@@ -1028,7 +1029,7 @@ export default function ProductPage({ handle }) {
           <div id="pdp-fit-content" className="pdp-fit__content">
             <figure className="pdp-fit__figure">
               <img
-                src="/images/product-details/foot-measurement-guide.png"
+                src="/images/product-details/foot-measurement-guide.webp"
                 alt="Foot measurement guide showing side and sole views"
                 width="560"
                 height="576"
@@ -1182,7 +1183,7 @@ export default function ProductPage({ handle }) {
             <ul className="pdp-recent__list">
               {recentlyViewed.map((p) => (
                 <li key={p.handle}>
-                  <Link to={`/product/${encodeURIComponent(p.handle)}`} className="pdp-recent__item">
+                  <Link to={productPath(p.handle)} className="pdp-recent__item">
                     <span className="pdp-recent__img">{p.img && <img src={p.img} alt="" loading="lazy" />}</span>
                     <span className="pdp-recent__name">{String(p.name || '').replace(/^syora\s+/i, '') || p.name}</span>
                     {p.price > 0 && <span className="pdp-recent__price">₹{Number(p.price).toLocaleString('en-IN')}</span>}

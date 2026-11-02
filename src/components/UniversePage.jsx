@@ -43,11 +43,13 @@ export default function UniversePage({ universe: universeId }) {
       className="universe-page"
       style={{ '--u-bg': palette.bg, '--u-accent': palette.accent, '--u-text': palette.text, '--u-muted': palette.muted, '--u-border': palette.border, '--u-hero-text': palette.heroText || '#f5ece4' }}
     >
+      <title>{`${titleCase(u.name)} Collection — SYORA`}</title>
+      <meta name="description" content={content.description} />
       {/* Solid navbar: the collection page leads with the products, not a full-screen hero. */}
       <Navbar universeMode solid />
 
       {/* ── Collection: header band + filters + grid ── */}
-      <section id={`products-${universeId}`} className="u-products">
+      <main id={`products-${universeId}`} className="u-products">
         {loading ? (
           <div className="u-products-loading" role="status" aria-label="Loading products">
             <div className="u-loading-spinner" />
@@ -79,7 +81,7 @@ export default function UniversePage({ universe: universeId }) {
             }}
           />
         )}
-      </section>
+      </main>
 
       {/* ── Universe bestsellers (only rendered when there are any) ── */}
       {!loading && !error && shopifyBestsellers.length > 0 && (

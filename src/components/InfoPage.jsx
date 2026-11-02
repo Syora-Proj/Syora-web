@@ -170,7 +170,7 @@ export default function InfoPage() {
           ))}
         </aside>
 
-        <main className="info__main">
+        <main id="main" className="info__main">
           {page.sections && (
             <nav className="info__toc" aria-label="On this page">
               <p>On this page</p>

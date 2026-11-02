@@ -47,9 +47,9 @@ export default function OrderConfirmation() {
 
   return (
     <div className="order-confirm">
-      <Navbar />
+      <Navbar universeMode solid />
 
-      <main className="order-confirm__main">
+      <main id="main" className="order-confirm__main">
         <div className="order-confirm__inner">
           {/* Success mark */}
           <div className="order-confirm__check">✓</div>

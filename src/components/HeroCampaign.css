@@ -296,6 +296,8 @@
   .hp-slide--meadow { container-type: normal; background: #394427; }
   .hp-slide--meadow::before { display: none; }
   .hp-slide--meadow .mv2-hero__photo {
+    inset: auto auto 0 0;
+    width: 100%;
     height: auto;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
     mask-image: linear-gradient(to bottom, transparent 0, #000 48px);

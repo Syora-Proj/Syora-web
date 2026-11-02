@@ -2,7 +2,7 @@ export default function AboutUs() {
   return (
     <section className="about-us">
       {/* Base Image */}
-      <img src="/about-us.jpg" alt="About Us" className="about-us__img" loading="lazy" decoding="async" />
+      <img src="/about-us.webp" alt="About Us" className="about-us__img" loading="lazy" decoding="async" />
 
       {/* ── DESKTOP: Left Column Text Overlay ── */}
       <div className="about-us__left about-us--desktop">

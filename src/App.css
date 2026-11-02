@@ -3066,7 +3066,7 @@
   .navbar--redesign .nav-mobile-utility:disabled { opacity: 0.52; }
   .navbar--redesign .nav-mobile-utility svg { width: 20px; height: 20px; color: #c9a66a; }
   .navbar--redesign.navbar--menu-open .nav-right { display: none; }
-  .navbar--redesign.navbar--menu-open .nav-backdrop { display: none; }
+  .navbar--redesign.navbar--menu-open .nav-backdrop { display: block; }
 
   .mv2-about { padding: 52px 24px 40px; }
   .mv2-about__layout {
@@ -3149,7 +3149,7 @@
 /* Our Journey: full-bleed editorial background, with copy over the open left side. */
 .mv2-about {
   padding: clamp(64px, 8vw, 112px) clamp(28px, 7vw, 120px) clamp(56px, 7vw, 96px);
-  background: #100c08 url('/our-journey-background.png') center 44% / cover no-repeat;
+  background: #100c08 url('/our-journey-background.webp') center 44% / cover no-repeat;
 }
 .mv2-about::before {
   background:
@@ -3327,3 +3327,44 @@
 @media (max-width: 1220px) {
   .navbar--redesign .nav-collections__menu a.nav-collections__all { text-transform: uppercase; color: #e4c9a3; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   AUDIT FIXES — touch targets, legibility, skip link
+══════════════════════════════════════════════════════════ */
+.skip-link { position: fixed; left: 12px; top: -64px; z-index: 5000; padding: 12px 18px; border-radius: 999px; background: #f5e2d5; color: #43101a; font: 600 0.8rem/1 'Inter', sans-serif; text-decoration: none; transition: top 0.2s ease; }
+.skip-link:focus { top: 12px; outline: 2px solid #7a1a28; outline-offset: 2px; }
+
+/* Touch devices: every control gets a >=44px hit area */
+@media (max-width: 1023px), (pointer: coarse) {
+  .navbar--redesign .nav-logo { display: inline-flex; align-items: center; min-height: 44px; }
+  .navbar--redesign .nav-action { width: 44px !important; height: 44px !important; min-width: 44px !important; min-height: 44px !important; }
+  .navbar--redesign .nav-hamburger { min-width: 44px; min-height: 44px; justify-content: center; align-items: center; }
+  .product-card__wish::before { content: ''; position: absolute; inset: -6px; }
+  .plp-cat { min-height: 44px !important; }
+  .plp-bar .plp-bar__btn { min-height: 44px !important; }
+  .uw__all, .hl__all { display: inline-flex; align-items: center; min-height: 44px; }
+  .hl__tab { min-height: 44px; }
+  .cp__remove, .cp__continue { display: inline-flex; align-items: center; min-height: 44px; }
+  .cp__qty button { width: 44px; height: 44px; }
+  .footer__col li a, .footer__service-button, .footer__logo { display: inline-flex; align-items: center; min-height: 44px; }
+  .info__toc a, .info__crumbs a, .pdp-crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
+  .sp__chip, .sp__go, .srch__chip, .cart-drawer__view { min-height: 44px; }
+  .pdp-gallery__expand { width: 44px !important; height: 44px !important; }
+  .mv2-about__cta, .about-us__cta, .size-chart__cta { min-height: 44px; display: inline-flex; align-items: center; }
+  .cart-line__qty-btn { width: 40px !important; height: 40px !important; }
+  .cart-line__remove { min-height: 40px; padding: 0 6px; }
+  .cart-drawer__close { min-width: 44px; min-height: 44px; }
+}
+.cart-line__qty-btn { width: 32px !important; height: 32px !important; }
+
+/* Smallest text on the site stays legible */
+.pay.pay--cod, .explore-more__eyebrow, .product-card__badge, .plp-hero__eyebrow, .plp-hero__count,
+.uw__eyebrow, .uw__sub, .uw-card__tagline, .cx__label, .nav-cart__count, .order-confirm__eyebrow { font-size: 0.72rem !important; }
+.nav-cart__count, .navbar--redesign .nav-cart__count { font-size: 0.68rem !important; }
+
+/* Contrast */
+.info-step__n { color: #8a4b32; }
+.order-confirm__note { color: rgba(43, 20, 16, 0.78); }
+.mv2-about__eyebrow, .mv2-about__footer-text { font-size: 0.72rem !important; }
+.mv2-about__cta, .about-us__cta { font-size: 0.74rem; }
+@media (max-width: 1023px) { .sp__go { min-height: 44px !important; } }

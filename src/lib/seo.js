@@ -6,6 +6,8 @@
  * is skipped when the product does not have it.
  */
 
+import { productPath } from '../data/productCatalog';
+
 export const DEFAULT_SITE_ORIGIN = 'https://syora.co.in';
 
 /** Production origin used for canonical URLs, sitemaps and structured data. */
@@ -33,7 +35,7 @@ const isFact = (v) => v && !/^(—|-|n\/a)$/i.test(String(v).trim());
  * @param {{ origin?: string, universe?: { id: string, name: string } | null }} [opts]
  */
 export function buildProductSeo(product, { origin = siteOrigin(), universe = null } = {}) {
-  const url = `${origin}/product/${encodeURIComponent(product.handle || product.id)}`;
+  const url = `${origin}${productPath(product.handle || product.id)}`;
   // The default "<name> — SYORA" repeats the brand for products already named "SYORA …": use a useful suffix instead.
   const autoTitle = `${product.name} — SYORA`;
   const rawTitle = clean(product.pageTitle || autoTitle);

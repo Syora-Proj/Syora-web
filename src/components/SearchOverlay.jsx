@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { searchProducts } from '../lib/shopify/search';
 import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
+import { productPath } from '../data/productCatalog';
 import { clearRecentSearches, readRecentSearches, saveRecentSearch } from '../lib/recentSearches';
 import './SearchOverlay.css';
 
@@ -147,7 +148,7 @@ export default function SearchOverlay({ open, onClose }) {
                 <ul className="srch__results">
                   {items.map((p) => (
                     <li key={p.id}>
-                      <Link to={`/product/${encodeURIComponent(p.handle)}`} className="srch__item" onClick={() => { saveRecentSearch(q); onClose(); }}>
+                      <Link to={productPath(p.handle)} className="srch__item" onClick={() => { saveRecentSearch(q); onClose(); }}>
                         <span className="srch__thumb">{p.img && <img src={p.img} alt="" loading="lazy" />}</span>
                         <span className="srch__name">{String(p.name || '').replace(/^syora\s+/i, '') || p.name}</span>
                         <span className="srch__price">{p.price}{p.availableForSale === false && ' · Sold out'}</span>

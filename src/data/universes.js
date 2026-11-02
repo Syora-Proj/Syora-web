@@ -35,10 +35,10 @@ export const UNIVERSES = {
       heroGradient: 'transparent',
       heroText: '#ffffff',
     },
-    heroImage: '/hero-icon.jpg',
+    heroImage: '/hero-icon.webp',
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '60% 86%',
-    heroImageMobile: '/hero-icon-mobile-new.png',
+    heroImageMobile: '/hero-icon-mobile-new.webp',
     heroImageAlt: 'Model in a burgundy evening gown and heels in a warmly lit, luxurious interior',
     products: [
       { id: 'icon-1', img: heelsImg,   name: 'Strappy Heels',       price: '₹3,499', badge: 'BESTSELLER' },
@@ -67,10 +67,10 @@ export const UNIVERSES = {
       heroGradient: 'transparent',
       heroText: '#ffffff',
     },
-    heroImage: '/hero-heritage.jpg',
+    heroImage: '/hero-heritage.webp',
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '62% 84%',
-    heroImageMobile: '/hero-heritage-mobile.png',
+    heroImageMobile: '/hero-heritage-mobile.webp',
     heroImageAlt: 'SYORA HERITAGE juttis',
     products: [
       { id: 'her-1', img: juttiSig, name: 'Signature Juttis',    price: '₹2,499', badge: 'BESTSELLER' },
@@ -100,10 +100,10 @@ export const UNIVERSES = {
       heroGradient: 'transparent',
       heroText: '#ffffff',
     },
-    heroImage: '/hero-everyday.jpg',
+    heroImage: '/hero-everyday.webp',
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '82% 80%',
-    heroImageMobile: '/hero-everyday-mobile.png',
+    heroImageMobile: '/hero-everyday-mobile.webp',
     heroImageAlt: 'SYORA EVERYDAY flats and loafers',
     products: [
       { id: 'evr-1', img: juttiEvy,  name: 'Everyday Jutti-Flat', price: '₹2,299', badge: null },
@@ -131,10 +131,10 @@ export const UNIVERSES = {
       heroGradient: 'transparent',
       heroText: '#ffffff',
     },
-    heroImage: '/hero-motion.jpg',
+    heroImage: '/hero-motion.webp',
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '55% 84%',
-    heroImageMobile: '/hero-motion-mobile.png',
+    heroImageMobile: '/hero-motion-mobile.webp',
     heroImageAlt: 'SYORA MOTION sneakers',
     // No sneaker product images in current assets — placeholder grid below
     products: [

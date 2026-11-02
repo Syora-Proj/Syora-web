@@ -59,6 +59,7 @@ async function main() {
     const seoLib = await vite.ssrLoadModule('/src/lib/seo.js');
     const { INFO_PAGES } = await vite.ssrLoadModule('/src/data/infoPages.jsx');
     const { UNIVERSES } = await vite.ssrLoadModule('/src/data/universes.js');
+    const productCatalog = await vite.ssrLoadModule('/src/data/productCatalog.js');
     const origin = seoLib.siteOrigin();
 
     /* ── 1. Which products? ── */
@@ -93,7 +94,7 @@ async function main() {
           const universe = UNIVERSES[product.universeId];
           const seo = seoLib.buildProductSeo(product, { origin, universe: universe ? { id: product.universeId, name: universe.name } : null });
           const html = injectProduct(template, product, seo, seoLib.productHeadHtml(seo));
-          const dir = path.join(dist, 'product', product.handle);
+          const dir = path.join(dist, 'product', productCatalog.slugFor(product.handle) || product.handle);
           await fs.mkdir(dir, { recursive: true });
           await fs.writeFile(path.join(dir, 'index.html'), html);
           written.push({ handle: product.handle, lastmod: (stub.updatedAt || '').slice(0, 10) });
@@ -111,7 +112,7 @@ async function main() {
       { loc: `${origin}/shop` },
       ...UNIVERSE_IDS.filter((id) => UNIVERSES[id]).map((id) => ({ loc: `${origin}/universe/${id}` })),
       ...INFO_PAGES.map((p) => ({ loc: `${origin}/info/${p.slug}` })),
-      ...written.sort((a, b) => a.handle.localeCompare(b.handle)).map((p) => ({ loc: `${origin}/product/${encodeURIComponent(p.handle)}`, lastmod: p.lastmod })),
+      ...written.sort((a, b) => a.handle.localeCompare(b.handle)).map((p) => ({ loc: `${origin}${productCatalog.productPath(p.handle)}`, lastmod: p.lastmod })),
     ];
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
       .map((u) => `  <url><loc>${esc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}</url>`)

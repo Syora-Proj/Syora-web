@@ -40,7 +40,7 @@ export default function SearchPage() {
       <meta name="robots" content="noindex" />
       <Navbar universeMode solid />
 
-      <main className="sp">
+      <main id="main" className="sp">
         <div className="sp__inner">
           <p className="sp__eyebrow">SEARCH</p>
           <h1 className="sp__title">{q.length >= 2 ? <>Results for <em>“{q}”</em></> : 'What are you looking for?'}</h1>
