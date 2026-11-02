@@ -15,12 +15,12 @@
 const STORE_DOMAIN  = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
 const API_VERSION   = import.meta.env.VITE_SHOPIFY_API_VERSION || '2025-01';
 const STOREFRONT_API_URL = `https://${STORE_DOMAIN}/api/${API_VERSION}/graphql.json`;
-const STOREFRONT_TOKEN   = import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN;
+const STOREFRONT_TOKEN   = import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 
 if (!STORE_DOMAIN || !STOREFRONT_TOKEN) {
   console.error(
     '[Shopify] Missing required environment variable(s): ' +
-    [!STORE_DOMAIN && 'VITE_SHOPIFY_STORE_DOMAIN', !STOREFRONT_TOKEN && 'VITE_SHOPIFY_STOREFRONT_TOKEN']
+    [!STORE_DOMAIN && 'VITE_SHOPIFY_STORE_DOMAIN', !STOREFRONT_TOKEN && 'VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN']
       .filter(Boolean).join(', ') +
     '. Check .env.local against .env.example.'
   );

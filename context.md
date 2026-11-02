@@ -27,7 +27,7 @@ Shopify browser configuration is read from `.env.local` (ignored by Git):
 | Variable | Purpose |
 | --- | --- |
 | `VITE_SHOPIFY_STORE_DOMAIN` | Shopify store hostname, used to construct the Storefront API URL |
-| `VITE_SHOPIFY_STOREFRONT_TOKEN` | Public Storefront API access token sent in the API request header |
+| `VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Public Storefront API access token sent in the API request header |
 
 Only a Storefront token belongs in this browser app. Never put Shopify Admin API credentials in a `VITE_` variable or client bundle. `.gitignore` excludes `.env.local`, other local environment files, `node_modules`, and `dist`.
 

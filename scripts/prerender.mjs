@@ -168,4 +168,11 @@ main().catch((err) => {
       'with zero product pages. Set PRERENDER_ALLOW_SKIP=true to explicitly bypass this (not recommended in production).');
     process.exitCode = 1;
   }
-}).finally(() => process.exit(process.exitCode ?? 0));
+});
+// Deliberately NOT calling process.exit() here. Node drains the event loop and exits on its own
+// once vite.close() and any pending fetch/socket cleanup actually finish -- confirmed this adds
+// no meaningful delay (success and failure paths both exit immediately in testing). A forced
+// process.exit() right after async cleanup raced against that cleanup and crashed on Windows
+// (libuv assertion in src\win\async.c, UV_HANDLE_CLOSING) -- Windows-specific in how it SURFACED,
+// but the underlying race (killing the process before handles finish closing) isn't Windows-only,
+// so removing the forced exit is the correct fix everywhere, not a Windows workaround.
