@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { Routes, Route, useLocation, useParams } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './index.css';
 import './App.css';
 import './shopify.css';
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
+      <SpeedInsights />
     </>
   );
 }
