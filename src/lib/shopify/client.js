@@ -9,11 +9,22 @@
  *   - Token is never logged, never returned in responses, never sent to third parties.
  *   - Admin API credentials must never be used here.
  *
- * API version: 2025-01 (stable, non-deprecated as of implementation date)
+ * API version: configurable via VITE_SHOPIFY_API_VERSION (defaults to 2025-01 if unset)
  */
 
-const STOREFRONT_API_URL = `https://${import.meta.env.VITE_SHOPIFY_STORE_DOMAIN}/api/2025-01/graphql.json`;
+const STORE_DOMAIN  = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
+const API_VERSION   = import.meta.env.VITE_SHOPIFY_API_VERSION || '2025-01';
+const STOREFRONT_API_URL = `https://${STORE_DOMAIN}/api/${API_VERSION}/graphql.json`;
 const STOREFRONT_TOKEN   = import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN;
+
+if (!STORE_DOMAIN || !STOREFRONT_TOKEN) {
+  console.error(
+    '[Shopify] Missing required environment variable(s): ' +
+    [!STORE_DOMAIN && 'VITE_SHOPIFY_STORE_DOMAIN', !STOREFRONT_TOKEN && 'VITE_SHOPIFY_STOREFRONT_TOKEN']
+      .filter(Boolean).join(', ') +
+    '. Check .env.local against .env.example.'
+  );
+}
 
 /**
  * Execute a GraphQL operation against the Shopify Storefront API.
