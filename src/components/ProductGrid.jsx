@@ -12,6 +12,8 @@ import {
   sortProducts,
 } from '../lib/collectionFilters';
 import FilterDrawer from './FilterDrawer';
+import CollectionHero from './CollectionHero';
+import './CollectionPage.css';
 import { facetGroups } from '../lib/facetGroups';
 
 const MAX_SWATCHES = 5;
@@ -158,7 +160,7 @@ export default function ProductGrid({
   viewAllHref,
   universeId,
   browse = false,
-  band,
+  hero,
   onExploreOthers,
 }) {
   const titleId = `grid-title-${universeId}-${slug(title)}`;
@@ -217,6 +219,8 @@ export default function ProductGrid({
 
   const activeCount = countActiveFilters(filters);
   const groups = facetGroups({ facets, filters, onChange: (next) => commit(next, sort) });
+  // Category has its own pill navigation above the bar; the bar keeps the other facets.
+  const barGroups = facets.category.length > 1 ? groups.filter((g) => g.id !== 'category') : groups;
 
   const keepBadges = useMemo(() => meaningfulBadges(products), [products]);
   const badgeFor = (p) => (p.badge && keepBadges.has(p.badge) ? titleCaseBadge(p.badge) : null);
@@ -244,20 +248,23 @@ export default function ProductGrid({
 
   const Heading = browse ? 'h1' : 'h2';
 
+  // Hero call-to-action: glide down to the category navigation / product grid.
+  const browseProducts = () => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('plp-browse')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  };
+
   return (
     <section className={`product-grid${browse ? ' product-grid--browse' : ''}`} aria-labelledby={titleId}>
-      {browse && band ? (
-        <div className="plp-band">
-          <div className="plp-band__media" aria-hidden="true">
-            <img src={band.image} alt="" style={band.position ? { objectPosition: band.position } : undefined} />
-          </div>
-          <div className="plp-band__inner">
-            {band.eyebrow && <p className="plp-band__eyebrow">{band.eyebrow}</p>}
-            <Heading id={titleId} className="plp-band__title">{title}</Heading>
-            {description && <p className="plp-band__desc">{description}</p>}
-            <p className="plp-band__count" role="status" aria-live="polite">{countLabel}</p>
-          </div>
-        </div>
+      {browse && hero ? (
+        <CollectionHero
+          hero={hero}
+          headingId={titleId}
+          title={title}
+          description={description}
+          countLabel={count > 0 ? countLabel : ''}
+          onBrowse={browseProducts}
+        />
       ) : (
         <div className="product-grid__inner product-grid__header">
           <div className="product-grid__heading">
@@ -272,8 +279,42 @@ export default function ProductGrid({
         </div>
       )}
 
+      {browse && count > 0 && facets.category.length > 1 && (
+        <nav id="plp-browse" className="plp-cats" aria-label="Browse by category" style={hero ? { '--hero-pill': hero.colors.pill } : undefined}>
+          <div className="plp-cats__inner">
+            <ul className="plp-cats__list">
+              <li>
+                <button
+                  type="button"
+                  className="plp-cat"
+                  aria-pressed={filters.category.length === 0}
+                  onClick={() => commit({ ...filters, category: [] }, sort)}
+                >
+                  All Products
+                </button>
+              </li>
+              {facets.category.map((cat) => {
+                const on = filters.category.length === 1 && filters.category[0] === cat;
+                return (
+                  <li key={cat}>
+                    <button
+                      type="button"
+                      className="plp-cat"
+                      aria-pressed={on}
+                      onClick={() => commit({ ...filters, category: on ? [] : [cat] }, sort)}
+                    >
+                      {cat}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </nav>
+      )}
+
       {browse && count > 0 && (
-        <div className="plp-bar" ref={barRef}>
+        <div className="plp-bar" ref={barRef} style={hero ? { '--hero-pill': hero.colors.pill } : undefined}>
           <div className="plp-bar__inner">
             <button
               ref={filterBtnRef}
@@ -289,9 +330,9 @@ export default function ProductGrid({
               <span>Filters{activeCount > 0 ? ` (${activeCount})` : ''}</span>
             </button>
 
-            {groups.length > 0 && <span className="plp-bar__div plp-bar__facet-only" aria-hidden="true" />}
+            {barGroups.length > 0 && <span className="plp-bar__div plp-bar__facet-only" aria-hidden="true" />}
             <div className="plp-bar__facets">
-              {groups.map((g) => (
+              {barGroups.map((g) => (
                 <div className="plp-menu" key={g.id}>
                   <button
                     type="button"
@@ -348,7 +389,7 @@ export default function ProductGrid({
         </div>
       )}
 
-      <div className="product-grid__inner">
+      <div className="product-grid__inner" id={browse && facets.category.length <= 1 ? 'plp-browse' : undefined}>
         {browse && count > 0 && chips.length > 0 && (
           <ul className="plp-chips" aria-label="Active filters">
             {chips.map((chip) => (

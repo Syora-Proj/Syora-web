@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { UNIVERSES } from '../data/universes';
+import { COLLECTION_CONTENT } from '../data/collectionContent';
 import ProductGrid from './ProductGrid';
 import ExploreMore from './ExploreMore';
 import Footer from './Footer';
@@ -35,6 +36,7 @@ export default function UniversePage({ universe: universeId }) {
   }
 
   const { palette } = u;
+  const content = COLLECTION_CONTENT[universeId];
 
   return (
     <div
@@ -62,12 +64,13 @@ export default function UniversePage({ universe: universeId }) {
         ) : (
           <ProductGrid
             browse
-            title={`The ${titleCase(u.name)} Edit`}
-            description={u.tagline}
-            band={{
-              eyebrow: `${titleCase(u.name)} Collection`,
-              image: u.heroImage,
-              position: u.bandPosition,
+            title={content.headline}
+            description={content.description}
+            hero={{
+              eyebrow: content.eyebrow,
+              cta: content.cta,
+              image: content.hero,
+              colors: content.colors,
             }}
             products={shopifyProducts}
             universeId={universeId}

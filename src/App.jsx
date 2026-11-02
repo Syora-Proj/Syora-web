@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
-import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
+import { Routes, Route, useLocation, useParams } from 'react-router-dom';
 import './index.css';
 import './App.css';
 import './shopify.css';
@@ -8,9 +8,15 @@ import CartDrawer from './components/CartDrawer';
 
 // Route-level chunks keep product and legacy-shop code out of the homepage load.
 const UniversePage = lazy(() => import('./components/UniversePage'));
+const ShopAllPage = lazy(() => import('./components/ShopAllPage'));
+const SearchPage = lazy(() => import('./components/SearchPage'));
+const CartPage = lazy(() => import('./components/CartPage'));
+const WishlistPage = lazy(() => import('./components/WishlistPage'));
+const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
 const ProductPage = lazy(() => import('./components/ProductPage'));
 const OrderConfirmation = lazy(() => import('./components/OrderConfirmation'));
 const LegacyHome = lazy(() => import('./components/LegacyHome'));
+const InfoPage = lazy(() => import('./components/InfoPage'));
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -56,15 +62,21 @@ export default function App() {
           {/* ── Product Detail Pages ── */}
           <Route path="/product/:handle" element={<ProductPageWrapper />} />
 
+          {/* ── Help & information pages (footer links) ── */}
+          <Route path="/info/:slug" element={<InfoPage />} />
+
           {/* ── Legacy Shop / Home ── */}
           <Route path="/home" element={<LegacyHome />} />
-          <Route path="/shop" element={<LegacyHome />} />
+          <Route path="/shop" element={<ShopAllPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
 
           {/* ── Order Confirmation (Shopify checkout return) ── */}
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
           {/* ── Fallback ── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </>

@@ -1,0 +1,165 @@
+/* ══════════════════════════════════════════════════════════
+   SITE FOOTER — shared by every page
+   Fixed, compact type sizes (they do not grow with the screen). Brand on the left with a hairline,
+   three link columns tied to the right edge, then a slim bottom bar. Side padding matches the header.
+   The SYORA wordmark uses the brand logotype (the same font as the header and hero).
+══════════════════════════════════════════════════════════ */
+.footer {
+  --f-ink: #1b1411;
+  --f-brown: #6a3b1f;
+  --f-hair: #e3dbd3;
+  background: #fdfaf6;
+  color: var(--f-ink);
+  border-top: 0;
+  padding: clamp(32px, 3.2vw, 48px) clamp(28px, 7vw, 120px) 18px;
+}
+
+/* ── Top: brand | links ── */
+/* Side inset = the "Crafted in Detail" text inset (HomeFeatures: --u * 5.3), so footer and section text line up */
+.footer { --f-in: calc(min(100vw, clamp(840px, 76vw, 1360px)) / 100 * 5.3); padding-left: var(--f-in); padding-right: var(--f-in); }
+@media (max-width: 860px) { .footer { --f-in: clamp(22px, 6vw, 56px); } }
+
+.footer__top {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  align-items: start;
+  padding: 0 0 clamp(24px, 2.4vw, 34px);
+  border: 0;
+}
+.footer__brand {
+  display: flex;
+  flex-direction: column;
+  padding-right: clamp(24px, 3vw, 48px);
+  border-right: 1px solid var(--f-hair);
+  align-self: stretch;
+}
+.footer__logo {
+  align-self: flex-start;
+  font-family: 'Syora Logo', serif;
+  font-size: 2.3rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.3em;
+  color: var(--f-ink);
+  text-decoration: none;
+}
+.footer__tagline {
+  margin-top: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--f-brown);
+}
+.footer__about {
+  margin-top: 10px;
+  max-width: 23em;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--f-ink);
+}
+.footer__socials { display: flex; gap: 18px; margin-top: 18px; }
+.footer__social { color: var(--f-ink); transition: color 0.2s; display: inline-flex; }
+.footer__social svg { width: 22px; height: 22px; }
+.footer__social:hover { color: var(--f-brown); }
+
+/* Link columns: three equal columns, centred in the space beside the brand block (never wider than 960px) */
+.footer__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 960px;
+  justify-self: center;
+  column-gap: clamp(24px, 3vw, 56px);
+  padding-left: clamp(24px, 3vw, 48px);
+  align-content: start;
+}
+.footer__col { display: flex; flex-direction: column; }
+.footer__col-title {
+  margin: 10px 0 10px;               /* sits level with the middle of the wordmark */
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--f-brown);
+}
+.footer__col ul { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.footer__col li a,
+.footer__service-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-align: left;
+  color: var(--f-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.footer__col li a:hover,
+.footer__service-button:hover { color: var(--f-brown); }
+.footer__logo:focus-visible,
+.footer__social:focus-visible,
+.footer__col li a:focus-visible,
+.footer__service-button:focus-visible { outline: 2px solid var(--f-brown); outline-offset: 3px; }
+
+/* ── Bottom bar ── */
+.footer__bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 28px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--f-hair);
+}
+.footer__copy { margin: 0; font-family: 'Inter', sans-serif; font-size: 0.78rem; letter-spacing: 0.01em; color: var(--f-ink); }
+.footer__payments { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; }
+.pay { display: inline-flex; align-items: center; height: 24px; font-family: 'Inter', sans-serif; line-height: 1; color: var(--f-ink); }
+.pay--visa { font-size: 1.1rem; font-weight: 800; font-style: italic; letter-spacing: -0.02em; color: #14213d; }
+.pay--mc { position: relative; width: 34px; }
+.pay--mc i { position: absolute; top: 2px; width: 20px; height: 20px; border-radius: 50%; }
+.pay--mc i:first-child { left: 0; background: #eb001b; }
+.pay--mc i:last-child { left: 13px; background: #f79e1b; mix-blend-mode: multiply; }
+.pay--upi { font-size: 0.98rem; font-weight: 800; font-style: italic; letter-spacing: 0.02em; color: #3a3a3a; }
+.pay--gpay { font-size: 0.95rem; font-weight: 500; color: #5f6368; gap: 3px; }
+.pay--gpay b { font-weight: 700; color: #4285f4; }
+.pay--cod { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; padding: 0 8px; height: 22px; border: 1px solid var(--f-hair); border-radius: 3px; }
+.footer__ssl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 1px solid var(--f-hair);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--f-ink);
+}
+.footer__ssl svg { width: 22px; height: 24px; flex: none; }
+
+/* ── Tablet: brand on top, three equal columns beneath ── */
+@media (max-width: 1000px) {
+  .footer__top { grid-template-columns: 1fr; }
+  .footer__brand { padding: 0 0 24px; border-right: 0; border-bottom: 1px solid var(--f-hair); }
+  .footer__cols { max-width: none; justify-self: stretch; padding: 22px 0 0; column-gap: 24px; }
+  .footer__col-title { margin-top: 0; }
+  .footer__col li a, .footer__service-button { min-height: 38px; }
+}
+/* ── Phones ── */
+@media (max-width: 640px) {
+  .footer { padding-top: 32px; }
+  .footer__cols { grid-template-columns: 1fr 1fr; gap: 22px 20px; }
+  .footer__col-title { white-space: nowrap; letter-spacing: 0.14em; }
+  .footer__col:last-child { grid-column: 1 / -1; }
+  .footer__col li a, .footer__service-button { min-height: 40px; font-size: 0.9rem; }
+  .footer__bottom { flex-direction: column; align-items: flex-start; }
+  .footer__ssl { border-left: 0; padding-left: 0; flex-basis: 100%; }
+}

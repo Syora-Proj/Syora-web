@@ -1,0 +1,370 @@
+/* ══════════════════════════════════════════════════════════
+   HOMEPAGE HERO — campaign photograph
+   Desktop: the model on the right, SYORA wordmark in the open studio space on the left.
+   Phones / portrait: the model low in the frame, wordmark above her.
+   Scoped to .mv2-hero; overrides the previous centred-video layout.
+══════════════════════════════════════════════════════════ */
+.mv2-hero__sticky {
+  justify-content: flex-start;
+  background: #2a0305;
+  --hp-ink: #f5ece4;
+  --hp-ink-soft: rgba(245, 236, 228, 0.82);
+  --hp-cta-bg: #f7eee4;
+  --hp-cta-ink: #3a0509;
+  --hp-cta-hover: #e9cfa6;
+}
+
+/* ── Carousel: the track slides; each slide paints its own studio background ── */
+.hp-track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 0;
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+  touch-action: pan-y;
+}
+.hp-slide { position: relative; flex: 0 0 100%; min-width: 0; overflow: hidden; }
+.hp-slide--crimson {
+  background-size: 100% 108%;
+  background-repeat: no-repeat;
+  background-color: #330102;
+  background-image: linear-gradient(to bottom, #200003 0%, #1f0102 8%, #240102 16%, #240102 24%, #240102 32%, #240102 40%, #1f0102 48%, #1e0001 56%, #1c0101 64%, #1c0101 65%, #1c0101 66%, #1c0201 67%, #3c0509 68%, #58090d 69%, #5c0a0f 70%, #5e0b0e 71%, #580a0d 72%, #4a0509 73%, #460206 74%, #4a0308 75%, #4f050a 76%, #440407 82%, #350002 88%, #330102 94%, #310002 100%);
+}
+.hp-slide--sand {
+  background-size: 100% 92%;
+  background-repeat: no-repeat;
+  background-color: #dcbaa6;
+  background-image: linear-gradient(to bottom, #c2a18b 0%, #cdab95 1%, #dbb8a2 2%, #e6c2ab 3%, #eecab2 4%, #f2cdb6 5%, #f2ceb6 6%, #f1cdb4 7%, #f0ccb3 8%, #f0cbb3 9%, #f0cbb2 10%, #efcab1 11%, #efcbb2 12%, #efcab1 13%, #efcab1 14%, #eecab1 15%, #efcbb2 16%, #efcab1 17%, #efcab2 18%, #efcbb2 19%, #efcab1 20%, #efcab1 21%, #efcab1 22%, #efcab1 23%, #efcab1 24%, #efcab1 25%, #eecab0 26%, #efcab1 27%, #efcab1 28%, #efcab1 29%, #f0cbb2 30%, #f0ccb3 31%, #f0cbb2 32%, #f0cbb3 33%, #f0cbb2 34%, #f0cbb2 35%, #f0cbb2 36%, #f0ccb3 37%, #f0ccb3 38%, #f0cbb2 39%, #f0cbb2 40%, #f0cbb2 41%, #efcbb2 42%, #efcbb1 43%, #efcab1 44%, #eecab0 45%, #efcab1 46%, #efcab1 47%, #eecab1 48%, #efcab1 49%, #efcab1 50%, #efcbb1 51%, #f0cbb2 52%, #f0cbb2 53%, #f0cbb2 54%, #f0cbb2 55%, #f0ccb2 56%, #f1cdb3 57%, #f1ccb3 58%, #f1ccb2 59%, #f1ccb2 60%, #f1ccb2 61%, #f1ccb2 62%, #f1ccb2 63%, #f1ccb2 64%, #f1ccb2 65%, #f2cdb2 66%, #f2cdb3 67%, #f3ceb4 68%, #f4ceb5 69%, #f5cfb6 70%, #f5d0b7 71%, #f6d2b9 72%, #f7d4bb 73%, #f8e0d1 74%, #e7c5af 75%, #d9af93 76%, #d7ad91 77%, #d5aa8d 78%, #d6ac8f 79%, #d7ab8f 80%, #d6ab8d 81%, #d6ab8e 82%, #d6aa8d 83%, #d5a98b 84%, #d4a88a 85%, #d5a98c 86%, #d5a98b 87%, #d4a98b 88%, #d3a789 89%, #d4a88a 90%, #d3a789 91%, #d0a487 92%, #e7c3ac 93%, #ddb8a2 94%, #dbb8a2 95%, #e1bea9 96%, #e3c1ad 97%, #e2c0ab 98%, #e0bda8 99%, #dfbca7 100%);
+}
+/* Slide 3 (green studio): sized so the vase and flowers always stay clear of the brand block on the left.
+   --ph = how tall the photograph is: the full hero height, or less on narrower screens. */
+.hp-slide--meadow {
+  container-type: size;
+  /* --ph = height of the (extended) photograph: the model is about 75% of the hero height (like the other
+     slides). The photo is shifted right just enough (cropping only its far right edge, as the burgundy slide
+     does with her arm) so the vase and flowers stay clear of the wordmark, tagline and button on the left. */
+  --ph: min(calc(100cqh * 1.865), calc(111.93cqw - 76px));
+  background-color: #4a5130;
+}
+/* the studio wall continues to the left of the photograph, sampled from its own left edge */
+.hp-slide--meadow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--ph);
+  background: linear-gradient(to bottom, #49512f 0%, #4a5130 1%, #4b512e 2%, #4a5030 3%, #495130 4%, #4a5130 5%, #49502f 6%, #4b5030 7%, #4a512f 8%, #49502f 9%, #4a512f 10%, #4b5131 11%, #4a5030 12%, #4b522f 13%, #4b5230 14%, #4b522f 15%, #4c5230 16%, #4d5230 17%, #4d5231 18%, #4d5230 19%, #4e532f 20%, #4f5430 21%, #4f5432 22%, #505332 23%, #505432 24%, #515432 25%, #505533 26%, #515533 27%, #515632 28%, #535634 29%, #535633 30%, #535634 31%, #565634 32%, #555632 33%, #545635 34%, #565735 35%, #565835 36%, #575735 37%, #585735 38%, #575734 39%, #575735 40%, #585835 41%, #575734 42%, #565634 43%, #555533 44%, #535433 45%, #515332 46%, #4f5231 47%, #4e5031 48%, #4a4f2f 49%, #484d2e 50%, #474b2d 51%, #424a2c 52%, #41482a 53%, #3e462a 54%, #3c4529 55%, #3a4429 56%, #374228 57%, #364227 58%, #364127 59%, #354027 60%, #344028 61%, #344027 62%, #333f26 63%, #344026 64%, #333f26 65%, #333f25 66%, #323f27 67%, #323e26 68%, #323e25 69%, #313e25 70%, #303c25 71%, #303c25 72%, #2e3b23 73%, #2d3a24 74%, #2d3923 75%, #2b3820 76%, #2b3720 77%, #2a3620 78%, #29351e 79%, #26331d 80%, #26331c 81%, #26301c 82%, #242f1b 83%, #636040 84%, #676344 85%, #696848 86%, #716c4c 87%, #787252 88%, #7f7953 89%, #867d56 90%, #887f57 91%, #877e56 92%, #807854 93%, #787250 94%, #6c694c 95%, #64624a 96%, #605e47 97%, #5c5b46 98%, #5a5a45 99%, #595a47 100%);
+}
+.hp-slide--meadow .mv2-hero__photo {
+  inset: auto calc(-1 * clamp(0px, 0.5819 * var(--ph) - 44cqw + 30px, 0.1888 * var(--ph))) 0 auto;   /* bottom-right, nudged right as needed */
+  transform-origin: 100% 100%;
+  height: var(--ph);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+/* Slide 4 (terracotta studio): same construction as the green slide */
+.hp-slide--terracotta {
+  container-type: size;
+  --ph: min(calc(100cqh * 1.865), calc(111.93cqw - 76px));
+  background-color: #ac4a2a;
+}
+.hp-slide--terracotta::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--ph);
+  background: linear-gradient(to bottom, #ac4b29 0%, #ab4a2b 1%, #ac4929 2%, #ac4a2a 3%, #ad4a2a 4%, #ac4a2a 5%, #ac492a 6%, #ac4a2a 7%, #ac4b2a 8%, #ad4a2a 9%, #ac4b2a 10%, #ac4a2a 11%, #ac4a2a 12%, #ac4a2a 13%, #ab492a 14%, #ac4a2a 15%, #ac4a2b 16%, #ac4a2a 17%, #ac4b2b 18%, #ad4b2b 19%, #ad4a2a 20%, #ae4a2a 21%, #ae4b2b 22%, #ad4b2a 23%, #ad4b2b 24%, #ad4b2a 25%, #ae4c2a 26%, #ae4b2b 27%, #ad4a2b 28%, #ad4b2c 29%, #ad4c2b 30%, #ac4b2b 31%, #ad4b2b 32%, #ae4c2c 33%, #ae4a2b 34%, #ae4a2b 35%, #ae4c2c 36%, #af4b2b 37%, #af4b2b 38%, #ae4b2b 39%, #ae4b2b 40%, #af4b2b 41%, #af4b2b 42%, #ad4b2b 43%, #ad4b2b 44%, #ac4a29 45%, #ab4a29 46%, #a94729 47%, #a64527 48%, #a34324 49%, #9f4024 50%, #9a3e20 51%, #943b1d 52%, #91381a 53%, #8c3317 54%, #853115 55%, #822e13 56%, #7f2d10 57%, #7c2a0f 58%, #7b290e 59%, #7a290e 60%, #79280e 61%, #7b290e 62%, #7c2b10 63%, #7e2c11 64%, #812e12 65%, #853014 66%, #893216 67%, #8d3619 68%, #92391a 69%, #973b1d 70%, #9d3f1f 71%, #9f4121 72%, #a34223 73%, #a64525 74%, #a94826 75%, #aa4828 76%, #ab4a28 77%, #ad4a29 78%, #ae4a29 79%, #af4b2a 80%, #af4b2c 81%, #ae4c2c 82%, #af4d2b 83%, #aa4a2a 84%, #a64829 85%, #a2472a 86%, #9d4529 87%, #994429 88%, #97472c 89%, #9a4d33 90%, #a0553b 91%, #aa6146 92%, #b66e53 93%, #c07c5f 94%, #ca8769 95%, #d08e6f 96%, #d39375 97%, #d69577 98%, #d79678 99%, #d7977a 100%);
+}
+.hp-slide--terracotta .mv2-hero__photo {
+  inset: auto calc(-1 * clamp(0px, 0.4 * var(--ph) - 44cqw + 30px, 0.1 * var(--ph))) 0 auto;
+  transform-origin: 100% 100%;
+  height: var(--ph);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+/* per-slide shading: legibility at the top (red) and a hand-off to the dark next section at the bottom */
+.hp-shade { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.hp-slide--crimson .hp-shade {
+  background: linear-gradient(to bottom, rgba(10, 2, 3, 0.4) 0%, transparent 20%, transparent 72%, color-mix(in srgb, var(--hp-dark, #150b0a) 88%, transparent) 100%);
+}
+.hp-slide--terracotta .hp-shade {
+  background:
+    linear-gradient(to bottom, transparent 0%, transparent 82%, color-mix(in srgb, var(--hp-dark, #150b0a) 55%, transparent) 93%, var(--hp-dark, #150b0a) 100%),
+    linear-gradient(90deg, rgba(50, 16, 8, 0.5) 0%, rgba(50, 16, 8, 0.26) 38%, transparent 62%);
+}
+.hp-slide--meadow .hp-shade {
+  background:
+    linear-gradient(to bottom, transparent 0%, transparent 82%, color-mix(in srgb, var(--hp-dark, #150b0a) 55%, transparent) 93%, var(--hp-dark, #150b0a) 100%),
+    linear-gradient(90deg, rgba(8, 20, 13, 0.5) 0%, rgba(8, 20, 13, 0.26) 38%, transparent 62%);
+}
+.hp-slide--sand .hp-shade {
+  background: linear-gradient(to bottom, transparent 0%, transparent 84%, color-mix(in srgb, var(--hp-dark, #150b0a) 55%, transparent) 94%, var(--hp-dark, #150b0a) 100%);
+}
+
+/* Slide 2 sits on a light studio: the brand block switches to deep oxblood ink (and back) with the slide */
+.mv2-hero__sticky[data-slide="1"] {
+  --hp-ink: #3a0d12;
+  --hp-ink-soft: rgba(58, 13, 18, 0.84);
+  --hp-cta-bg: #4a0a14;
+  --hp-cta-ink: #f7eee4;
+  --hp-cta-hover: #6b1220;
+}
+
+/* the dark text shadows only help on the dark slide */
+.mv2-hero__sticky[data-slide="1"] .mv2-hero__wordmark,
+.mv2-hero__sticky[data-slide="1"] .mv2-hero__sub,
+.mv2-hero__sticky[data-slide="1"] .mv2-hero__line { text-shadow: none; }
+
+/* Dots */
+.hp-controls {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: clamp(18px, 3.4vh, 34px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hp-dots { display: flex; gap: 4px; }
+.hp-playpause {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  color: #f7eee4;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.hp-playpause svg { width: 12px; height: 12px; display: block; }
+.hp-playpause:hover { opacity: 1; }
+.hp-playpause:focus-visible { outline: 2px solid #f7eee4; outline-offset: -6px; opacity: 1; }
+.hp-dot {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hp-dot::before {
+  content: '';
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: #f7eee4;
+  opacity: 0.45;
+  transition: opacity 0.3s ease, width 0.3s ease;
+}
+.hp-dot:hover::before { opacity: 0.7; }
+.hp-dot.is-active::before { opacity: 1; width: 44px; }
+.hp-dot:focus-visible { outline: 2px solid #f7eee4; outline-offset: -6px; }
+
+/* The whole photograph is always shown (face to heels): it is sized by the hero's HEIGHT and
+   anchored right/bottom, and the studio background fills whatever width is left over. */
+.mv2-hero__photo {
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: auto;
+  height: 108%;
+  max-width: none;
+  display: block;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 64px);
+  mask-image: linear-gradient(to right, transparent 0, #000 64px);
+  transform-origin: 100% 0;
+  animation: hp-photo-in 1.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes hp-photo-in { from { transform: scale(1.03); } to { transform: none; } }
+
+.hp-slide--sand .mv2-hero__photo {
+  height: 92%;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 180px);
+  mask-image: linear-gradient(to right, transparent 0, #000 180px);
+}
+.mv2-hero__veil { display: none; }
+.mv2-hero__veil::before {
+  background: linear-gradient(to bottom,
+    rgba(10, 2, 3, 0.4) 0%,
+    transparent 20%,
+    transparent 72%,
+    color-mix(in srgb, var(--hp-dark, #150b0a) 88%, transparent) 100%);
+}
+
+/* Brand block: left-aligned over the studio background */
+.mv2-hero__center {
+  align-items: flex-start;
+  text-align: left;
+  width: min(54%, 820px);
+  padding-left: clamp(24px, 6.5vw, 130px);
+  gap: clamp(10px, 1.2vw, 18px);
+}
+.mv2-hero__wordmark {
+  font-size: clamp(3.8rem, 9.2vw, 10.5rem);
+  letter-spacing: 0.4em;
+  text-indent: 0;
+  color: var(--hp-ink);
+  text-shadow: 0 2px 36px rgba(0, 0, 0, 0.35);
+  transition: color 0.45s ease 0.32s, text-shadow 0.45s ease 0.32s;
+}
+.mv2-hero__sub {
+  font-size: clamp(0.9rem, 1.4vw, 1.3rem);
+  letter-spacing: 0.34em;
+  text-indent: 0;
+  color: var(--hp-ink-soft);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.4);
+  transition: color 0.45s ease 0.32s;
+}
+.mv2-hero__scroll-cue { align-items: flex-start; margin-top: clamp(22px, 3.4vh, 44px); }
+.mv2-hero__scroll-text { text-indent: 0; }
+
+.mv2-hero__line {
+  margin-top: clamp(6px, 1vw, 14px);
+  max-width: 40ch;
+  text-wrap: balance;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.82rem, 1.05vw, 1rem);
+  font-weight: 300;
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  color: var(--hp-ink-soft);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.45);
+  transition: color 0.45s ease 0.32s;
+}
+.mv2-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 54px;
+  margin-top: clamp(16px, 2.2vw, 30px);
+  padding: 0 clamp(26px, 2.4vw, 38px);
+  border: 0;
+  border-radius: 2px;
+  background: var(--hp-cta-bg);        /* solid, high-contrast on every slide */
+  color: var(--hp-cta-ink);
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.74rem, 0.9vw, 0.84rem);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.45s ease 0.32s, color 0.45s ease 0.32s, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.mv2-hero__cta:hover,
+.mv2-hero__cta:focus-visible {
+  transition-delay: 0s;
+  background: var(--hp-cta-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.4);
+}
+.mv2-hero__cta:active { transform: translateY(0); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+.mv2-hero__cta:focus-visible { outline: 2px solid var(--hp-ink); outline-offset: 4px; }
+.mv2-hero__cta-arrow { font-size: 1.3em; letter-spacing: 0; line-height: 1; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+.mv2-hero__cta:hover .mv2-hero__cta-arrow { transform: translateX(5px); }
+
+/* Phones and portrait screens */
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .mv2-hero__sticky {
+    justify-content: center;
+    align-items: flex-start;
+    background: linear-gradient(to bottom, #1c0102, #200101);
+  }
+  .hp-slide--crimson { background: linear-gradient(to bottom, #1c0102, #200101); }
+  .hp-slide--terracotta { container-type: normal; background: #a84727; }
+  .hp-slide--terracotta::before { display: none; }
+  .hp-slide--terracotta .mv2-hero__photo {
+    inset: auto auto 0 0;
+    width: 100%;
+    height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+  }
+  .hp-slide--terracotta .hp-shade { background: linear-gradient(to bottom, transparent 0%, transparent 90%, color-mix(in srgb, var(--hp-dark, #150b0a) 60%, transparent) 100%); }
+  .hp-slide--meadow { container-type: normal; background: #394427; }
+  .hp-slide--meadow::before { display: none; }
+  .hp-slide--meadow .mv2-hero__photo {
+    height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+  }
+  .hp-slide--meadow .hp-shade { background: linear-gradient(to bottom, transparent 0%, transparent 90%, color-mix(in srgb, var(--hp-dark, #150b0a) 60%, transparent) 100%); }
+  .hp-slide--sand { background: #806553; }
+  .hp-slide--sand .mv2-hero__photo {
+    height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+  }
+  /* on phones the text sits over the darker taupe wall above the model: ivory ink reads best there */
+  .mv2-hero__sticky[data-slide="1"] {
+    --hp-ink: #f7eee4;
+    --hp-ink-soft: rgba(247, 238, 228, 0.88);
+    --hp-cta-bg: #f7eee4;
+    --hp-cta-ink: #3a0509;
+    --hp-cta-hover: #e9cfa6;
+  }
+  .mv2-hero__sticky[data-slide="1"] .mv2-hero__wordmark,
+  .mv2-hero__sticky[data-slide="1"] .mv2-hero__sub,
+  .mv2-hero__sticky[data-slide="1"] .mv2-hero__line { text-shadow: 0 1px 18px rgba(0, 0, 0, 0.35); }
+  /* Tall frame: sized by WIDTH so the whole model is always visible, anchored to the bottom */
+  .mv2-hero__photo {
+    inset: auto auto 0 0;
+    width: 100%;
+    height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 48px);
+  }
+  .mv2-hero__center {
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    padding: clamp(64px, 9svh, 100px) 20px 0;
+  }
+  .mv2-hero__wordmark {
+    font-size: clamp(3.4rem, 16vw, 6.2rem);
+    letter-spacing: 0.34em;
+    text-indent: 0.34em;
+  }
+  .mv2-hero__sub { font-size: clamp(0.74rem, 2.9vw, 0.95rem); letter-spacing: 0.26em; text-indent: 0.26em; }
+  .mv2-hero__line { text-align: center; max-width: 34ch; font-size: 0.82rem; }
+  .mv2-hero__cta { margin-top: 16px; min-height: 52px; padding: 0 28px; }
+  .mv2-hero__scroll-cue { align-items: center; margin-top: clamp(16px, 3svh, 30px); }
+  .mv2-hero__scroll-text { text-indent: 0.32em; }
+}
+
+/* Short phone screens: tighten the stack so the wordmark never touches the model's head */
+@media (max-height: 720px) and ((max-width: 900px) or (max-aspect-ratio: 1/1)) {
+  .mv2-hero__center { padding-top: clamp(64px, 11svh, 90px); gap: 8px; }
+  .mv2-hero__wordmark { font-size: clamp(3rem, 14vw, 4.6rem); }
+  .mv2-hero__scroll-cue { margin-top: 8px; }
+  .mv2-hero__scroll-line { height: 18px; }
+  .mv2-hero__line { display: none; }
+  .mv2-hero__cta { margin-top: 12px; min-height: 48px; padding: 0 24px; }
+}
+
+/* Tablet portrait: the model is large here, so the text block is compact and sits clear of her head */
+@media (min-width: 700px) and (max-width: 900px) and (min-height: 900px) {
+  .mv2-hero__center { padding-top: 22px; gap: 6px; }
+  .mv2-hero__wordmark { font-size: clamp(3.2rem, 7.2vw, 4.6rem); }
+  .mv2-hero__line { display: none; }
+  .mv2-hero__cta { margin-top: 10px; padding: 10px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-track { transition: none; }
+  .mv2-hero__photo { animation: none; }
+  .mv2-hero__cta, .mv2-hero__cta-arrow { transition: none; }
+  .mv2-hero__cta:hover, .mv2-hero__cta:focus-visible { transform: none; }
+}

@@ -134,6 +134,7 @@ export function normaliseProductCard(node) {
     availableForSale: node.availableForSale,
     // Filter facets
     category,
+    universeId:      getUniverseFromTags(node.tags),
     createdAt:       node.createdAt || '',
     sizes:           sizeFacet.all,
     sizesAvailable:  sizeFacet.available,
@@ -372,6 +373,7 @@ export function normaliseProduct(node) {
 
     /* Comfort profile — defaults; override via metafields */
     heelHeight:    node.tags?.find((t) => t.startsWith('heel:'))?.split(':')[1] || '—',
+    modelSize:     node.tags?.find((t) => t.toLowerCase().startsWith('model-size:'))?.split(':')[1]?.trim() || '',
     closureType:   '—',
     soleType:      '—',
     material:      materialTag ? materialTag.split(':').slice(1).join(':').trim() : '',
@@ -388,7 +390,7 @@ export function normaliseProduct(node) {
     offerBanner:     null,
 
     /* Delivery / returns — adjust per your store policy */
-    deliveryDaysEstimate: '5–7 business days',
+    deliveryDaysEstimate: '3–7 business days',
     returnWindowDays:     7,
     exchangeWindowDays:   15,
     codAvailable:         true,

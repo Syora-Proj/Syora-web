@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { UNIVERSES, UNIVERSE_ORDER } from '../data/universes';
+import UniverseCard from './UniverseCard';
 
 /**
  * SYORA — Explore More Universes
@@ -23,37 +23,17 @@ export default function ExploreMore({ currentId }) {
         </p>
       </div>
 
-      <div className="explore-more__grid">
+      <div className="uw-more-grid">
         {others.map((id) => {
           const u = UNIVERSES[id];
           return (
-            <Link
+            <UniverseCard
               key={id}
-              id={`explore-tile-${id}`}
-              className="explore-tile"
-              to={`/universe/${id}`}
-              aria-label={`Explore ${u.name} universe — ${u.tagline}`}
-            >
-              {/* Background image */}
-              <div className="explore-tile__img-wrap">
-                <img
-                  src={u.heroImage}
-                  alt={u.heroImageAlt}
-                  className="explore-tile__img"
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Gradient overlay */}
-              <div className="explore-tile__overlay" />
-
-              {/* Text */}
-              <div className="explore-tile__content">
-                <span className="explore-tile__name">{u.name}</span>
-                <span className="explore-tile__tagline">{u.tagline}</span>
-                <span className="explore-tile__cta">ENTER →</span>
-              </div>
-            </Link>
+              universe={u}
+              tileId={`explore-tile-${id}`}
+              ariaLabel={`Explore ${u.name} universe — ${u.tagline}`}
+              isStatic
+            />
           );
         })}
       </div>

@@ -288,3 +288,7 @@
   letter-spacing: 0.03em;
 }
 .order-confirm__note a { color: #915f6d; text-decoration: underline; }
+
+/* Cart drawer: link to the full bag page, as a rounded secondary button */
+.cart-drawer__view { display: flex; align-items: center; justify-content: center; min-height: 46px; margin-top: 10px; border: 1px solid rgba(90, 15, 28, 0.35); border-radius: 999px; color: #5a0f1c; text-decoration: none; font: 600 0.72rem/1 'Inter', sans-serif; letter-spacing: 0.14em; text-transform: uppercase; transition: background-color 0.2s, color 0.2s; }
+.cart-drawer__view:hover { background: #5a0f1c; color: #fbf5ee; }

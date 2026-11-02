@@ -53,3 +53,19 @@ export function useWishlisted(handle) {
 
   return [wishlisted, toggle];
 }
+
+/** @returns {string[]} every wishlisted product handle on this device (live-updating). */
+export function useWishlistHandles() {
+  const [list, setList] = useState(() => read());
+  useEffect(() => {
+    const sync = () => setList(read());
+    sync();
+    window.addEventListener(EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+  return list;
+}

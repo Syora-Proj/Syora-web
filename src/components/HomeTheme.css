@@ -1,0 +1,24 @@
+/* ══════════════════════════════════════════════════════════
+   HOMEPAGE THEME — one palette for the whole scroll
+   Warm oxblood-black  →  champagne ivory  →  oxblood  →  oxblood-black  →  cream footer
+   Tokens live on .mv2 (the homepage root) so every homepage section draws from the same set.
+══════════════════════════════════════════════════════════ */
+.mv2 {
+  --hp-dark: #150b0a;        /* the one dark: warm, red-leaning near-black */
+  --hp-oxblood: #360709;     /* the one accent ground */
+  --hp-light: #f5e2d5;       /* the one light: champagne ivory (kin to the footer cream) */
+  --hp-champagne: #e4c9a3;   /* accent text on dark */
+  --hp-ivory: #f7eee4;       /* text on dark */
+}
+
+/* "Find Your Style": same dark as the sections around it (no separate brown glass) */
+.mv2 .uw {
+  --uw-accent: var(--hp-champagne);
+  --uw-ink: var(--hp-ivory);
+  background:
+    radial-gradient(ellipse 72% 42% at 50% 0%, rgba(122, 26, 40, 0.1), transparent 72%),
+    var(--hp-dark);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}

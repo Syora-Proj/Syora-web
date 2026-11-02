@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatMoney } from '../lib/shopify/products';
 import { trackViewCart, trackBeginCheckout } from '../lib/analytics';
@@ -186,6 +187,7 @@ export default function CartDrawer() {
               {cartLoading ? 'UPDATING…' : 'GO TO CHECKOUT →'}
             </button>
 
+            <Link to="/cart" className="cart-drawer__view" onClick={closeCart}>View full bag</Link>
             <button className="cart-drawer__continue" onClick={closeCart}>
               Continue shopping
             </button>

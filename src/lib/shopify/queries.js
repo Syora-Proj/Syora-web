@@ -28,7 +28,7 @@ const IMAGE_FRAGMENT = `
   }
 `;
 
-const PRODUCT_CARD_FRAGMENT = `
+export const PRODUCT_CARD_FRAGMENT = `
   ${MONEY_FRAGMENT}
   ${IMAGE_FRAGMENT}
   fragment ProductCardFields on Product {

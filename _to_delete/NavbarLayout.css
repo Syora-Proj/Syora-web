@@ -1,0 +1,32 @@
+/* ══════════════════════════════════════════════════════════
+   HEADER LAYOUT (desktop ≥ 1221px)
+   Left: search · account · bag icons     Centre: main links     Right: SYORA wordmark
+   Phones/tablets keep the existing menu button layout.
+══════════════════════════════════════════════════════════ */
+.nav-action { display: inline-flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0; color: inherit; cursor: pointer; text-decoration: none; position: relative; }
+.navbar--redesign .nav-cart__count {
+  position: absolute; top: -7px; right: -9px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  background: #e9cfa6; color: #3a0509; font: 700 0.62rem/16px 'Inter', sans-serif; letter-spacing: 0; text-align: center;
+}
+.navbar--redesign .nav-action:hover { opacity: 1; }
+
+@media (min-width: 1221px) {
+  .navbar.navbar--redesign {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(20px, 3vw, 56px);
+    padding-left: clamp(24px, 2.4vw, 48px);
+    padding-right: clamp(24px, 2.4vw, 48px);
+  }
+  .navbar--redesign .nav-right { grid-column: 1; grid-row: 1; justify-self: start; margin: 0; gap: clamp(18px, 1.8vw, 28px); }
+  .navbar--redesign .nav-left { grid-column: 2; grid-row: 1; justify-self: center; justify-content: center; align-items: center; align-self: center; gap: clamp(28px, 3.4vw, 64px); }
+  .navbar--redesign .nav-logo { grid-column: 3; grid-row: 1; justify-self: end; }
+  .navbar--redesign .nav-sep { display: none; }
+  .navbar--redesign .nav-link { font-size: 0.74rem; letter-spacing: 0.18em; opacity: 0.92; }
+  .navbar--redesign .nav-action { min-width: 40px; min-height: 40px; }
+  .navbar--redesign .nav-collections__menu { left: 50%; margin-left: -116px; }
+}
+@media (max-width: 1220px) {
+  .navbar--redesign .nav-right .nav-action { min-width: 44px; min-height: 44px; }
+}

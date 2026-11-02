@@ -6,6 +6,8 @@ import { ProductCard } from './ProductGrid';
 import { useShopifyProduct } from '../hooks/useShopifyProduct';
 import { useShopifyCollection } from '../hooks/useShopifyCollection';
 import { useCart } from '../context/CartContext';
+import { buildProductSeo, jsonLdString } from '../lib/seo';
+import { useRecentlyViewed } from '../lib/recentlyViewed';
 import { UNIVERSES } from '../data/universes';
 import { useWishlisted } from '../lib/wishlist';
 import { getCheckoutUrl } from '../lib/shopify/cart';
@@ -40,12 +42,10 @@ const EVERYDAY_FEATURE_GALLERY_INDEX = {
 };
 
 // The delivery PIN-code checker has no real serviceability data behind it: it used to
-// answer "delivery in 5–7 days, COD available" for ANY 6-digit code after a fake delay.
+// answer "delivery in 3–7 days, COD available" for ANY 6-digit code after a fake delay.
 // It stays off until it can be wired to a real service; the UI code is kept intact.
 const SHOW_PIN_CHECKER = false;
 
-// products.js falls back to this when a colour name is not in its known list.
-const UNKNOWN_HEX = '#d8d1c8';
 
 const SIZE_CHART = [
   [35, 2, 5, '22.5'], [36, 3, 6, '23'], [37, 4, 7, '24'], [38, 5, 8, '24.5'],
@@ -64,6 +64,10 @@ const ICONS = {
   share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" /></>,
   bag: <><path d="M6 8h12l1 13H5z" /><path d="M9 9V6a3 3 0 0 1 6 0v3" /></>,
   expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
+  zoom: <><circle cx="11" cy="11" r="7" /><path d="m16 16 5 5M11 8v6M8 11h6" /></>,
+  ruler: <><rect x="2" y="8" width="20" height="8" rx="1" /><path d="M6 8v3M10 8v4M14 8v3M18 8v4" /></>,
+  stitch: <path d="M4 20 20 4M6.5 14.5l2 2M10.5 10.5l2 2M14.5 6.5l2 2" />,
+  heightArrow: <path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4" />,
   chevL: <path d="M15 18l-6-6 6-6" />,
   chevR: <path d="M9 18l6-6-6-6" />,
   close: <path d="M5 5l14 14M19 5L5 19" />,
@@ -80,6 +84,15 @@ function Icon({ name, size = 20, stroke = 1.5 }) {
 
 const titleCase = (text = '') => String(text).toLowerCase().replace(/(^|[\s-])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
 const firstSentence = (text = '') => (String(text).match(/^[^.!?]+[.!?]/)?.[0] || String(text)).trim();
+/** Split a plain-text description into short readable paragraphs (2 sentences each when it is one long block). */
+function toParagraphs(text = '') {
+  const blocks = String(text).split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  if (blocks.length > 1 || (blocks[0] || '').length < 320) return blocks;
+  const sentences = blocks[0].match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g)?.map((s) => s.trim()).filter(Boolean) || blocks;
+  const out = [];
+  for (let i = 0; i < sentences.length; i += 2) out.push(sentences.slice(i, i + 2).join(' '));
+  return out;
+}
 const availableFact = (value) => value && !/^(—|-|n\/a)$/i.test(String(value).trim());
 
 function Stars({ value }) {
@@ -149,7 +162,7 @@ function Lightbox({ name, src, position, total, onClose, onMove }) {
 }
 
 const TRUST = [
-  { icon: 'truck', title: '5–7 Days Delivery', note: 'Across India' },
+  { icon: 'truck', title: '3–7 Days Delivery', note: 'Across India' },
   { icon: 'exchange', title: 'Easy Exchanges', note: 'Within 48 hours' },
   { icon: 'shield', title: 'Secure Payments', note: 'Cards, UPI & COD' },
 ];
@@ -201,9 +214,15 @@ export default function ProductPage({ handle }) {
   const [stickyVisible, setStickyVisible] = useState(false);
   const [brokenImages, setBrokenImages]   = useState(() => new Set());
 
+  const recentlyViewed = useRecentlyViewed(product);
   const actionsRef  = useRef(null);
   const endRef      = useRef(null);
   const touchStartX = useRef(null);
+
+  // Static SEO tags written by the build-time pre-render are replaced by this component's own tags.
+  useEffect(() => {
+    if (product?.handle) document.head.querySelectorAll('[data-prerender], [data-site-default]').forEach((node) => node.remove());
+  }, [product?.handle]);
 
   useEffect(() => {
     setColour(0);
@@ -335,6 +354,7 @@ export default function ProductPage({ handle }) {
   }
 
   const universe = UNIVERSES[product.universeId];
+  const seo = buildProductSeo(product, { universe: universe ? { id: product.universeId, name: universe.name } : null });
   const galleryImageIndices = getColourGalleryIndices();
   const activePosition = Math.max(0, galleryImageIndices.indexOf(activeImg));
 
@@ -563,18 +583,18 @@ export default function ProductPage({ handle }) {
   }
 
   /* ── Product information (accordion) ── */
-  const productFacts = [
+  const aboutFacts = [
     ['Material', product.material],
+    ['Heel height', product.heelHeight],
     ['Closure', product.closureType],
     ['Sole', product.soleType],
     ['Best for', product.bestForOccasion],
+    ['Colours', product.colours?.length > 1 ? product.colours.map((c) => c.name).join(', ') : ''],
+    ['Brand', /^syora$/i.test(product.vendor || 'SYORA') ? 'SYORA' : product.vendor],
   ].filter(([, value]) => availableFact(value));
-  const tagline = product.oneLineHook || firstSentence(product.description);
+  const keyFacts = aboutFacts.filter(([label]) => ['Material', 'Heel height', 'Sole', 'Best for'].includes(label)).slice(0, 4);
+  const aboutParagraphs = toParagraphs(product.description);
   const infoItems = [
-    product.description && product.description.trim() !== tagline.trim() && {
-      id: 'description', title: 'Description', icon: 'doc',
-      content: <p>{product.description}</p>,
-    },
     product.benefits?.length > 0 && {
       id: 'benefits', title: "Why you'll love it", icon: 'heart',
       content: <ul className="pdp-bullets">{product.benefits.map((b, i) => <li key={i}>{b.text}</li>)}</ul>,
@@ -586,7 +606,7 @@ export default function ProductPage({ handle }) {
       id: 'shipping', title: 'Shipping, Delivery & Exchange', icon: 'truck',
       content: (
         <>
-          <p>We ship across India to serviceable PIN codes. Estimated delivery is 5–7 business days.</p>
+          <p>We ship across India to serviceable PIN codes. Estimated delivery is 3–7 business days.</p>
           <p>Cash on Delivery is available across India wherever the PIN code and courier are serviceable.</p>
           <p>For a size or colour exchange, contact SYORA within 48 hours of delivery. Items must be unworn and returned with their original packaging and tags. Exchanges are subject to availability.</p>
           <p>If your order arrives damaged or you receive the wrong item, please contact us within 48 hours with your order number and clear photos. We will arrange an appropriate resolution. No change-of-mind returns are offered; this does not limit remedies required by applicable consumer law.</p>
@@ -600,16 +620,6 @@ export default function ProductPage({ handle }) {
           {availableFact(product.material) && <p><strong>Composition:</strong> {product.material}</p>}
           <p><strong>Care:</strong> Wipe gently with a soft, dry cloth. Keep away from prolonged moisture, direct heat, and harsh chemicals. Store in a cool, dry place.</p>
         </>
-      ),
-    },
-    productFacts.length > 0 && {
-      id: 'specs', title: 'Product Specifications', icon: 'tag',
-      content: (
-        <dl className="pdp-facts">
-          {productFacts.map(([label, value]) => (
-            <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
-          ))}
-        </dl>
       ),
     },
     {
@@ -666,17 +676,26 @@ export default function ProductPage({ handle }) {
 
   return (
     <div className="pdp">
-      <title>{product.pageTitle}</title>
-      <meta name="description" content={product.pageDescription} />
+      <title>{seo.title}</title>
+      <meta name="description" content={seo.description} />
+      <link rel="canonical" href={seo.url} />
+      <meta property="og:type" content="product" />
+      <meta property="og:site_name" content="SYORA" />
+      <meta property="og:title" content={seo.title} />
+      <meta property="og:description" content={seo.description} />
+      <meta property="og:url" content={seo.url} />
+      {seo.image && <meta property="og:image" content={seo.image} />}
+      {seo.price > 0 && <meta property="product:price:amount" content={Number(seo.price).toFixed(2)} />}
+      {seo.price > 0 && <meta property="product:price:currency" content="INR" />}
+      <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
+      <meta name="twitter:title" content={seo.title} />
+      <meta name="twitter:description" content={seo.description} />
+      {seo.image && <meta name="twitter:image" content={seo.image} />}
+      {seo.jsonLd.map((ld, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
+      ))}
 
       <Navbar universeMode solid />
-
-      {product.offerBanner && (
-        <div className="pdp-offer" role="note">
-          <span aria-hidden="true">🎁</span>
-          <span>{product.offerBanner}</span>
-        </div>
-      )}
 
       <main>
         {/* ═══════════ HERO: gallery + buy box ═══════════ */}
@@ -700,12 +719,15 @@ export default function ProductPage({ handle }) {
                 <img
                   key={activeImg}
                   src={product.images[activeImg]}
-                  alt={`${product.name} — view ${activePosition + 1}`}
+                  alt={`${product.name}${selectedColourName ? `, ${selectedColourName}` : ''} — view ${activePosition + 1} of ${galleryImageIndices.length}`}
                   className="pdp-gallery__img"
                 />
-                <button type="button" className="pdp-gallery__expand" onClick={() => setLightbox(true)} aria-label="View image full screen">
-                  <Icon name="expand" size={18} />
+                <button type="button" className="pdp-gallery__expand" onClick={() => setLightbox(true)} aria-label="Zoom image">
+                  <Icon name="zoom" size={18} />
                 </button>
+                {galleryImageIndices.length > 1 && (
+                  <span className="pdp-gallery__count" aria-live="polite">{activePosition + 1} / {galleryImageIndices.length}</span>
+                )}
                 {galleryImageIndices.length > 1 && (
                   <>
                     <button type="button" className="pdp-gallery__arrow pdp-gallery__arrow--prev" onClick={() => moveGalleryImage(-1)} aria-label="Previous image"><Icon name="chevL" size={20} /></button>
@@ -735,26 +757,32 @@ export default function ProductPage({ handle }) {
 
             {/* ── Buy box ── */}
             <div className="pdp-buy">
-              <p className="pdp-buy__eyebrow">
-                {universe ? `${titleCase(universe.name)} Collection` : 'SYORA'}
-                {product.badge && <span className="pdp-buy__badge">{product.badge}</span>}
-              </p>
+              {product.badge && <p className="pdp-buy__badgewrap"><span className="pdp-buy__badge">{product.badge}</span></p>}
               <h1 className="pdp-buy__name">{product.name}</h1>
-              {tagline && <p className="pdp-buy__tagline">{tagline}</p>}
 
-              {hasRating && (
-                <a className="pdp-buy__rating" href="#pdp-reviews">
-                  <Stars value={Number(displayRating)} />
-                  <span>{Number(displayRating).toFixed(1)} ({reviewCount})</span>
-                </a>
-              )}
-
-              <div className="pdp-buy__price">
-                <span className="pdp-buy__price-now">{product.price ? `₹${product.price.toLocaleString('en-IN')}` : ''}</span>
-                {hasDiscount && <span className="pdp-buy__price-was">₹{product.originalPrice.toLocaleString('en-IN')}</span>}
-                {product.discountPercent > 0 && <span className="pdp-buy__price-off">{product.discountPercent}% OFF</span>}
+              <div className="pdp-buy__pricerow">
+                <div className="pdp-buy__price">
+                  <span className="pdp-buy__price-now">{product.price ? `₹${product.price.toLocaleString('en-IN')}` : ''}</span>
+                  {hasDiscount && <span className="pdp-buy__price-was">₹{product.originalPrice.toLocaleString('en-IN')}</span>}
+                  {product.discountPercent > 0 && <span className="pdp-buy__price-off">{product.discountPercent}% OFF</span>}
+                </div>
+                {hasRating && (
+                  <a className="pdp-buy__rating" href="#pdp-reviews" aria-label={`Rated ${Number(displayRating).toFixed(1)} out of 5 from ${reviewCount} reviews`}>
+                    <span className="pdp-buy__star" aria-hidden="true">★</span>
+                    <strong>{Number(displayRating).toFixed(1)}</strong>
+                    <span>({reviewCount})</span>
+                  </a>
+                )}
               </div>
               <p className="pdp-buy__tax">Inclusive of all taxes</p>
+
+              {keyFacts.length > 0 && (
+                <dl className="pdp-keyfacts" aria-label="Key details">
+                  {keyFacts.map(([label, value]) => (
+                    <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+                  ))}
+                </dl>
+              )}
 
               {product.colours?.length > 0 && (
                 <div className="pdp-field pdp-field--colour">
@@ -766,15 +794,15 @@ export default function ProductPage({ handle }) {
                       <li key={c.name}>
                         <button
                           type="button"
-                          className={`pdp-swatch${i === selectedColour ? ' is-active' : ''}`}
+                          className={`pdp-swatch${c.image ? ' has-photo' : ''}${i === selectedColour ? ' is-active' : ''}`}
                           onClick={() => handleColourSelect(i)}
                           title={c.name}
                           aria-label={`Select colour: ${c.name}`}
                           aria-pressed={i === selectedColour}
                         >
-                          {/* Solid colour when the name is recognised; the variant photo otherwise. */}
-                          {c.image && (!c.hex || c.hex === UNKNOWN_HEX)
-                            ? <img src={c.image} alt="" />
+                          {/* The variant photo when there is one; a solid colour otherwise. */}
+                          {c.image
+                            ? <img src={c.image} alt="" loading="lazy" />
                             : <span style={{ background: c.hex }} />}
                         </button>
                       </li>
@@ -785,7 +813,7 @@ export default function ProductPage({ handle }) {
 
               <div className="pdp-field">
                 <div className="pdp-field__row">
-                  <p className="pdp-field__label">Select size</p>
+                  <p className="pdp-field__label">Size<span className="pdp-field__value">: {selectedSize || 'Select a size'}</span></p>
                   <button
                     type="button"
                     className="pdp-link"
@@ -795,7 +823,7 @@ export default function ProductPage({ handle }) {
                     }}
                     aria-controls="pdp-size-guidance"
                   >
-                    Size Guide <Icon name="arrow" size={13} />
+                    <Icon name="ruler" size={18} /> Size Guide
                   </button>
                 </div>
 
@@ -820,6 +848,7 @@ export default function ProductPage({ handle }) {
                   })}
                 </div>
                 {sizeError && <p className="pdp-size-error" role="alert">Please select a size to continue.</p>}
+                {product.modelSize && <p className="pdp-modelnote">Model is wearing size {product.modelSize}.</p>}
 
                 {product.fitNote && product.fitNote !== 'Not known yet' && (
                   <p className="pdp-fitnote">
@@ -847,6 +876,13 @@ export default function ProductPage({ handle }) {
                   </p>
                 )}
               </div>
+
+              {product.offerBanner && (
+                <div className="pdp-offerstrip" role="note">
+                  <Icon name="tag" size={22} />
+                  <span>{product.offerBanner}</span>
+                </div>
+              )}
 
               {/* ── Delivery PIN checker (off: see SHOW_PIN_CHECKER) ── */}
               {SHOW_PIN_CHECKER && (
@@ -884,37 +920,55 @@ export default function ProductPage({ handle }) {
           </section>
         </div>
 
+        {/* ═══════════ ABOUT THIS STYLE (open by default: description + specs) ═══════════ */}
+        {(aboutParagraphs.length > 0 || aboutFacts.length > 1) && (
+          <section id="pdp-about" className="pdp-section pdp-about" aria-labelledby="pdp-about-title">
+            <div className="pdp-wrap pdp-about__grid">
+              <header className="pdp-about__head">
+                <p className="pdp-eyebrow">About this style</p>
+                <h2 id="pdp-about-title" className="pdp-h2">About the {product.name}</h2>
+              </header>
+              <div className="pdp-about__body">
+                {aboutParagraphs.map((para, i) => <p key={i} className="pdp-about__text">{para}</p>)}
+                {aboutFacts.length > 1 && (
+                  <dl className="pdp-specs">
+                    {aboutFacts.map(([label, value]) => (
+                      <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ═══════════ A CLOSER LOOK ═══════════ */}
         {closerLook.length > 0 && (
-          <Section
-            labelId="pdp-closer-title"
-            className="pdp-closer"
-            eyebrow="The details"
-            title="A Closer Look"
-            intro="Thoughtfully designed for all-day elegance, with refined details that make a difference."
-          >
-            <div className="pdp-closer__grid">
-              {closerLook.map((item) => (
-                <article className="pdp-closer__item" key={item.title}>
-                  <div className="pdp-media">
-                    <img
-                      src={item.image.src}
-                      alt={item.image.alt}
-                      width={item.image.width}
-                      height={item.image.height}
-                      style={item.image.style}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                  <div className="pdp-caption">
-                    <h3>{item.title}</h3>
-                    <p>{item.copy}</p>
-                  </div>
-                </article>
-              ))}
+          <section className="pdp-section pdp-closer" aria-labelledby="pdp-closer-title">
+            <div className="pdp-wrap">
+              <header className="pdp-closer__head">
+                <h2 id="pdp-closer-title" className="pdp-h2">A Closer Look</h2>
+                <p className="pdp-closer__sub">The details that make it special.</p>
+              </header>
+              <ul className={`pdp-closer__tiles${closerLook.length === 4 ? ' is-quad' : ''}`}>
+                {closerLook.map((item) => {
+                  const { src, alt, width, height, style } = item.image;
+                  const iconName = /cushion|insole|footbed|comfort|sole/i.test(item.title) ? 'layers'
+                    : /stitch|finish|upper/i.test(item.title) ? 'stitch'
+                    : /heel|height|base/i.test(item.title) ? 'heightArrow' : 'layers';
+                  return (
+                    <li className="pdp-closer__tile" key={item.title}>
+                      <img src={src} alt={alt} width={width} height={height} style={style} loading="lazy" decoding="async" />
+                      <span className="pdp-closer__label">
+                        <Icon name={iconName} size={26} stroke={1.3} />
+                        <span>{item.title}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-          </Section>
+          </section>
         )}
 
         {/* ═══════════ STYLE IT ═══════════ */}
@@ -926,7 +980,7 @@ export default function ProductPage({ handle }) {
             title="Pairs Beautifully With"
             intro={`Versatile looks for your ${footwearLabel}, from work to evenings and everything in between.`}
           >
-            <div className="pdp-style__grid">
+            <div className="pdp-style__grid" style={{ '--n': visibleLooks.length }}>
               {visibleLooks.map((look) => (
                 <article className="pdp-style__item" key={look.image}>
                   <div className="pdp-media pdp-media--tall">
@@ -1119,6 +1173,23 @@ export default function ProductPage({ handle }) {
                 <ProductCard key={p.id} product={{ ...p, imgHover: p.imgSecond || p.imgHover }} />
               ))}
             </div>
+          </Section>
+        )}
+
+        {/* ═══════════ RECENTLY VIEWED (this device only) ═══════════ */}
+        {recentlyViewed.length > 0 && (
+          <Section labelId="pdp-recent-title" className="pdp-recent" title="Recently Viewed">
+            <ul className="pdp-recent__list">
+              {recentlyViewed.map((p) => (
+                <li key={p.handle}>
+                  <Link to={`/product/${encodeURIComponent(p.handle)}`} className="pdp-recent__item">
+                    <span className="pdp-recent__img">{p.img && <img src={p.img} alt="" loading="lazy" />}</span>
+                    <span className="pdp-recent__name">{String(p.name || '').replace(/^syora\s+/i, '') || p.name}</span>
+                    {p.price > 0 && <span className="pdp-recent__price">₹{Number(p.price).toLocaleString('en-IN')}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </Section>
         )}
 

@@ -1,0 +1,276 @@
+/* ══════════════════════════════════════════════════════════
+   HOMEPAGE FEATURE SECTIONS — "Comfort Engineered" + "Crafted in Detail"
+   Scoped to .cx. Desktop is one banner-shaped stage whose copy is sized in
+   container units (cqw) so artwork and text scale as a single composition;
+   below 860px the copy stacks above a cropped view of the artwork.
+══════════════════════════════════════════════════════════ */
+.cx {
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  --cx-ink: #43101a;
+  --cx-ink-soft: rgba(67, 16, 26, 0.82);
+  --cx-hair: rgba(67, 16, 26, 0.22);
+  --cx-btn-bg: #5a0f1c;
+  --cx-btn-ink: #f7eee4;
+  background: #f5e2d5;
+  color: var(--cx-ink);
+  /* width of the artwork: about three quarters of the screen, between 840px and 1360px (so a section is ~420–680px tall on any standard screen) */
+  --cxw: min(100vw, clamp(840px, 76vw, 1360px));
+  --u: calc(var(--cxw) / 100);
+}
+.cx--details {
+  --cx-ink: #f5e9de;
+  --cx-ink-soft: rgba(245, 233, 222, 0.86);
+  --cx-hair: rgba(245, 233, 222, 0.26);
+  background: #360709;
+}
+
+/* Blends: each section fades in from the one above and out into the one below.
+   They sit between the artwork (below) and the copy (above), full-bleed. */
+.cx__fade {
+  position: absolute;
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+  z-index: 3;
+  pointer-events: none;
+}
+.cx__fade--top { top: 0; height: clamp(36px, 4vw, 80px); }
+.cx__fade--bottom { bottom: 0; height: clamp(40px, 5vw, 100px); }
+.cx--comfort .cx__fade--top { background: linear-gradient(to bottom, var(--hp-dark, #150b0a), color-mix(in srgb, var(--hp-dark, #150b0a) 0%, transparent)); }
+.cx--comfort .cx__fade--bottom { background: linear-gradient(to top, #370408, rgba(55, 4, 8, 0)); }
+.cx--details .cx__fade--top { background: linear-gradient(to bottom, #370408, rgba(55, 4, 8, 0)); }
+.cx--details .cx__fade--bottom { background: linear-gradient(to top, #140c07, rgba(20, 12, 7, 0)); }
+
+.cx__inner {
+  position: relative;
+  display: grid;
+  max-width: 2000px;
+  margin-inline: auto;
+  container-type: inline-size;
+}
+.cx__art {
+  grid-area: 1 / 1;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 1;
+}
+.cx__stage { position: absolute; inset: 0; isolation: isolate; z-index: 1; }
+.cx__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.05);
+  transition: transform 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cx.is-in .cx__img { transform: none; }
+
+/* Desktop: the artwork has a fixed, standard size (see --cxw) and sits against the right edge;
+   its left edge is the section colour, so the copy side stays seamless on wider screens. */
+@media (min-width: 860px) {
+  .cx__art {
+    width: var(--cxw);
+    justify-self: end;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 9%);
+    mask-image: linear-gradient(to right, transparent 0, #000 9%);
+  }
+}
+
+/* ── Copy ── */
+.cx__copy {
+  grid-area: 1 / 1;
+  --c: 1;                      /* scroll progress of the copy (script sets 0 → 1) */
+  position: relative;
+  z-index: 4;                  /* above the section's blend gradients */
+  align-self: center;
+  width: calc(var(--u) * 47);
+  padding: 0 0 0 calc(var(--u) * 5.3);
+}
+.cx__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.6);
+  font-family: 'Inter', sans-serif;
+  font-size: max(calc(var(--u) * 0.98), 11px);
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cx-ink-soft);
+}
+.cx__eyebrow::after { content: ''; width: calc(var(--u) * 4.5); height: 1px; background: currentColor; opacity: 0.6; }
+.cx__title {
+  margin-top: calc(var(--u) * 1.9);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: max(calc(var(--u) * 4.6), 2.1rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.005em;
+  color: var(--cx-ink);
+}
+.cx__lede {
+  margin-top: calc(var(--u) * 1.9);
+  max-width: calc(var(--u) * 31);
+  font-family: 'Inter', sans-serif;
+  font-size: max(calc(var(--u) * 1.6), 0.95rem);
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--cx-ink-soft);
+}
+.cx__features {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content: start;
+  margin: calc(var(--u) * 3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cx__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--u) * 0.9);
+  padding: 0 calc(var(--u) * 2.3);
+  text-align: center;
+  border-left: 1px solid var(--cx-hair);
+}
+.cx__feature:first-child { padding-left: 0; border-left: 0; }
+.cx__feature-icon { width: max(calc(var(--u) * 3.3), 28px); height: max(calc(var(--u) * 3.3), 28px); color: var(--cx-ink); }
+.cx__feature-icon svg { display: block; width: 100%; height: 100%; }
+.cx__feature-label {
+  max-width: calc(var(--u) * 8);
+  font-family: 'Inter', sans-serif;
+  font-size: max(calc(var(--u) * 1.1), 11.5px);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--cx-ink-soft);
+}
+.cx__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  margin-top: calc(var(--u) * 3.2);
+  padding: max(calc(var(--u) * 1.15), 13px) max(calc(var(--u) * 2), 22px);
+  border: 1px solid var(--cx-btn-bg);
+  background: var(--cx-btn-bg);
+  color: var(--cx-btn-ink);
+  font-family: 'Inter', sans-serif;
+  font-size: max(calc(var(--u) * 0.98), 11px);
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+.cx--details .cx__cta { background: transparent; border-color: rgba(245, 233, 222, 0.7); color: #f5e9de; }
+.cx__cta:hover { background: transparent; color: var(--cx-btn-bg); }
+.cx--details .cx__cta:hover { background: #f5e9de; color: #360709; border-color: #f5e9de; }
+.cx__cta:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.cx__cta-arrow { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.cx__cta:hover .cx__cta-arrow { transform: translateX(5px); }
+
+/* Wider measure for the paragraph over the dark artwork */
+.cx--details .cx__lede { max-width: calc(var(--u) * 40); }
+
+/* ── Comfort artwork: layers, leader lines and labels ──
+   --p runs 0 → 1 with scroll (set by script). With no script, or with motion reduced, it stays at 1:
+   the finished artwork and fully drawn labels. */
+.cx__stage { --p: 1; }
+.cx__plate, .cx__sprite { position: absolute; display: block; }
+.cx__plate { inset: 0; width: 100%; height: 100%; }
+.cx__layer, .cx__tagwrap { position: absolute; inset: 0; pointer-events: none; }
+.cx__layer {
+  transform: translate3d(calc((1 - var(--p)) * var(--ox, 0%)), calc((1 - var(--p)) * var(--o)), 0);
+  will-change: transform;
+}
+.cx__tagwrap {
+  z-index: 8;
+  transform: translate3d(calc((1 - var(--p)) * var(--ox, 0%)), calc((1 - var(--p)) * var(--o)), 0);
+  opacity: 1;
+}
+.cx__stage.is-animated .cx__tagwrap {
+  opacity: calc((var(--p) - 0.55) * 2.4);
+  will-change: transform, opacity;
+}
+/* the untouched artwork fades in over the layers during the last few % of the motion, so the settled state is exact */
+.cx__stage.is-animated .cx__img--final {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  opacity: calc((var(--p) - 0.9) * 10);
+}
+.cx--comfort .cx__img { transform: none; transition: none; }
+
+.cx__tag { position: absolute; left: 81.4%; top: var(--y); width: 6.5%; height: 0; }
+.cx__tag-line {
+  position: absolute; left: 0; top: -0.5px; width: 80%; height: 1px;
+  background: #43101a; opacity: 0.85;
+}
+.cx__tag-dot {
+  position: absolute; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: #43101a;
+}
+.cx__tag-dot--a { left: -3px; }
+.cx__tag-dot--b { left: calc(80% - 3px); }
+.cx__label {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  transform: translateY(-50%);
+  font-family: 'Inter', sans-serif;
+  font-size: max(calc(var(--u) * 1.24), 12px);
+  font-weight: 500;
+  line-height: 1.28;
+  color: #43101a;
+  white-space: nowrap;
+}
+
+/* ── Scroll-linked fade-in of the copy (each line starts a little after the one above) ── */
+.cx__copy > * {
+  --k: clamp(0, calc(var(--c) * 1.7 - var(--i, 0) * 0.17), 1);
+  opacity: var(--k);
+  transform: translateY(calc((1 - var(--k)) * 22px));
+}
+.cx__copy > :nth-child(1) { --i: 0; }
+.cx__copy > :nth-child(2) { --i: 1; }
+.cx__copy > :nth-child(3) { --i: 2; }
+.cx__copy > :nth-child(4) { --i: 3; }
+.cx__copy > :nth-child(5) { --i: 4; }
+
+/* ── Tablet: tighten the copy so it keeps clear of the artwork ── */
+@media (max-width: 1100px) and (min-width: 860px) {
+  .cx__copy { width: calc(var(--u) * 50); }
+  .cx__features { margin-top: calc(var(--u) * 2.2); }
+  .cx__cta { margin-top: calc(var(--u) * 2.4); }
+  .cx__lede { max-width: calc(var(--u) * 36); }
+}
+
+/* ── Mobile: copy first, then a cropped view of the artwork ── */
+@media (max-width: 859px) {
+  .cx__inner { display: flex; flex-direction: column; }
+  .cx__copy { order: 1; align-self: stretch; width: auto; padding: 56px clamp(22px, 6vw, 56px) 32px; }
+  .cx__art { order: 2; aspect-ratio: var(--crop-ratio); }
+  .cx--comfort { --crop-ratio: 1.2; --stage-w: 166.7%; --stage-l: -66.7%; }
+  .cx--details { --crop-ratio: 1.1; --stage-w: 181.8%; --stage-l: -81.8%; }
+  .cx__stage { inset: auto; top: 0; left: var(--stage-l); width: var(--stage-w); aspect-ratio: 2 / 1; }
+  .cx__eyebrow { font-size: 0.68rem; gap: 14px; }
+  .cx__eyebrow::after { width: 36px; }
+  .cx__title { margin-top: 14px; font-size: clamp(2.3rem, 10.5vw, 3rem); }
+  .cx__lede { margin-top: 14px; max-width: none; font-size: 0.98rem; }
+  .cx__features { grid-template-columns: repeat(2, 1fr); gap: 22px 0; margin-top: 28px; }
+  .cx__feature { flex-direction: row; align-items: center; gap: 12px; padding: 0; border: 0; text-align: left; }
+  .cx__feature-icon { width: 30px; height: 30px; flex: none; }
+  .cx__feature-label { max-width: none; font-size: 0.84rem; }
+  .cx__cta { margin-top: 30px; gap: 14px; padding: 15px 22px; font-size: 0.7rem; }
+  .cx__label { font-size: 10.5px; line-height: 1.25; white-space: normal; width: 9.6vw; min-width: 56px; }
+  .cx__fade--top { height: 70px; }
+  .cx--comfort .cx__fade--bottom { display: none; }
+  .cx--details .cx__fade--top { display: none; }
+  .cx--details .cx__fade--bottom { height: 90px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx__img { transform: none; transition: none; }
+  .cx__copy > * { opacity: 1; transform: none; }
+  .cx__layer, .cx__tagwrap { transform: none; }
+  .cx__stage .cx__tagwrap { opacity: 1; }
+}
