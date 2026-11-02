@@ -2,10 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     { "source": "/product/black-pump", "destination": "/product/nyx-black-slingback-heels", "permanent": true },
-    { "source": "/product/black-pumps", "destination": "/product/aria-black-block-heel-pumps", "permanent": true },
+    { "source": "/product/black-pumps", "destination": "/product/colette-black-bow-pumps", "permanent": true },
     { "source": "/product/glitter-flat", "destination": "/product/iris-black-mary-janes", "permanent": true },
-    { "source": "/product/kitten-heels", "destination": "/product/rosalie-kitten-heels", "permanent": true },
-    { "source": "/product/zebra-flats", "destination": "/product/zebra-print-flats", "permanent": true }
+    { "source": "/product/kitten-heels", "destination": "/product/aveline-nude-kitten-heels", "permanent": true },
+    { "source": "/product/zebra-flats", "destination": "/product/zebra-print-flats", "permanent": true },
+    { "source": "/product/aria-black-block-heel-pumps", "destination": "/product/colette-black-bow-pumps", "permanent": true },
+    { "source": "/product/rosalie-kitten-heels", "destination": "/product/aveline-nude-kitten-heels", "permanent": true }
   ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }

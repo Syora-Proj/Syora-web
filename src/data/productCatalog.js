@@ -20,9 +20,9 @@ export const PRODUCT_CATALOG = {
     description: 'Nyx black slingback heels with a sleek pointed toe, glossy finish and cushioned footbed. Premium women’s heels by SYORA.',
   },
   'black-pumps': {
-    name: 'Aria Black Block Heel Pumps',
-    slug: 'aria-black-block-heel-pumps',
-    description: 'Aria block heel pumps in black with a glossy patent finish and soft cushioned insole, made for all-day comfort. By SYORA.',
+    name: 'Colette Black Patent Bow Pumps',
+    slug: 'colette-black-bow-pumps',
+    description: 'Colette bow pumps in black with a glossy patent finish and soft cushioned insole, made for all-day comfort. By SYORA.',
   },
   'glitter-flat': {
     name: 'Iris Black Mary Janes',
@@ -30,9 +30,9 @@ export const PRODUCT_CATALOG = {
     description: 'Iris Mary Jane shoes with a glossy strap, buckle closure and low block heel. Comfortable women’s Mary Janes by SYORA.',
   },
   'kitten-heels': {
-    name: 'Rosalie Kitten Heels',
-    slug: 'rosalie-kitten-heels',
-    description: 'Rosalie kitten heels in nude, burgundy and black. Elegant low heels for work, occasions and everyday. By SYORA.',
+    name: 'Aveline Nude Kitten Heels',
+    slug: 'aveline-nude-kitten-heels',
+    description: 'Aveline kitten heels in nude, burgundy and black. Elegant low heels for work, occasions and everyday. By SYORA.',
   },
   'zebra-flats': {
     name: 'Zebra Print Flats',
