@@ -1,16 +1,17 @@
 /**
- * SYORA — POST /api/cashfree-create-order
+ * SYORA — POST /api/razorpay-create-order
  *
- * Starts an online (Cashfree) payment. Re-prices the cart server-side —
- * amounts are never trusted from the client. Returns a payment_session_id
- * for the frontend to hand to Cashfree's checkout SDK.
+ * Starts an online (Razorpay) payment. Re-prices the cart server-side —
+ * amounts are never trusted from the client. Returns the Razorpay order id
+ * for the frontend to hand to Razorpay Checkout's modal.
  *
- * The resulting Shopify order is NOT created here — it's created by
- * /api/cashfree-webhook.js once Cashfree confirms payment succeeded.
+ * The resulting Shopify order is created by /api/razorpay-verify-payment.js
+ * once the browser's checkout handler reports a signed, successful payment
+ * (with /api/razorpay-webhook.js as a backup path — see that file).
  */
 
 import { getAuthoritativeCart, shippingFeeFor } from './_lib/shopify.js';
-import { createCashfreeOrder } from './_lib/cashfree.js';
+import { createRazorpayOrder, rupeesToPaise } from './_lib/razorpay.js';
 
 const PHONE_RE = /^[6-9]\d{9}$/;
 const PINCODE_RE = /^\d{6}$/;
@@ -37,19 +38,12 @@ export default async function handler(req, res) {
     const shippingFee = shippingFeeFor(cart.subtotal);
     const total = cart.subtotal + shippingFee;
 
-    const orderId = `syora_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const siteUrl = process.env.SITE_URL;
+    const receipt = `syora_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    const { paymentSessionId } = await createCashfreeOrder({
-      orderId,
-      amount: total,
-      customer: { id: cartId.replace(/\W/g, '').slice(-32), name: customer.name, email: customer.email, phone: customer.phone },
-      returnUrl: `${siteUrl}/order-confirmation?cf_order_id=${orderId}`,
-      notifyUrl: `${siteUrl}/api/cashfree-webhook`,
-      // Flat key/value pairs, not a nested JSON blob — Cashfree's sandbox API
-      // returns a 500 when order_note contains two nested objects together
-      // (reproduced directly against their API; order_tags has no such issue).
-      orderTags: {
+    const order = await createRazorpayOrder({
+      amountPaise: rupeesToPaise(total),
+      receipt,
+      notes: {
         cart_id: cartId,
         name: customer.name,
         email: customer.email,
@@ -63,9 +57,15 @@ export default async function handler(req, res) {
       },
     });
 
-    return res.status(200).json({ orderId, paymentSessionId, total });
+    return res.status(200).json({
+      orderId: order.id,
+      amount: order.amount,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      total,
+      customer: { name: customer.name, email: customer.email, phone: customer.phone },
+    });
   } catch (err) {
-    console.error('[cashfree-create-order]', err);
+    console.error('[razorpay-create-order]', err);
     return res.status(500).json({ error: 'Could not start payment. Please try again.' });
   }
 }

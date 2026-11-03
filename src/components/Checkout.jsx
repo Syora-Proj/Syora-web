@@ -2,11 +2,15 @@
  * SYORA — Checkout (/checkout)
  *
  * Collects shipping details, then hands off payment to one of two places:
- *   - "Pay online"        → Cashfree's hosted checkout (card/UPI/netbanking)
+ *   - "Pay online"        → Razorpay Checkout modal (card/UPI/netbanking)
  *   - "Cash on Delivery"  → order is created immediately, unpaid
  *
  * No card, UPI, or payment details are ever collected on this page or by
- * this site's own code — Cashfree's hosted page handles that entirely.
+ * this site's own code — Razorpay's modal handles that entirely. After a
+ * successful payment, Razorpay's handler callback returns a signed receipt
+ * (order id, payment id, signature) which is verified server-side in
+ * /api/razorpay-verify-payment.js before any order is created — the browser
+ * reporting "success" is never trusted on its own.
  */
 
 import { useState } from 'react';
@@ -36,12 +40,12 @@ const PHONE_RE = /^[6-9]\d{9}$/;
 const PINCODE_RE = /^\d{6}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function loadCashfreeSdk() {
+function loadRazorpaySdk() {
   return new Promise((resolve, reject) => {
-    if (window.Cashfree) return resolve(window.Cashfree);
+    if (window.Razorpay) return resolve(window.Razorpay);
     const script = document.createElement('script');
-    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-    script.onload = () => resolve(window.Cashfree);
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(window.Razorpay);
     script.onerror = () => reject(new Error('Could not load the payment SDK. Check your connection and try again.'));
     document.head.appendChild(script);
   });
@@ -114,7 +118,7 @@ export default function Checkout() {
         return;
       }
 
-      const res = await fetch('/api/cashfree-create-order', {
+      const res = await fetch('/api/razorpay-create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -122,11 +126,44 @@ export default function Checkout() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not start payment.');
 
-      const Cashfree = await loadCashfreeSdk();
-      // Must match CASHFREE_ENV (server-side) — see .env.local.
-      const cashfree = Cashfree({ mode: import.meta.env.VITE_CASHFREE_MODE || 'production' });
-      cashfree.checkout({ paymentSessionId: data.paymentSessionId, redirectTarget: '_self' });
-      // Browser navigates away to Cashfree's hosted page here.
+      const Razorpay = await loadRazorpaySdk();
+      const rzp = new Razorpay({
+        key: data.keyId,
+        amount: data.amount,
+        currency: 'INR',
+        order_id: data.orderId,
+        name: 'SYORA',
+        description: 'Order payment',
+        prefill: { name: data.customer.name, email: data.customer.email, contact: data.customer.phone },
+        theme: { color: '#5a0f1c' },
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch('/api/razorpay-verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.error || 'Could not verify your payment.');
+            navigate(`/order-confirmation?order_number=${encodeURIComponent(verifyData.orderName)}`);
+          } catch (err) {
+            setSubmitError(err.message || 'Payment succeeded but something went wrong finalizing your order. Contact us with your payment ID.');
+            setSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: () => setSubmitting(false),
+        },
+      });
+      rzp.on('payment.failed', (response) => {
+        setSubmitError(response.error?.description || 'Payment failed. Please try again.');
+        setSubmitting(false);
+      });
+      rzp.open();
     } catch (err) {
       setSubmitError(err.message || 'Something went wrong. Please try again.');
       setSubmitting(false);
@@ -220,7 +257,7 @@ export default function Checkout() {
                     <label className={`ckt__pay-opt${method === 'online' ? ' ckt__pay-opt--active' : ''}`}>
                       <input type="radio" name="method" value="online" checked={method === 'online'} onChange={() => setMethod('online')} />
                       <span className="ckt__pay-opt-title">Pay online</span>
-                      <span className="ckt__pay-opt-sub">Cards, UPI, netbanking &amp; wallets via Cashfree</span>
+                      <span className="ckt__pay-opt-sub">Cards, UPI, netbanking &amp; wallets via Razorpay</span>
                     </label>
                     <label className={`ckt__pay-opt${method === 'cod' ? ' ckt__pay-opt--active' : ''}`}>
                       <input type="radio" name="method" value="cod" checked={method === 'cod'} onChange={() => setMethod('cod')} />
@@ -228,7 +265,7 @@ export default function Checkout() {
                       <span className="ckt__pay-opt-sub">Pay in cash when your order arrives*</span>
                     </label>
                   </div>
-                  <p className="ckt__fine">*Where your PIN code and courier are serviceable. Card and UPI details are entered only on Cashfree's secure payment page — never on this site.</p>
+                  <p className="ckt__fine">*Where your PIN code and courier are serviceable. Card and UPI details are entered only in Razorpay's secure payment window — never on this site.</p>
                 </section>
 
                 {submitError && <div className="ckt__submit-error" role="alert">{submitError}</div>}

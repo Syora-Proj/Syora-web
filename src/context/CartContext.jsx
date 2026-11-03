@@ -85,7 +85,7 @@ export function CartProvider({ children }) {
       setCartError('Your bag is empty. Please add items first.');
       return;
     }
-    // Our own checkout page: address + Cashfree (or Cash on Delivery) — see /checkout.
+    // Our own checkout page: address + Razorpay (or Cash on Delivery) — see /checkout.
     window.location.href = '/checkout';
   }, [cart]);
 

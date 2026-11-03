@@ -3,7 +3,7 @@
  *
  * Cash on Delivery path — advertised on the cart page ("Cash on Delivery*
  * ... where your PIN code and courier are serviceable"), so it's kept as
- * a real option alongside Cashfree. No external payment gateway involved:
+ * a real option alongside Razorpay. No external payment gateway involved:
  * the order is created immediately as unpaid (financial_status: pending).
  */
 

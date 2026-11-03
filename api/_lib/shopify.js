@@ -120,7 +120,7 @@ const DRAFT_ORDER_COMPLETE = `
  * @param {number} opts.shippingFee
  * @param {Array<string>} opts.tags
  * @param {string} opts.note
- * @param {boolean} opts.paymentPending - true for COD (unpaid), false/omit for already-paid (Cashfree)
+ * @param {boolean} opts.paymentPending - true for COD (unpaid), false/omit for already-paid (Razorpay)
  * @returns {Promise<{orderId: string, orderName: string}>}
  */
 export async function createShopifyOrder({ lines, address, email, shippingFee, tags, note, paymentPending }) {
@@ -157,11 +157,22 @@ export async function createShopifyOrder({ lines, address, email, shippingFee, t
   return { orderId: order.id, orderName: order.name };
 }
 
-/** Idempotency guard: has an order already been created for this Cashfree order_id? */
-export async function findOrderByCashfreeOrderId(cfOrderId) {
+/**
+ * Idempotency guard: has an order already been created for this payment gateway's order id?
+ *
+ * KNOWN LIMITATION (verified directly): Shopify's order search index lags
+ * writes by a few seconds. Two calls to this within that window - e.g. the
+ * Razorpay client-side verify call and the Razorpay webhook firing almost
+ * simultaneously after a real payment - can both miss the other's order and
+ * create a duplicate. Low-risk today since only one gateway order-creation
+ * path is ever live at a time (the webhook is inert until
+ * RAZORPAY_WEBHOOK_SECRET is configured), but revisit with real locking
+ * (e.g. Vercel KV) before running both paths concurrently in production.
+ */
+export async function findOrderByGatewayOrderId(gatewayOrderId) {
   const data = await adminFetch(
     `query($q: String!) { orders(first: 1, query: $q) { edges { node { id name } } } }`,
-    { q: `tag:'cf_order_id:${cfOrderId}'` },
+    { q: `tag:'gateway_order_id:${gatewayOrderId}'` },
   );
   return data.orders.edges[0]?.node || null;
 }

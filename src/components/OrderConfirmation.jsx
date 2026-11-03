@@ -1,20 +1,20 @@
 /**
  * SYORA — Order Confirmation Page
  *
- * Shown when a customer returns from Cashfree's hosted checkout, or
- * immediately after placing a Cash on Delivery order.
+ * Shown immediately after a Razorpay payment is verified server-side, or
+ * after a Cash on Delivery order is placed.
  *
  * IMPORTANT RULES:
  * - We NEVER mark an order as paid based solely on the customer landing here.
- * - For online payments, the Shopify order is created by the Cashfree
- *   webhook (/api/cashfree-webhook.js), not by this page — Cashfree +
- *   Shopify are the source of truth, not the URL the browser lands on.
+ * - For online payments, the Shopify order is created by
+ *   /api/razorpay-verify-payment.js (signature-verified server-side) before
+ *   this page ever navigates here — by the time order_number is present,
+ *   the order genuinely exists in Shopify, not just "probably".
  * - The purchase analytics event fires once per order ID, guarded by sessionStorage.
  *
  * Query params:
- *   ?cf_order_id=...   — set on Cashfree's return_url (online payment just attempted)
- *   ?order_number=...  — set by this site after a Cash on Delivery order is placed
- * Neither is trusted to confirm payment status — informational only.
+ *   ?order_number=...  — set by this site only after the order was actually created
+ *   ?cod=1             — distinguishes Cash on Delivery from a paid order, for copy only
  */
 
 import { useEffect, useState } from 'react';
@@ -28,24 +28,21 @@ export default function OrderConfirmation() {
   const navigate           = useNavigate();
   const [tracked, setTracked] = useState(false);
 
-  // Read order data from the return URL (Cashfree return_url or our own COD redirect)
-  const cfOrderId   = searchParams.get('cf_order_id');
   const orderNumber = searchParams.get('order_number');
   const isCod        = searchParams.get('cod') === '1';
-  const orderId      = cfOrderId || orderNumber;
 
   useEffect(() => {
     // Fire purchase event once, guarded against duplicate firing on refresh
-    if (orderId && !tracked) {
+    if (orderNumber && !tracked) {
       trackPurchase({
-        orderId,
-        total:    0,         // Actual total fetched via webhook/Admin API; do not trust URL params
+        orderId:  orderNumber,
+        total:    0,         // Actual total available via Admin API if needed; do not trust URL params
         currency: 'INR',
-        items:    [],        // Items populated by webhook; not from client-side state
+        items:    [],
       });
       setTracked(true);
     }
-  }, [orderId, tracked]);
+  }, [orderNumber, tracked]);
 
   return (
     <div className="order-confirm">
@@ -71,7 +68,7 @@ export default function OrderConfirmation() {
           <p className="order-confirm__body">
             {isCod
               ? <>You'll pay in cash when your order arrives.<br />A confirmation email is on its way.</>
-              : <>If your payment went through, you'll receive a confirmation email shortly.<br />Having trouble? Check your email or contact us before trying again.</>}
+              : <>Your payment is confirmed.<br />A confirmation email is on its way.</>}
           </p>
 
           <div className="order-confirm__actions">
