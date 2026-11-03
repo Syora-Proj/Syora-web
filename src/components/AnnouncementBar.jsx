@@ -48,6 +48,7 @@ export default function AnnouncementBar() {
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [shown, setShown] = useState(false);
   const count = SLIDES.length;
   const rootRef = useRef(null);
 
@@ -65,7 +66,28 @@ export default function AnnouncementBar() {
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
-  const rotating = count > 1 && !paused && !reduced && !hidden;
+  // Hidden on first paint so the opening screen stays clean; slides in after the
+  // first scroll and tucks away again when the visitor is back at the very top.
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      setShown((prev) => (prev ? y > 8 : y > 40));
+    };
+    const onScroll = () => { if (!raf) raf = window.requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (raf) window.cancelAnimationFrame(raf); };
+  }, []);
+
+  // Lets the pinned navbar (App.css) sit just beneath the bar while it is showing.
+  useEffect(() => {
+    document.documentElement.classList.toggle('ann-on', shown);
+    return () => document.documentElement.classList.remove('ann-on');
+  }, [shown]);
+
+  const rotating = count > 1 && shown && !paused && !reduced && !hidden;
   useEffect(() => {
     if (!rotating) return undefined;
     const t = window.setTimeout(() => setIndex((i) => (i + 1) % count), INTERVAL_MS);
@@ -82,7 +104,9 @@ export default function AnnouncementBar() {
   return (
     <section
       ref={rootRef}
-      className="ann"
+      className={`ann${shown ? ' is-shown' : ''}`}
+      aria-hidden={shown ? undefined : true}
+      inert={shown ? undefined : true}
       aria-roledescription="carousel"
       aria-label="Store announcements"
       onMouseEnter={() => setPaused(true)}
@@ -101,7 +125,7 @@ export default function AnnouncementBar() {
         {SLIDES.map((m, i) => (
           <div
             key={m.id}
-            className={`ann__slide${i === index ? ' is-active' : ''}`}
+            className={`ann__slide${i === index ? ' is-active' : i < index ? ' is-before' : ''}`}
             role="group"
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${count}`}

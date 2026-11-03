@@ -1,12 +1,18 @@
 /* SYORA announcement bar — oxblood ground, champagne type, one message at a time.
-   Height is fixed (--ab-h) so nothing shifts while messages rotate; the navbar
-   and the homepage entry screen read the same variable to stay aligned. */
+   Fixed overlay, hidden until the first scroll, so it never takes space in the page
+   (no layout shift). Fixed height --ab-h so nothing moves while messages rotate. */
 :root { --ab-h: 36px; }
 @media (max-width: 560px) { :root { --ab-h: 34px; } }
 
 .ann {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 210;
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 380ms;
   box-sizing: border-box;
   height: var(--ab-h);
   display: flex;
@@ -19,6 +25,8 @@
   overflow: hidden;
 }
 
+.ann.is-shown { transform: translateY(0); visibility: visible; transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s; }
+
 .ann__viewport { position: relative; flex: 1 1 auto; height: 100%; min-width: 0; }
 .ann__slide {
   position: absolute;
@@ -28,14 +36,15 @@
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(7px);
-  transition: opacity 450ms ease, transform 450ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 450ms;
+  transform: translateX(56px);
+  transition: opacity 500ms ease, transform 600ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 600ms;
 }
+.ann__slide.is-before { transform: translateX(-56px); }
 .ann__slide.is-active {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
-  transition: opacity 450ms ease 120ms, transform 450ms cubic-bezier(0.22, 1, 0.36, 1) 120ms, visibility 0s;
+  transform: translateX(0);
+  transition: opacity 500ms ease 100ms, transform 600ms cubic-bezier(0.22, 1, 0.36, 1) 100ms, visibility 0s;
 }
 
 .ann__msg {
@@ -83,5 +92,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ann, .ann.is-shown { transition: none; }
   .ann__slide, .ann__slide.is-active { transform: none; transition: none; }
 }

@@ -3369,8 +3369,10 @@
 .mv2-about__cta, .about-us__cta { font-size: 0.74rem; }
 @media (max-width: 1023px) { .sp__go { min-height: 44px !important; } }
 
-/* ── Announcement bar offset ──
-   The bar is an in-flow strip above every page (see AnnouncementBar.css).
-   The absolutely-positioned navbar starts directly beneath it; once the homepage
-   navbar pins to the viewport (.navbar--intro-passed) it returns to top: 0. */
-.navbar { top: var(--ab-h, 0px); }
+/* ── Announcement bar ──
+   The bar is a fixed overlay that slides in after the first scroll (AnnouncementBar.jsx),
+   so it reserves no space. When it is showing, the pinned homepage navbar steps down
+   to sit directly beneath it. */
+.navbar--redesign.navbar--intro-passed { transition: top 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease, transform 300ms ease, background-color 300ms ease, visibility 0s; }
+html.ann-on .navbar--redesign.navbar--intro-passed { top: var(--ab-h, 0px); }
+@media (prefers-reduced-motion: reduce) { .navbar--redesign.navbar--intro-passed { transition: none; } }
