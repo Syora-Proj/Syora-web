@@ -51,6 +51,9 @@ export default async function handler(req, res) {
       tags: ['source:cod'],
       note: 'Cash on Delivery — payment due at delivery.',
       paymentPending: true,
+      discount: cart.discountAmount > 0
+        ? { amount: cart.discountAmount, title: cart.discountCodes.join(',') || undefined }
+        : undefined,
     });
 
     return res.status(200).json({ orderName });

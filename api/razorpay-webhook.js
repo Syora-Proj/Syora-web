@@ -100,6 +100,9 @@ export default async function handler(req, res) {
       tags: [`gateway_order_id:${razorpayOrderId}`, `razorpay_payment_id:${razorpayPaymentId}`, 'source:razorpay'],
       note: `Paid via Razorpay (webhook). Order ID: ${razorpayOrderId}, Payment ID: ${razorpayPaymentId}`,
       paymentPending: false,
+      discount: parseFloat(notes.discount_amount || '0') > 0
+        ? { amount: parseFloat(notes.discount_amount), title: notes.discount_code || undefined }
+        : undefined,
     });
 
     console.log(`[razorpay-webhook] created ${orderName} for Razorpay order ${razorpayOrderId}`);

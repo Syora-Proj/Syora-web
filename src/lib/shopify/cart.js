@@ -20,6 +20,7 @@ import {
   CART_LINES_ADD_MUTATION,
   CART_LINES_UPDATE_MUTATION,
   CART_LINES_REMOVE_MUTATION,
+  CART_DISCOUNT_CODES_UPDATE_MUTATION,
 } from './queries';
 
 const CART_ID_KEY = 'syora_cart_id';
@@ -217,6 +218,25 @@ export async function removeFromCart(lineId) {
   });
   throwIfUserErrors(data?.cartLinesRemove?.userErrors, 'lines remove');
   return normaliseCart(data?.cartLinesRemove?.cart);
+}
+
+/**
+ * Set the cart's discount codes (pass [] to remove). Shopify validates the code and
+ * reports it back with applicable true/false; the discounted total comes from Shopify too.
+ *
+ * @param {string[]} codes
+ * @returns {Promise<Object>} - Updated normalised cart
+ */
+export async function updateDiscountCodes(codes) {
+  const cartId = loadCartId();
+  if (!cartId) throw new Error('No active cart.');
+
+  const data = await shopifyFetch({
+    query:     CART_DISCOUNT_CODES_UPDATE_MUTATION,
+    variables: { cartId, discountCodes: codes },
+  });
+  throwIfUserErrors(data?.cartDiscountCodesUpdate?.userErrors, 'discount update');
+  return normaliseCart(data?.cartDiscountCodesUpdate?.cart);
 }
 
 /**

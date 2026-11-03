@@ -40,7 +40,8 @@ const CART_QUERY = `
     cart(id: $cartId) {
       id
       totalQuantity
-      cost { subtotalAmount { amount currencyCode } }
+      cost { subtotalAmount { amount currencyCode } totalAmount { amount currencyCode } }
+      discountCodes { code applicable }
       lines(first: 100) {
         edges {
           node {
@@ -72,16 +73,29 @@ export async function getAuthoritativeCart(cartId) {
   const cart = data?.cart;
   if (!cart || !cart.lines?.edges?.length) return null;
 
+  const lines = cart.lines.edges.map((e) => ({
+    variantId: e.node.merchandise.id,
+    quantity: e.node.quantity,
+    title: `${e.node.merchandise.product?.title || ''} — ${e.node.merchandise.title}`.trim(),
+    price: parseFloat(e.node.merchandise.price.amount),
+  }));
+  const subtotal = parseFloat(cart.cost.subtotalAmount.amount);
+  // totalAmount is what the customer owes after any applicable discount code.
+  const total = parseFloat((cart.cost.totalAmount || cart.cost.subtotalAmount).amount);
+  // Order lines are created at list price, so the discount is whatever list price
+  // minus the cart's own total says it is — never a figure sent from the browser.
+  const listSubtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
+  const discountAmount = Math.max(0, Math.round((listSubtotal - total) * 100) / 100);
+  const discountCodes = (cart.discountCodes || []).filter((d) => d.applicable).map((d) => d.code);
+
   return {
     id: cart.id,
-    subtotal: parseFloat(cart.cost.subtotalAmount.amount),
+    subtotal,
+    total,
+    discountAmount,
+    discountCodes,
     currency: cart.cost.subtotalAmount.currencyCode,
-    lines: cart.lines.edges.map((e) => ({
-      variantId: e.node.merchandise.id,
-      quantity: e.node.quantity,
-      title: `${e.node.merchandise.product?.title || ''} — ${e.node.merchandise.title}`.trim(),
-      price: parseFloat(e.node.merchandise.price.amount),
-    })),
+    lines,
   };
 }
 
@@ -120,10 +134,11 @@ const DRAFT_ORDER_COMPLETE = `
  * @param {number} opts.shippingFee
  * @param {Array<string>} opts.tags
  * @param {string} opts.note
+ * @param {{amount:number,title?:string}} [opts.discount] - order-level discount (coupon), fixed rupee amount
  * @param {boolean} opts.paymentPending - true for COD (unpaid), false/omit for already-paid (Razorpay)
  * @returns {Promise<{orderId: string, orderName: string}>}
  */
-export async function createShopifyOrder({ lines, address, email, shippingFee, tags, note, paymentPending }) {
+export async function createShopifyOrder({ lines, address, email, shippingFee, tags, note, paymentPending, discount }) {
   const input = {
     lineItems: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })),
     shippingAddress: {
@@ -140,6 +155,9 @@ export async function createShopifyOrder({ lines, address, email, shippingFee, t
     email,
     note,
     tags,
+    ...(discount && discount.amount > 0
+      ? { appliedDiscount: { title: discount.title || 'Discount', description: discount.title ? `Coupon ${discount.title}` : 'Discount', value: discount.amount, valueType: 'FIXED_AMOUNT' } }
+      : {}),
     shippingLine: { title: shippingFee > 0 ? 'Standard Delivery' : 'Free Delivery', price: shippingFee.toFixed(2) },
   };
 

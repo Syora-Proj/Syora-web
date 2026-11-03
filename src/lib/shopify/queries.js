@@ -348,3 +348,19 @@ export const CART_LINES_REMOVE_MUTATION = `
     }
   }
 `;
+
+/** Replace the cart's discount codes (pass [] to clear). Invalid codes come back with applicable: false. */
+export const CART_DISCOUNT_CODES_UPDATE_MUTATION = `
+  ${CART_FRAGMENT}
+  mutation CartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!]) {
+    cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+      cart {
+        ...CartFields
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;

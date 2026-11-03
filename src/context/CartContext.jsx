@@ -24,6 +24,7 @@ import {
   addToCart   as shopifyAddToCart,
   updateCartLine as shopifyUpdateCartLine,
   removeFromCart as shopifyRemoveFromCart,
+  updateDiscountCodes as shopifyUpdateDiscountCodes,
 } from '../lib/shopify/cart';
 
 const CartContext = createContext(null);
@@ -80,6 +81,14 @@ export function CartProvider({ children }) {
     return runOperation(() => shopifyRemoveFromCart(lineId));
   }, []);
 
+  const applyDiscountCode = useCallback(async (code) => {
+    return runOperation(() => shopifyUpdateDiscountCodes([code]));
+  }, []);
+
+  const removeDiscountCode = useCallback(async () => {
+    return runOperation(() => shopifyUpdateDiscountCodes([]));
+  }, []);
+
   const goToCheckout = useCallback(() => {
     if (!cart?.lines?.length) {
       setCartError('Your bag is empty. Please add items first.');
@@ -103,6 +112,8 @@ export function CartProvider({ children }) {
         addToCart,
         updateCartLine,
         removeFromCart,
+        applyDiscountCode,
+        removeDiscountCode,
         goToCheckout,
         cartOpen,
         openCart,

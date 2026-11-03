@@ -68,6 +68,9 @@ export default async function handler(req, res) {
       tags: [`gateway_order_id:${razorpay_order_id}`, `razorpay_payment_id:${razorpay_payment_id}`, 'source:razorpay'],
       note: `Paid via Razorpay. Order ID: ${razorpay_order_id}, Payment ID: ${razorpay_payment_id}`,
       paymentPending: false,
+      discount: parseFloat(notes.discount_amount || '0') > 0
+        ? { amount: parseFloat(notes.discount_amount), title: notes.discount_code || undefined }
+        : undefined,
     });
 
     return res.status(200).json({ orderName });

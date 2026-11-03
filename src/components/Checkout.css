@@ -12,11 +12,11 @@
 .ckt__section:last-of-type { border-bottom: 0; padding-bottom: 0; }
 .ckt__section h2 { margin: 0 0 18px; font: 500 1.4rem/1.1 'Cormorant Garamond', Georgia, serif; }
 
-.ckt__field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.ckt__field { min-width: 0; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .ckt__field:last-child { margin-bottom: 0; }
 .ckt__field label { font: 500 0.78rem/1 'Inter', sans-serif; color: var(--u-muted); letter-spacing: 0.02em; }
 .ckt__field input, .ckt__field select {
-  min-height: 48px; padding: 0 14px; border: 1px solid var(--u-border); border-radius: 10px;
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 0 14px; border: 1px solid var(--u-border); border-radius: 10px;
   background: #fffaf3; color: var(--u-text); font: 400 0.95rem/1 'Inter', sans-serif;
   transition: border-color 0.2s;
 }
@@ -25,9 +25,9 @@
 .ckt__err { font: 500 0.75rem/1 'Inter', sans-serif; color: #b3261e; }
 
 .ckt__row { display: grid; gap: 14px; grid-template-columns: 1fr; }
-@media (min-width: 560px) { .ckt__row { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 560px) { .ckt__row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .ckt__row--3 { grid-template-columns: 1fr; }
-@media (min-width: 560px) { .ckt__row--3 { grid-template-columns: 1.4fr 1fr 1fr; } }
+@media (min-width: 560px) { .ckt__row--3 { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); } }
 
 /* ── Payment method picker ── */
 .ckt__pay-options { display: grid; gap: 12px; margin-bottom: 14px; }
@@ -79,3 +79,78 @@
 .ckt__empty-cta:hover { background: #430b15; }
 
 .ckt input:focus-visible, .ckt select:focus-visible, .ckt button:focus-visible, .ckt label:focus-within { outline: 2px solid #7a1a28; outline-offset: 2px; }
+
+/* ════════════════════════════════════════════════
+   Checkout redesign — steps, coupon, delivery, trust
+════════════════════════════════════════════════ */
+.ckt__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Progress steps */
+.ckt__steps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 14px; padding: 0; list-style: none; font: 500 0.68rem/1 'Inter', sans-serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--u-muted); }
+.ckt__steps li + li::before { content: ''; display: inline-block; width: 18px; height: 1px; margin-right: 10px; vertical-align: middle; background: var(--u-border); }
+.ckt__steps a { color: inherit; text-decoration: none; }
+.ckt__steps a:hover { color: #7a1a28; }
+.ckt__steps .is-current { color: #7a1a28; }
+
+/* Numbered section headings */
+.ckt__section h2 { display: flex; align-items: center; gap: 12px; }
+.ckt__num { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(122, 26, 40, 0.45); color: #7a1a28; font: 600 0.72rem/1 'Inter', sans-serif; }
+
+/* Delivery method card */
+.ckt__ship-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; border: 1.5px solid #7a1a28; border-radius: 14px; background: #fcf1ee; }
+.ckt__ship-title { margin: 0; font: 600 0.92rem/1.2 'Inter', sans-serif; color: var(--u-text); }
+.ckt__ship-sub { margin: 4px 0 0; font: 400 0.8rem/1.3 'Inter', sans-serif; color: var(--u-muted); }
+.ckt__ship-price { margin: 0; font: 600 0.92rem/1 'Inter', sans-serif; color: var(--u-text); }
+.ckt__free { color: #2f6b46 !important; font-weight: 600; }
+
+/* Coupon */
+.ckt__coupon { margin: 0 0 16px; }
+.ckt__coupon-form { display: flex; gap: 8px; }
+.ckt__coupon-form input { flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 46px; padding: 0 14px; border: 1px solid var(--u-border); border-radius: 10px; background: #fff; color: var(--u-text); font: 500 0.88rem/1 'Inter', sans-serif; letter-spacing: 0.06em; text-transform: uppercase; }
+.ckt__coupon-form input::placeholder { text-transform: none; letter-spacing: 0.02em; font-weight: 400; color: var(--u-muted); }
+.ckt__coupon-form input:focus { outline: none; border-color: #7a1a28; }
+.ckt__coupon-form button { flex: 0 0 auto; min-height: 46px; padding: 0 20px; border: 1px solid #5a0f1c; border-radius: 10px; background: transparent; color: #5a0f1c; cursor: pointer; font: 600 0.72rem/1 'Inter', sans-serif; letter-spacing: 0.14em; text-transform: uppercase; transition: background-color 0.2s, color 0.2s; }
+.ckt__coupon-form button:hover:not(:disabled) { background: #5a0f1c; color: #fbf5ee; }
+.ckt__coupon-form button:disabled { opacity: 0.45; cursor: default; }
+.ckt__coupon-applied { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px dashed rgba(47, 107, 70, 0.55); border-radius: 10px; background: rgba(47, 107, 70, 0.07); }
+.ckt__coupon-tag { display: inline-flex; align-items: center; gap: 8px; color: #2f6b46; font: 600 0.82rem/1 'Inter', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.ckt__coupon-remove { padding: 4px 2px; border: 0; background: none; color: var(--u-muted); cursor: pointer; font: 500 0.78rem/1 'Inter', sans-serif; text-decoration: underline; text-underline-offset: 3px; }
+.ckt__coupon-remove:hover { color: #7a1a28; }
+.ckt__coupon-msg { margin: 8px 2px 0; font: 500 0.78rem/1.3 'Inter', sans-serif; }
+.ckt__coupon-msg.is-ok { color: #2f6b46; }
+.ckt__coupon-msg.is-err { color: #b3261e; }
+
+/* Totals extras */
+.ckt__totals-save dt, .ckt__totals-save dd { color: #2f6b46; }
+.ckt__saved { margin: 6px 0 0; font: 500 0.8rem/1.3 'Inter', sans-serif; color: #2f6b46; }
+.ckt__ship-meter { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: rgba(122, 26, 40, 0.05); }
+.ckt__ship-meter p { margin: 0 0 8px; font: 400 0.8rem/1.3 'Inter', sans-serif; color: var(--u-muted); }
+.ckt__ship-meter strong { color: var(--u-text); font-weight: 600; }
+.ckt__ship-bar { height: 4px; border-radius: 999px; background: rgba(122, 26, 40, 0.15); overflow: hidden; }
+.ckt__ship-bar span { display: block; height: 100%; border-radius: inherit; background: #7a1a28; transition: width 0.4s ease; }
+.ckt__ship-ok { margin: 16px 0 0; font: 500 0.8rem/1.3 'Inter', sans-serif; color: #2f6b46; }
+
+/* Pay button + trust row */
+.ckt__submit { gap: 10px; }
+.ckt__trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin: 0; padding: 0; list-style: none; }
+.ckt__trust li { display: inline-flex; align-items: center; gap: 8px; font: 500 0.76rem/1.2 'Inter', sans-serif; color: var(--u-muted); }
+.ckt__trust svg { color: #7a1a28; flex: 0 0 auto; }
+.ckt__trust a { color: inherit; text-decoration: none; }
+.ckt__trust a:hover { color: #7a1a28; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Order summary: sidebar on desktop, collapsible panel above the form on mobile */
+.ckt__summary { display: none; }
+@media (min-width: 1024px) { .ckt__summary { display: block; } .ckt__msum { display: none; } }
+.ckt__msum { border: 1px solid var(--u-border); border-radius: 14px; background: #fffaf3; overflow: hidden; }
+.ckt__msum summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; cursor: pointer; list-style: none; font: 600 0.88rem/1 'Inter', sans-serif; color: var(--u-text); }
+.ckt__msum summary::-webkit-details-marker { display: none; }
+.ckt__msum-label { display: inline-flex; align-items: center; gap: 10px; }
+.ckt__msum-label::after { content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform 0.2s; }
+.ckt__msum[open] .ckt__msum-label::after { transform: rotate(-135deg) translateY(-2px); }
+.ckt__msum-total { font-weight: 700; }
+.ckt__msum-body { padding: 4px 16px 18px; border-top: 1px solid var(--u-border); }
+.ckt__msum-body .ckt__lines { margin-top: 16px; }
+@media (max-width: 480px) {
+  .ckt__steps { flex-wrap: nowrap; gap: 8px; font-size: 0.58rem; letter-spacing: 0.1em; white-space: nowrap; }
+  .ckt__steps li + li::before { width: 10px; margin-right: 8px; }
+}

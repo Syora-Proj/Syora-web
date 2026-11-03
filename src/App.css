@@ -3368,3 +3368,9 @@
 .mv2-about__eyebrow, .mv2-about__footer-text { font-size: 0.72rem !important; }
 .mv2-about__cta, .about-us__cta { font-size: 0.74rem; }
 @media (max-width: 1023px) { .sp__go { min-height: 44px !important; } }
+
+/* ── Announcement bar offset ──
+   The bar is an in-flow strip above every page (see AnnouncementBar.css).
+   The absolutely-positioned navbar starts directly beneath it; once the homepage
+   navbar pins to the viewport (.navbar--intro-passed) it returns to top: 0. */
+.navbar { top: var(--ab-h, 0px); }

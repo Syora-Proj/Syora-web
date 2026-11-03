@@ -6,6 +6,7 @@ import './App.css';
 import './shopify.css';
 import MultiverseEntry from './components/MultiverseEntry';
 import CartDrawer from './components/CartDrawer';
+import AnnouncementBar from './components/AnnouncementBar';
 
 // Route-level chunks keep product and legacy-shop code out of the homepage load.
 const UniversePage = lazy(() => import('./components/UniversePage'));
@@ -53,6 +54,7 @@ export default function App() {
   return (
     <>
       <a className="skip-link" href="#main" onClick={(e) => { const el = document.getElementById('main') || document.querySelector('main'); if (el) { e.preventDefault(); el.setAttribute('tabindex', '-1'); el.focus(); el.scrollIntoView(); } }}>Skip to content</a>
+      <AnnouncementBar />
       <CartDrawer />
       <ScrollToTop />
       <Suspense fallback={<div className="route-loading" role="status" aria-label="Loading page" />}>

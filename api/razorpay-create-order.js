@@ -36,7 +36,8 @@ export default async function handler(req, res) {
     if (!cart) return res.status(400).json({ error: 'Cart not found or empty' });
 
     const shippingFee = shippingFeeFor(cart.subtotal);
-    const total = cart.subtotal + shippingFee;
+    // cart.total already has any applicable coupon taken off.
+    const total = Math.round((cart.total + shippingFee) * 100) / 100;
 
     const receipt = `syora_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -54,6 +55,8 @@ export default async function handler(req, res) {
         provinceCode: shipping.provinceCode,
         zip: shipping.zip,
         shipping_fee: String(shippingFee),
+        discount_amount: String(cart.discountAmount || 0),
+        discount_code: (cart.discountCodes || []).join(',').slice(0, 100),
       },
     });
 
