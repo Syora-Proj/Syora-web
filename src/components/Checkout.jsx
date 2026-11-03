@@ -123,8 +123,8 @@ export default function Checkout() {
       if (!res.ok) throw new Error(data.error || 'Could not start payment.');
 
       const Cashfree = await loadCashfreeSdk();
-      // Only production Cashfree credentials exist for this account — see CASHFREE_ENV server-side.
-      const cashfree = Cashfree({ mode: 'production' });
+      // Must match CASHFREE_ENV (server-side) — see .env.local.
+      const cashfree = Cashfree({ mode: import.meta.env.VITE_CASHFREE_MODE || 'production' });
       cashfree.checkout({ paymentSessionId: data.paymentSessionId, redirectTarget: '_self' });
       // Browser navigates away to Cashfree's hosted page here.
     } catch (err) {

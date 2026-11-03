@@ -46,8 +46,21 @@ export default async function handler(req, res) {
       customer: { id: cartId.replace(/\W/g, '').slice(-32), name: customer.name, email: customer.email, phone: customer.phone },
       returnUrl: `${siteUrl}/order-confirmation?cf_order_id=${orderId}`,
       notifyUrl: `${siteUrl}/api/cashfree-webhook`,
-      orderTags: { cart_id: cartId },
-      orderNote: JSON.stringify({ customer, shipping, shippingFee }),
+      // Flat key/value pairs, not a nested JSON blob — Cashfree's sandbox API
+      // returns a 500 when order_note contains two nested objects together
+      // (reproduced directly against their API; order_tags has no such issue).
+      orderTags: {
+        cart_id: cartId,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address1: shipping.address1,
+        address2: shipping.address2 || '',
+        city: shipping.city,
+        provinceCode: shipping.provinceCode,
+        zip: shipping.zip,
+        shipping_fee: String(shippingFee),
+      },
     });
 
     return res.status(200).json({ orderId, paymentSessionId, total });

@@ -9,13 +9,15 @@
  * Idempotent: Cashfree retries webhook delivery, so we check for an
  * existing order tagged with this Cashfree order_id before creating one.
  *
- * IMPORTANT: order_note at creation time carries the only copy of the
- * shipping address + customer info (no database in this project). If a
- * cart has expired on Shopify's side by the time this fires (carts last
- * ~10 days), the line-item re-fetch below will fail — this function
- * returns 500 so Cashfree retries, but a cart dead for that long won't
- * recover on retry either. That's a real gap worth a database if order
- * volume grows.
+ * IMPORTANT: order_tags at creation time carries the only copy of the
+ * shipping address + customer info (no database in this project) — as
+ * flat key/value pairs, not nested JSON in order_note, because Cashfree's
+ * API 500s when order_note contains two nested objects together (verified
+ * directly against their API; see cashfree-create-order.js). If a cart has
+ * expired on Shopify's side by the time this fires (carts last ~10 days),
+ * the line-item re-fetch below will fail — this function returns 500 so
+ * Cashfree retries, but a cart dead for that long won't recover on retry
+ * either. That's a real gap worth a database if order volume grows.
  */
 
 import { verifyWebhookSignature } from './_lib/cashfree.js';
@@ -73,13 +75,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true, alreadyCreated: existing.name });
     }
 
-    let meta;
-    try {
-      meta = JSON.parse(payload.data.order.order_note);
-    } catch {
-      throw new Error('Could not parse order_note — shipping/customer details lost');
+    const tags = payload.data.order.order_tags || {};
+    const customer = { name: tags.name, email: tags.email, phone: tags.phone };
+    const shipping = { address1: tags.address1, address2: tags.address2, city: tags.city, provinceCode: tags.provinceCode, zip: tags.zip };
+    const shippingFee = parseFloat(tags.shipping_fee || '0');
+    if (!customer.name || !shipping.address1) {
+      throw new Error('order_tags missing shipping/customer details');
     }
-    const { customer, shipping, shippingFee } = meta;
 
     const cart = await getAuthoritativeCart(cartId);
     if (!cart) throw new Error(`Cart ${cartId} not found or expired — cannot rebuild line items`);
