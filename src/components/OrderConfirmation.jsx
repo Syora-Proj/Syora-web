@@ -1,20 +1,20 @@
 /**
  * SYORA — Order Confirmation Page
  *
- * Shown when a customer returns from Shopify checkout.
+ * Shown when a customer returns from Cashfree's hosted checkout, or
+ * immediately after placing a Cash on Delivery order.
  *
  * IMPORTANT RULES:
  * - We NEVER mark an order as paid based solely on the customer landing here.
- * - Shopify is the source of truth for order status.
+ * - For online payments, the Shopify order is created by the Cashfree
+ *   webhook (/api/cashfree-webhook.js), not by this page — Cashfree +
+ *   Shopify are the source of truth, not the URL the browser lands on.
  * - The purchase analytics event fires once per order ID, guarded by sessionStorage.
- * - No duplicate order records are created; Shopify creates and owns the order.
  *
- * Shopify appends order info to the return URL as query parameters.
- * The return URL is set in your Shopify checkout settings.
- *
- * Shopify may provide: ?order_id=... &order_number=... &checkout_token=...
- * These are informational only — never trust them to confirm payment.
- * Payment status must be verified through Shopify Admin or webhooks.
+ * Query params:
+ *   ?cf_order_id=...   — set on Cashfree's return_url (online payment just attempted)
+ *   ?order_number=...  — set by this site after a Cash on Delivery order is placed
+ * Neither is trusted to confirm payment status — informational only.
  */
 
 import { useEffect, useState } from 'react';
@@ -28,9 +28,11 @@ export default function OrderConfirmation() {
   const navigate           = useNavigate();
   const [tracked, setTracked] = useState(false);
 
-  // Read order data from Shopify's return URL parameters
-  const orderId     = searchParams.get('order_id') || searchParams.get('orderId');
-  const orderNumber = searchParams.get('order_number') || searchParams.get('orderNumber');
+  // Read order data from the return URL (Cashfree return_url or our own COD redirect)
+  const cfOrderId   = searchParams.get('cf_order_id');
+  const orderNumber = searchParams.get('order_number');
+  const isCod        = searchParams.get('cod') === '1';
+  const orderId      = cfOrderId || orderNumber;
 
   useEffect(() => {
     // Fire purchase event once, guarded against duplicate firing on refresh
@@ -57,7 +59,7 @@ export default function OrderConfirmation() {
           <p className="order-confirm__eyebrow">ORDER CONFIRMED</p>
 
           <h1 className="order-confirm__heading">
-            Thank you for<br />your order.
+            {isCod ? <>Order placed.<br />Pay on delivery.</> : <>Thank you for<br />your order.</>}
           </h1>
 
           {orderNumber && (
@@ -67,9 +69,9 @@ export default function OrderConfirmation() {
           )}
 
           <p className="order-confirm__body">
-            You will receive a confirmation email shortly.<br />
-            Your payment and order status are managed by Shopify.<br />
-            For order details, check your email or contact us.
+            {isCod
+              ? <>You'll pay in cash when your order arrives.<br />A confirmation email is on its way.</>
+              : <>If your payment went through, you'll receive a confirmation email shortly.<br />Having trouble? Check your email or contact us before trying again.</>}
           </p>
 
           <div className="order-confirm__actions">

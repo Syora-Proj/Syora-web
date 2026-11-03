@@ -12,6 +12,7 @@ const UniversePage = lazy(() => import('./components/UniversePage'));
 const ShopAllPage = lazy(() => import('./components/ShopAllPage'));
 const SearchPage = lazy(() => import('./components/SearchPage'));
 const CartPage = lazy(() => import('./components/CartPage'));
+const Checkout = lazy(() => import('./components/Checkout'));
 const WishlistPage = lazy(() => import('./components/WishlistPage'));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
 const ProductPage = lazy(() => import('./components/ProductPage'));
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="/shop" element={<ShopAllPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/wishlist" element={<WishlistPage />} />
 
           {/* ── Order Confirmation (Shopify checkout return) ── */}

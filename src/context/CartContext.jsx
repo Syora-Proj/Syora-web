@@ -11,7 +11,7 @@
  *   addToCart      — async (variantId, quantity?) → updated cart
  *   updateCartLine — async (lineId, quantity) → updated cart
  *   removeFromCart — async (lineId) → updated cart
- *   goToCheckout   — redirects the browser to Shopify-hosted checkout
+ *   goToCheckout   — redirects to SYORA's own checkout page (/checkout)
  *   cartOpen       — controls the cart drawer visibility
  *   openCart       — opens the cart drawer
  *   closeCart      — closes the cart drawer
@@ -81,12 +81,12 @@ export function CartProvider({ children }) {
   }, []);
 
   const goToCheckout = useCallback(() => {
-    if (!cart?.checkoutUrl) {
-      setCartError('No checkout URL available. Please add items to your bag first.');
+    if (!cart?.lines?.length) {
+      setCartError('Your bag is empty. Please add items first.');
       return;
     }
-    // Shopify handles payment, validation, shipping, taxes — we just redirect.
-    window.location.href = cart.checkoutUrl;
+    // Our own checkout page: address + Cashfree (or Cash on Delivery) — see /checkout.
+    window.location.href = '/checkout';
   }, [cart]);
 
   const openCart  = useCallback(() => setCartOpen(true),  []);

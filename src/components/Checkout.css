@@ -1,0 +1,81 @@
+.ckt { padding: clamp(28px, 4vw, 56px) 0 clamp(48px, 6vw, 96px); background: var(--u-bg); color: var(--u-text); }
+.ckt__inner { max-width: 1280px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 64px); }
+.ckt__eyebrow { margin: 0 0 12px; font: 500 0.7rem/1 'Inter', sans-serif; letter-spacing: 0.32em; color: #7a1a28; }
+.ckt__title { margin: 0; font: 400 clamp(2rem, 3.6vw, 3rem)/1.05 'Cormorant Garamond', Georgia, serif; }
+
+.ckt__layout { display: grid; gap: 28px; margin-top: clamp(22px, 3vw, 36px); align-items: start; }
+@media (min-width: 1024px) { .ckt__layout { grid-template-columns: minmax(0, 1fr) 380px; gap: clamp(32px, 4vw, 64px); } }
+
+/* ── Form ── */
+.ckt__form { display: flex; flex-direction: column; gap: clamp(24px, 3vw, 36px); }
+.ckt__section { padding-bottom: clamp(20px, 2.6vw, 30px); border-bottom: 1px solid var(--u-border); }
+.ckt__section:last-of-type { border-bottom: 0; padding-bottom: 0; }
+.ckt__section h2 { margin: 0 0 18px; font: 500 1.4rem/1.1 'Cormorant Garamond', Georgia, serif; }
+
+.ckt__field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.ckt__field:last-child { margin-bottom: 0; }
+.ckt__field label { font: 500 0.78rem/1 'Inter', sans-serif; color: var(--u-muted); letter-spacing: 0.02em; }
+.ckt__field input, .ckt__field select {
+  min-height: 48px; padding: 0 14px; border: 1px solid var(--u-border); border-radius: 10px;
+  background: #fffaf3; color: var(--u-text); font: 400 0.95rem/1 'Inter', sans-serif;
+  transition: border-color 0.2s;
+}
+.ckt__field input:focus, .ckt__field select:focus { outline: none; border-color: #7a1a28; }
+.ckt__field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2343101a' stroke-width='1.5' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+.ckt__err { font: 500 0.75rem/1 'Inter', sans-serif; color: #b3261e; }
+
+.ckt__row { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .ckt__row { grid-template-columns: 1fr 1fr; } }
+.ckt__row--3 { grid-template-columns: 1fr; }
+@media (min-width: 560px) { .ckt__row--3 { grid-template-columns: 1.4fr 1fr 1fr; } }
+
+/* ── Payment method picker ── */
+.ckt__pay-options { display: grid; gap: 12px; margin-bottom: 14px; }
+@media (min-width: 560px) { .ckt__pay-options { grid-template-columns: 1fr 1fr; } }
+.ckt__pay-opt {
+  display: flex; flex-direction: column; gap: 4px; padding: 16px 18px;
+  border: 1.5px solid var(--u-border); border-radius: 14px; cursor: pointer;
+  background: #fffaf3; transition: border-color 0.2s, background-color 0.2s;
+}
+.ckt__pay-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.ckt__pay-opt--active { border-color: #7a1a28; background: #fcf1ee; }
+.ckt__pay-opt-title { font: 600 0.92rem/1 'Inter', sans-serif; color: var(--u-text); }
+.ckt__pay-opt-sub { font: 400 0.8rem/1.4 'Inter', sans-serif; color: var(--u-muted); }
+.ckt__fine { margin: 10px 0 0; font-size: 0.78rem; line-height: 1.5; color: var(--u-muted); }
+
+.ckt__submit-error { padding: 12px 16px; border-radius: 12px; background: #f6dcdc; color: #6b1620; font-size: 0.9rem; }
+.ckt__submit {
+  display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%;
+  border: 0; border-radius: 999px; background: #5a0f1c; color: #fbf5ee; cursor: pointer;
+  font: 600 0.8rem/1 'Inter', sans-serif; letter-spacing: 0.16em; text-transform: uppercase;
+  transition: background-color 0.2s;
+}
+.ckt__submit:hover:not(:disabled) { background: #430b15; }
+.ckt__submit:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Order summary ── */
+.ckt__summary { padding: clamp(20px, 2.4vw, 30px); border-radius: 20px; background: #fffaf3; border: 1px solid var(--u-border); }
+@media (min-width: 1024px) { .ckt__summary { position: sticky; top: 84px; } }
+.ckt__summary h2 { margin: 0 0 16px; font: 500 1.4rem/1.1 'Cormorant Garamond', Georgia, serif; }
+.ckt__lines { margin: 0 0 16px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.ckt__line { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.ckt__line-img { position: relative; width: 56px; aspect-ratio: 4 / 5; border-radius: 10px; overflow: hidden; background: #efe3d4; }
+.ckt__line-img img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 78%; }
+.ckt__line-qty { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: #43101a; color: #fbf5ee; font: 600 0.65rem/18px 'Inter', sans-serif; text-align: center; }
+.ckt__line-name { margin: 0; font: 500 0.88rem/1.3 'Inter', sans-serif; }
+.ckt__line-opts { margin: 2px 0 0; font-size: 0.76rem; color: var(--u-muted); }
+.ckt__line-total { margin: 0; font: 600 0.88rem/1.3 'Inter', sans-serif; white-space: nowrap; }
+
+.ckt__totals { margin: 0; padding-top: 14px; border-top: 1px solid var(--u-border); }
+.ckt__totals > div { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; font-size: 0.9rem; }
+.ckt__totals dt { color: var(--u-muted); }
+.ckt__totals dd { margin: 0; font-weight: 500; }
+.ckt__totals-grand { margin-top: 4px; padding-top: 12px !important; border-top: 1px solid var(--u-border); }
+.ckt__totals-grand dt { color: var(--u-text); font-weight: 600; }
+.ckt__totals-grand dd { font-weight: 700; font-size: 1.1rem; }
+
+.ckt__empty { margin-top: clamp(28px, 4vw, 56px); padding: clamp(36px, 6vw, 80px) 20px; text-align: center; border-radius: 24px; background: #fffaf3; border: 1px solid var(--u-border); }
+.ckt__empty-cta { display: inline-flex; align-items: center; min-height: 46px; margin-top: 18px; padding: 0 26px; border: 0; border-radius: 999px; background: #5a0f1c; color: #fbf5ee; cursor: pointer; font: 600 0.74rem/1 'Inter', sans-serif; letter-spacing: 0.14em; text-transform: uppercase; }
+.ckt__empty-cta:hover { background: #430b15; }
+
+.ckt input:focus-visible, .ckt select:focus-visible, .ckt button:focus-visible, .ckt label:focus-within { outline: 2px solid #7a1a28; outline-offset: 2px; }
