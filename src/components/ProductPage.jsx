@@ -11,7 +11,6 @@ import { useRecentlyViewed } from '../lib/recentlyViewed';
 import { productPath } from '../data/productCatalog';
 import { UNIVERSES } from '../data/universes';
 import { useWishlisted } from '../lib/wishlist';
-import { getCheckoutUrl } from '../lib/shopify/cart';
 import { trackViewItem, trackAddToCart } from '../lib/analytics';
 import '../pdp.css';
 
@@ -193,7 +192,7 @@ export default function ProductPage({ handle }) {
   const { products: collectionProducts } = useShopifyCollection(product?.universeId);
 
   // Cart operations
-  const { addToCart, cartLoading, cartError } = useCart();
+  const { addToCart, goToCheckout, cartLoading, cartError } = useCart();
 
   const [activeImg, setActiveImg]         = useState(0);
   const [selectedColour, setColour]       = useState(0);
@@ -398,9 +397,7 @@ export default function ProductPage({ handle }) {
     const result = await addToCart(selectedVariantId, 1);
     // Never continue to checkout with a cart the add step failed to update.
     if (!result) { showCartError(); return; }
-    const url = await getCheckoutUrl();
-    if (url) window.location.href = url;
-    else showCartError();
+    goToCheckout();
   }
 
   function handlePinCheck() {
