@@ -7,11 +7,49 @@
 
 const STORE_DOMAIN  = process.env.SHOPIFY_STORE_DOMAIN;
 const API_VERSION   = process.env.SHOPIFY_API_VERSION || '2026-10';
-const ADMIN_TOKEN    = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+const ADMIN_CLIENT_ID     = process.env.SHOPIFY_ADMIN_CLIENT_ID;
+const ADMIN_CLIENT_SECRET = process.env.SHOPIFY_ADMIN_CLIENT_SECRET;
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 
-const ADMIN_URL      = `https://${STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`;
-const STOREFRONT_URL = `https://${STORE_DOMAIN}/api/${API_VERSION}/graphql.json`;
+const ADMIN_URL       = `https://${STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`;
+const STOREFRONT_URL  = `https://${STORE_DOMAIN}/api/${API_VERSION}/graphql.json`;
+const OAUTH_TOKEN_URL = `https://${STORE_DOMAIN}/admin/oauth/access_token`;
+
+// Admin access tokens minted from this OAuth app have been observed to go
+// invalid well before their stated 24h expiry (e.g. a concurrent token
+// request can silently invalidate the previous one) — so instead of pinning
+// one token in an env var and manually replacing it when it dies, we mint a
+// fresh one from the (non-expiring) client id/secret on cold start, cache it
+// briefly, and transparently re-mint on any auth failure.
+let cachedAdminToken = null;
+let cachedAdminTokenAt = 0;
+const ADMIN_TOKEN_CACHE_MS = 10 * 60 * 1000;
+
+async function mintAdminToken() {
+  const res = await fetch(OAUTH_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: ADMIN_CLIENT_ID,
+      client_secret: ADMIN_CLIENT_SECRET,
+      grant_type: 'client_credentials',
+    }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.access_token) {
+    throw new Error(`Shopify admin token exchange failed: ${JSON.stringify(json)}`);
+  }
+  return json.access_token;
+}
+
+async function getAdminToken(forceRefresh) {
+  const stale = !cachedAdminToken || forceRefresh || Date.now() - cachedAdminTokenAt > ADMIN_TOKEN_CACHE_MS;
+  if (stale) {
+    cachedAdminToken = await mintAdminToken();
+    cachedAdminTokenAt = Date.now();
+  }
+  return cachedAdminToken;
+}
 
 async function gql(url, headers, query, variables) {
   const res = await fetch(url, {
@@ -19,15 +57,28 @@ async function gql(url, headers, query, variables) {
     headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify({ query, variables }),
   });
-  if (!res.ok) throw new Error(`Shopify HTTP error ${res.status}`);
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
+  const authError = res.status === 401
+    || (typeof json?.errors === 'string' && /invalid api key|access token/i.test(json.errors));
+  if (!res.ok || authError) {
+    const err = new Error(`Shopify HTTP error ${res.status}: ${json ? JSON.stringify(json.errors) : ''}`);
+    err.authError = authError;
+    throw err;
+  }
   if (json.errors?.length) throw new Error(`Shopify GraphQL error: ${json.errors.map((e) => e.message).join(', ')}`);
   return json.data;
 }
 
-/** Admin API call — never expose ADMIN_TOKEN to the client. */
-export function adminFetch(query, variables) {
-  return gql(ADMIN_URL, { 'X-Shopify-Access-Token': ADMIN_TOKEN }, query, variables);
+/** Admin API call — mints/refreshes its own token; never exposes it to the client. */
+export async function adminFetch(query, variables) {
+  const token = await getAdminToken();
+  try {
+    return await gql(ADMIN_URL, { 'X-Shopify-Access-Token': token }, query, variables);
+  } catch (err) {
+    if (!err.authError) throw err;
+    const freshToken = await getAdminToken(true);
+    return gql(ADMIN_URL, { 'X-Shopify-Access-Token': freshToken }, query, variables);
+  }
 }
 
 /** Storefront API call (public token, but used server-side here for authoritative cart pricing). */
