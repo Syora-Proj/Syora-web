@@ -4,7 +4,7 @@ import { getProductsByHandles } from '../lib/shopify/catalog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { UNIVERSES } from '../data/universes';
 import { ProductCard } from './ProductGrid';
-import { groupCardsByDesign } from '../lib/collectionFilters';
+import { clusterByDesign } from '../lib/collectionFilters';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import './CartPage.css';
@@ -17,7 +17,7 @@ export default function WishlistPage() {
   const { palette } = UNIVERSES.icon;
 
   // Un-hearting a card removes it straight away, without waiting for a refetch.
-  const items = groupCardsByDesign((data || []).filter((p) => handles.includes(p.handle)));
+  const items = clusterByDesign((data || []).filter((p) => handles.includes(p.handle)));
 
   return (
     <div

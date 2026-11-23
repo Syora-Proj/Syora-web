@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ProductCard } from './ProductGrid';
-import { groupCardsByDesign } from '../lib/collectionFilters';
+import { clusterByDesign } from '../lib/collectionFilters';
 import ExploreMore from './ExploreMore';
 import Footer from './Footer';
 import Navbar from './Navbar';
@@ -30,7 +30,7 @@ export default function SearchPage() {
     const v = draft.trim();
     if (v.length >= 2) navigate(`/search?q=${encodeURIComponent(v)}`);
   };
-  const results = q.length >= 2 ? groupCardsByDesign(data || []) : [];
+  const results = q.length >= 2 ? clusterByDesign(data || []) : [];
 
   return (
     <div

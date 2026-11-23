@@ -144,6 +144,28 @@ function buildColourSwatches(group) {
 }
 
 /**
+ * Keeps every colourway as its own card, but reorders the list so same-design
+ * colourways sit next to each other (first-appearance order is preserved,
+ * only the clustering is new) - "clubbed" in the sense of adjacent placement,
+ * not merged into one card. Combine with attachColourSwatches for the swatch
+ * links; this function only changes order.
+ */
+export function clusterByDesign(products) {
+  const firstIndex = new Map();
+  products.forEach((p, i) => {
+    const key = p.designKey || p.id;
+    if (!firstIndex.has(key)) firstIndex.set(key, i);
+  });
+  // Array.prototype.sort is stable (ES2019+), so ties keep their original
+  // relative order - same-design items stay in whatever order they arrived in.
+  return [...products].sort((a, b) => {
+    const fa = firstIndex.get(a.designKey || a.id);
+    const fb = firstIndex.get(b.designKey || b.id);
+    return fa - fb;
+  });
+}
+
+/**
  * Keeps every colourway as its own card (so the grid shows the full product
  * count), but attaches the full sibling list to each card's `colourSwatches`
  * so every card can still link to its other colours. Unlike groupCardsByDesign,

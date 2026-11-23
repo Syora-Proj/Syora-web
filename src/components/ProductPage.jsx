@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { ProductCard } from './ProductGrid';
-import { groupCardsByDesign } from '../lib/collectionFilters';
+import { clusterByDesign } from '../lib/collectionFilters';
 import { useShopifyProduct } from '../hooks/useShopifyProduct';
 import { useShopifyCollection } from '../hooks/useShopifyCollection';
 import { useCart } from '../context/CartContext';
@@ -216,7 +216,7 @@ export default function ProductPage({ handle }) {
   const [brokenImages, setBrokenImages]   = useState(() => new Set());
 
   const recentlyViewedRaw = useRecentlyViewed(product);
-  const recentlyViewed = useMemo(() => groupCardsByDesign(recentlyViewedRaw), [recentlyViewedRaw]);
+  const recentlyViewed = useMemo(() => clusterByDesign(recentlyViewedRaw), [recentlyViewedRaw]);
   const actionsRef  = useRef(null);
   const endRef      = useRef(null);
   const touchStartX = useRef(null);
@@ -316,10 +316,8 @@ export default function ProductPage({ handle }) {
     && product?.colours?.[selectedColour]?.name?.toLowerCase() === 'burgundy';
 
   const relatedProducts = useMemo(
-    () => groupCardsByDesign(
-      (collectionProducts || []).filter((p) => p.designKey ? p.designKey !== product?.designKey : p.handle !== handle),
-    ).slice(0, 4),
-    [collectionProducts, handle, product?.designKey],
+    () => clusterByDesign((collectionProducts || []).filter((p) => p.handle !== handle)).slice(0, 4),
+    [collectionProducts, handle],
   );
 
   // Loading state
