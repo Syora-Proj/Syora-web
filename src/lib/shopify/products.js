@@ -122,6 +122,20 @@ export function normaliseProductCard(node) {
   };
   const category = (node.productType || '').trim() || tagValue('category') || tagValue('heel');
 
+  // Each colourway of a design is its own separate Shopify product (no "Colour"
+  // option), so the card-level colour facet above is always empty. Derive a
+  // design-group key and this product's own colour from its SKU instead
+  // (SY-W-<CAT>-<NNN>-<COLOUR>-<size>) so ProductGrid can club same-design
+  // colourways into one card. Falls back to no grouping if the SKU doesn't match.
+  const firstSku = variantNodes[0]?.sku || '';
+  const skuMatch = /^(SY-W-[A-Z]+-\d+)-([A-Z]+)(?:-|$)/.exec(firstSku);
+  const SKU_COLOUR_NAMES = {
+    BLK: 'Black', NUD: 'Nude', BUR: 'Burgundy', RED: 'Red', TAN: 'Tan',
+    BEI: 'Taupe', BRN: 'Brown', CRM: 'Cream', GOL: 'Gold', MUL: 'Multi',
+  };
+  const designKey = skuMatch ? skuMatch[1] : node.handle;
+  const skuColourName = skuMatch ? (SKU_COLOUR_NAMES[skuMatch[2]] || skuMatch[2]) : '';
+
   return {
     // Public product routes use the handle; retain the GraphQL ID for API use.
     id:              node.handle,
@@ -148,7 +162,8 @@ export function normaliseProductCard(node) {
     createdAt:       node.createdAt || '',
     sizes:           sizeFacet.all,
     sizesAvailable:  sizeFacet.available,
-    colours:         colourFacet.all,
+    colours:         colourFacet.all.length ? colourFacet.all : (skuColourName ? [skuColourName] : []),
+    designKey,
   };
 }
 

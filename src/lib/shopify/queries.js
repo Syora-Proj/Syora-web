@@ -68,6 +68,7 @@ export const PRODUCT_CARD_FRAGMENT = `
       edges {
         node {
           availableForSale
+          sku
           selectedOptions {
             name
             value

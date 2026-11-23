@@ -100,6 +100,37 @@ export function applyFilters(products, filters, priceBands = []) {
   });
 }
 
+/**
+ * Clubs same-design colourways (separate Shopify products sharing a `designKey`,
+ * e.g. Colette Black + Colette Nude) into a single display card with a combined
+ * `colours` list for swatches. Call this AFTER filtering/sorting, not before -
+ * facet building and colour filtering both need the real one-product-per-colourway
+ * list to work correctly (see normaliseProductCard). Products without a design
+ * sibling in the given list pass through unchanged.
+ */
+export function groupCardsByDesign(products) {
+  const byDesign = new Map();
+  products.forEach((p) => {
+    const key = p.designKey || p.id;
+    if (!byDesign.has(key)) byDesign.set(key, []);
+    byDesign.get(key).push(p);
+  });
+
+  const result = [];
+  byDesign.forEach((group) => {
+    if (group.length === 1) { result.push(group[0]); return; }
+    // Deterministic representative: prefer Black, else keep first-seen order.
+    const representative = group.find((p) => (p.colours || [])[0] === 'Black') || group[0];
+    const colours = [...new Set(group.flatMap((p) => p.colours || []))].sort((a, b) => a.localeCompare(b));
+    result.push({ ...representative, colours });
+  });
+
+  // Preserve the incoming sort order (by each group's representative's original position).
+  const order = new Map(products.map((p, i) => [p.id, i]));
+  result.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  return result;
+}
+
 export function sortProducts(products, sortId) {
   if (sortId === 'featured') return products; // Shopify's collection (best-selling) order
   const list = [...products];
