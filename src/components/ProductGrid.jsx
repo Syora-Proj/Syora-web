@@ -55,7 +55,9 @@ export function ProductCard({ product, badge: badgeProp }) {
   const badge = soldOut ? 'Sold out' : (badgeProp ?? null);
 
   const colours = product.colours || [];
+  const swatches = product.colourSwatches || [];
   const shownColours = colours.slice(0, MAX_SWATCHES);
+  const shownSwatches = swatches.slice(0, MAX_SWATCHES);
   const extraColours = colours.length - shownColours.length;
 
   return (
@@ -109,7 +111,23 @@ export function ProductCard({ product, badge: badgeProp }) {
             </>
           )}
         </p>
-        {shownColours.length > 0 && (
+        {shownSwatches.length > 1 ? (
+          <ul className="product-card__swatches" aria-label={`Colours: ${colours.join(', ')}`}>
+            {shownSwatches.map((s) => (
+              <li key={s.handle}>
+                <Link
+                  to={pathFor(s.handle)}
+                  className={`product-card__swatch${s.handle === productHandle ? ' is-active' : ''}`}
+                  style={{ background: colourHex(s.name) }}
+                  title={s.name}
+                  aria-label={`View ${displayName} in ${s.name}`}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </li>
+            ))}
+            {extraColours > 0 && <li className="product-card__swatch-more" aria-hidden="true">+{extraColours}</li>}
+          </ul>
+        ) : shownColours.length > 0 && (
           <ul className="product-card__swatches" aria-label={`Colours: ${colours.join(', ')}`}>
             {shownColours.map((c) => (
               <li key={c} className="product-card__swatch" style={{ background: colourHex(c) }} title={c} />

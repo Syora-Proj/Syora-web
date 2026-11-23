@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getProductByHandle } from '../lib/shopify/products';
+import { getProductByHandle, getDesignSiblings } from '../lib/shopify/products';
 
 /**
  * @param {string} handle - Shopify product handle (slug)
@@ -28,6 +28,15 @@ export function useShopifyProduct(handle) {
     async function fetchData() {
       try {
         const p = await getProductByHandle(handle);
+        // Other colourways of this design, for the PDP colour-swatch links - a
+        // separate, non-fatal fetch, so a failure here never breaks the PDP itself.
+        if (p?.designKey) {
+          try {
+            p.colourSiblings = await getDesignSiblings(p.designKey);
+          } catch {
+            p.colourSiblings = [];
+          }
+        }
         if (!cancelled) setResult({ requestId, product: p, error: null });
       } catch (err) {
         if (!cancelled) setResult({ requestId, product: null, error: err.message || 'Could not load product.' });

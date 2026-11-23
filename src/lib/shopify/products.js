@@ -7,7 +7,19 @@
 
 import { shopifyFetch }                            from './client';
 import { PRODUCT_CATALOG, displayName } from '../../data/productCatalog';
-import { SHOP_QUERY, COLLECTION_QUERY, PRODUCT_BY_HANDLE_QUERY } from './queries';
+import { SHOP_QUERY, COLLECTION_QUERY, PRODUCT_BY_HANDLE_QUERY, ALL_PRODUCTS_QUERY } from './queries';
+
+const SKU_COLOUR_NAMES = {
+  BLK: 'Black', NUD: 'Nude', BUR: 'Burgundy', RED: 'Red', TAN: 'Tan',
+  BEI: 'Taupe', BRN: 'Brown', CRM: 'Cream', GOL: 'Gold', MUL: 'Multi',
+};
+
+/** SY-W-<CAT>-<NNN>-<COLOUR>[-<size>] -> { designKey: 'SY-W-<CAT>-<NNN>', colourName }. */
+function parseDesignSku(sku) {
+  const match = /^(SY-W-[A-Z]+-\d+)-([A-Z]+)(?:-|$)/.exec(sku || '');
+  if (!match) return { designKey: '', colourName: '' };
+  return { designKey: match[1], colourName: SKU_COLOUR_NAMES[match[2]] || match[2] };
+}
 
 /**
  * Ask Shopify's image CDN for a web-sized copy (never larger than the original). Only touches
@@ -127,14 +139,8 @@ export function normaliseProductCard(node) {
   // design-group key and this product's own colour from its SKU instead
   // (SY-W-<CAT>-<NNN>-<COLOUR>-<size>) so ProductGrid can club same-design
   // colourways into one card. Falls back to no grouping if the SKU doesn't match.
-  const firstSku = variantNodes[0]?.sku || '';
-  const skuMatch = /^(SY-W-[A-Z]+-\d+)-([A-Z]+)(?:-|$)/.exec(firstSku);
-  const SKU_COLOUR_NAMES = {
-    BLK: 'Black', NUD: 'Nude', BUR: 'Burgundy', RED: 'Red', TAN: 'Tan',
-    BEI: 'Taupe', BRN: 'Brown', CRM: 'Cream', GOL: 'Gold', MUL: 'Multi',
-  };
-  const designKey = skuMatch ? skuMatch[1] : node.handle;
-  const skuColourName = skuMatch ? (SKU_COLOUR_NAMES[skuMatch[2]] || skuMatch[2]) : '';
+  const { designKey: parsedDesignKey, colourName: skuColourName } = parseDesignSku(variantNodes[0]?.sku);
+  const designKey = parsedDesignKey || node.handle;
 
   return {
     // Public product routes use the handle; retain the GraphQL ID for API use.
@@ -189,6 +195,7 @@ export function normaliseProduct(node) {
   const compareAt = node.compareAtPriceRange?.minVariantPrice;
   const imageNodes = (node.images?.edges || []).map((e) => e.node);
   const variants  = (node.variants?.edges || []).map((e) => e.node);
+  const { designKey } = parseDesignSku(variants[0]?.sku);
   const images = [...new Set([
     ...imageNodes.map((image) => image.url),
     ...variants.map((variant) => variant.image?.url),
@@ -359,6 +366,7 @@ export function normaliseProduct(node) {
 
     /* Core fields — mapped from Shopify */
     id:               node.handle,          // used as URL slug
+    designKey,        // used to find other-colourway sibling products (see getDesignSiblings)
     name:             displayName(node.handle, node.title),
     price:            parsePrice(price?.amount),
     originalPrice:    parsePrice(compareAt?.amount),
@@ -493,4 +501,23 @@ export async function getProductByHandle(handle) {
     variables: { handle },
   });
   return normaliseProduct(data?.product);
+}
+
+/**
+ * Other colourways of the same design, for the PDP's colour-swatch links.
+ * Colourways are separate Shopify products (no shared Colour option), so this
+ * fetches the whole catalogue's cards and filters by designKey client-side -
+ * fine at this catalogue's size (dozens, not thousands, of products).
+ *
+ * @param {string} designKey - e.g. 'SY-W-CLS-002', from normaliseProduct's designKey
+ * @returns {Promise<Array<{name: string, handle: string, image: string}>>}
+ */
+export async function getDesignSiblings(designKey) {
+  if (!designKey) return [];
+  const data = await shopifyFetch({ query: ALL_PRODUCTS_QUERY, variables: { first: 100 } });
+  const cards = (data?.products?.edges || []).map((e) => normaliseProductCard(e.node));
+  return cards
+    .filter((c) => c.designKey === designKey && c.colours?.[0])
+    .map((c) => ({ name: c.colours[0], handle: c.handle, image: c.img }))
+    .sort((a, b) => (a.name === 'Black' ? -1 : b.name === 'Black' ? 1 : a.name.localeCompare(b.name)));
 }

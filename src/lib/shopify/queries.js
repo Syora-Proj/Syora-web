@@ -152,6 +152,26 @@ export const COLLECTION_QUERY = `
   }
 `;
 
+/**
+ * Fetch product cards across the whole store (not scoped to a collection).
+ * Used to find colourway siblings for a design (see getDesignSiblings) -
+ * cheap enough at this catalogue's size to fetch all of them and filter
+ * client-side rather than relying on Storefront search query syntax.
+ * Variables: { first: number }
+ */
+export const ALL_PRODUCTS_QUERY = `
+  ${PRODUCT_CARD_FRAGMENT}
+  query AllProducts($first: Int!) {
+    products(first: $first) {
+      edges {
+        node {
+          ...ProductCardFields
+        }
+      }
+    }
+  }
+`;
+
 /* ─────────────────────────────────────────────────────────────
    PRODUCT — full product detail page
 ───────────────────────────────────────────────────────────── */

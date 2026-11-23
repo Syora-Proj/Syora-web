@@ -782,7 +782,32 @@ export default function ProductPage({ handle }) {
                 </dl>
               )}
 
-              {product.colours?.length > 0 && (
+              {product.colourSiblings?.length > 1 ? (
+                // Separate Shopify products, one per colourway - swatches navigate
+                // to the sibling's own PDP rather than switching an image index.
+                <div className="pdp-field pdp-field--colour">
+                  <p className="pdp-field__label">
+                    Colour: <span className="pdp-field__value">
+                      {product.colourSiblings.find((s) => s.handle === product.handle)?.name || ''}
+                    </span>
+                  </p>
+                  <ul className="pdp-swatches">
+                    {product.colourSiblings.map((s) => (
+                      <li key={s.handle}>
+                        <Link
+                          to={productPath(s.handle)}
+                          className={`pdp-swatch has-photo${s.handle === product.handle ? ' is-active' : ''}`}
+                          title={s.name}
+                          aria-label={`View colour: ${s.name}`}
+                          aria-current={s.handle === product.handle ? 'page' : undefined}
+                        >
+                          <img src={s.image} alt="" loading="lazy" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : product.colours?.length > 0 && (
                 <div className="pdp-field pdp-field--colour">
                   <p className="pdp-field__label">
                     Colour{selectedColourName && <>: <span className="pdp-field__value">{selectedColourName}</span></>}

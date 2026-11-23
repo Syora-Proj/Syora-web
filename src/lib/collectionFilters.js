@@ -122,7 +122,13 @@ export function groupCardsByDesign(products) {
     // Deterministic representative: prefer Black, else keep first-seen order.
     const representative = group.find((p) => (p.colours || [])[0] === 'Black') || group[0];
     const colours = [...new Set(group.flatMap((p) => p.colours || []))].sort((a, b) => a.localeCompare(b));
-    result.push({ ...representative, colours });
+    // One real sibling product per colour, for clickable swatches (not just dots) -
+    // each navigates straight to that colourway's own PDP.
+    const colourSwatches = group
+      .filter((p) => p.colours?.[0])
+      .map((p) => ({ name: p.colours[0], handle: p.handle, image: p.img }))
+      .sort((a, b) => (a.name === 'Black' ? -1 : b.name === 'Black' ? 1 : a.name.localeCompare(b.name)));
+    result.push({ ...representative, colours, colourSwatches });
   });
 
   // Preserve the incoming sort order (by each group's representative's original position).
