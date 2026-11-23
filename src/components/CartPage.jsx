@@ -8,6 +8,7 @@ import { trackBeginCheckout, trackViewCart } from '../lib/analytics';
 import { UNIVERSES } from '../data/universes';
 import { productPath } from '../data/productCatalog';
 import { ProductCard } from './ProductGrid';
+import { groupCardsByDesign } from '../lib/collectionFilters';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import './CartPage.css';
@@ -35,7 +36,7 @@ export default function CartPage() {
 
   const suggested = useAsyncData(() => getBestSellers(4), [], true);
   const inBag = new Set(lines.map((l) => l.variant?.product?.handle));
-  const picks = (suggested.data || []).filter((p) => !inBag.has(p.handle)).slice(0, 4);
+  const picks = groupCardsByDesign((suggested.data || []).filter((p) => !inBag.has(p.handle))).slice(0, 4);
 
   const count = cart?.totalQuantity || 0;
 

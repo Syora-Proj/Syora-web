@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductCard } from './ProductGrid';
+import { groupCardsByDesign } from '../lib/collectionFilters';
 import { getBestSellers, getNewArrivals } from '../lib/shopify/catalog';
 import { useAsyncData } from '../hooks/useAsyncData';
 import './ShopHighlights.css';
@@ -42,7 +43,7 @@ export default function ShopHighlights() {
 
   const activeId = available.some((t) => t.id === tab) ? tab : (available[0]?.id || tab);
   const current = byTab[activeId];
-  const items = (current.data || []).slice(0, 8);
+  const items = groupCardsByDesign(current.data || []).slice(0, 8);
   const isLoading = !loaded;
 
   return (
