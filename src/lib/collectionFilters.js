@@ -107,6 +107,10 @@ export function applyFilters(products, filters, priceBands = []) {
  * facet building and colour filtering both need the real one-product-per-colourway
  * list to work correctly (see normaliseProductCard). Products without a design
  * sibling in the given list pass through unchanged.
+ *
+ * Not currently used by ProductGrid (which shows every colourway as its own
+ * card, see attachColourSwatches below) - kept in case a grouped grid view is
+ * wanted again later.
  */
 export function groupCardsByDesign(products) {
   const byDesign = new Map();
@@ -122,12 +126,7 @@ export function groupCardsByDesign(products) {
     // Deterministic representative: prefer Black, else keep first-seen order.
     const representative = group.find((p) => (p.colours || [])[0] === 'Black') || group[0];
     const colours = [...new Set(group.flatMap((p) => p.colours || []))].sort((a, b) => a.localeCompare(b));
-    // One real sibling product per colour, for clickable swatches (not just dots) -
-    // each navigates straight to that colourway's own PDP.
-    const colourSwatches = group
-      .filter((p) => p.colours?.[0])
-      .map((p) => ({ name: p.colours[0], handle: p.handle, image: p.img }))
-      .sort((a, b) => (a.name === 'Black' ? -1 : b.name === 'Black' ? 1 : a.name.localeCompare(b.name)));
+    const colourSwatches = buildColourSwatches(group);
     result.push({ ...representative, colours, colourSwatches });
   });
 
@@ -135,6 +134,35 @@ export function groupCardsByDesign(products) {
   const order = new Map(products.map((p, i) => [p.id, i]));
   result.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
   return result;
+}
+
+function buildColourSwatches(group) {
+  return group
+    .filter((p) => p.colours?.[0])
+    .map((p) => ({ name: p.colours[0], handle: p.handle, image: p.img }))
+    .sort((a, b) => (a.name === 'Black' ? -1 : b.name === 'Black' ? 1 : a.name.localeCompare(b.name)));
+}
+
+/**
+ * Keeps every colourway as its own card (so the grid shows the full product
+ * count), but attaches the full sibling list to each card's `colourSwatches`
+ * so every card can still link to its other colours. Unlike groupCardsByDesign,
+ * nothing is dropped and each product's own `colours` (used for filtering) is
+ * left untouched - only the extra `colourSwatches` display field is added.
+ */
+export function attachColourSwatches(products) {
+  const byDesign = new Map();
+  products.forEach((p) => {
+    const key = p.designKey || p.id;
+    if (!byDesign.has(key)) byDesign.set(key, []);
+    byDesign.get(key).push(p);
+  });
+
+  return products.map((p) => {
+    const group = byDesign.get(p.designKey || p.id);
+    if (!group || group.length < 2) return p;
+    return { ...p, colourSwatches: buildColourSwatches(group) };
+  });
 }
 
 export function sortProducts(products, sortId) {

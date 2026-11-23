@@ -7,9 +7,9 @@ import {
   EMPTY_FILTERS,
   SORT_OPTIONS,
   applyFilters,
+  attachColourSwatches,
   buildFacets,
   countActiveFilters,
-  groupCardsByDesign,
   meaningfulBadges,
   sortProducts,
 } from '../lib/collectionFilters';
@@ -216,10 +216,9 @@ export default function ProductGrid({
 
   const visible = useMemo(() => {
     const list = !browse ? products : sortProducts(applyFilters(products, filters, facets.price), sort);
-    // Grouping happens last, on the already-filtered/sorted per-colourway list - the
-    // colour facet and colour filter above need the ungrouped list to work (see
-    // groupCardsByDesign's own comment).
-    return groupCardsByDesign(list);
+    // Every colourway stays its own card (keeps the grid's product count full) -
+    // this just attaches sibling links for the swatches, nothing is collapsed.
+    return attachColourSwatches(list);
   }, [browse, products, filters, sort, facets.price]);
 
   // Close any open dropdown on outside click / Escape.
@@ -245,11 +244,10 @@ export default function ProductGrid({
   // Category has its own pill navigation above the bar; the bar keeps the other facets.
   const barGroups = facets.category.length > 1 ? groups.filter((g) => g.id !== 'category') : groups;
 
-  const groupedAll = useMemo(() => groupCardsByDesign(products), [products]);
-  const keepBadges = useMemo(() => meaningfulBadges(groupedAll), [groupedAll]);
+  const keepBadges = useMemo(() => meaningfulBadges(products), [products]);
   const badgeFor = (p) => (p.badge && keepBadges.has(p.badge) ? titleCaseBadge(p.badge) : null);
 
-  const count = groupedAll.length;
+  const count = products.length;
   const noun = count === 1 ? 'Product' : 'Products';
   const countLabel = activeCount > 0 ? `${visible.length} of ${count} ${noun}` : `${count} ${noun}`;
 
