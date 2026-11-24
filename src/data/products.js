@@ -13,11 +13,11 @@ import productHero from '../assets/product_hero.png';
 
 export const PRODUCTS = {
 
-  /* ── ICON Universe ── */
+  /* ── HEELS Universe ── */
   'icon-1': {
     id: 'icon-1',
     universeId: 'icon',
-    universeName: 'THE ICON EDIT',
+    universeName: 'THE HEELS EDIT',
     name: 'Rosalie Kitten Heels',
     category: 'Heels',
     subCategory: 'Kitten Heels',
@@ -140,7 +140,7 @@ export const PRODUCTS = {
   'icon-2': {
     id: 'icon-2',
     universeId: 'icon',
-    universeName: 'THE ICON EDIT',
+    universeName: 'THE HEELS EDIT',
     name: 'Vienna Block Heels',
     category: 'Heels',
     subCategory: 'Block Heels',
@@ -222,11 +222,11 @@ export const PRODUCTS = {
     editorialBg: '/hero-icon.webp',
   },
 
-  /* ── HERITAGE Universe ── */
+  /* ── CRAFT Universe ── */
   'her-1': {
     id: 'her-1',
     universeId: 'heritage',
-    universeName: 'THE HERITAGE EDIT',
+    universeName: 'THE CRAFT EDIT',
     name: 'Rangrez Juttis',
     category: 'Juttis',
     subCategory: 'Embroidered Juttis',
@@ -309,7 +309,7 @@ export const PRODUCTS = {
       { img: productHeel, label: 'Kundan Earrings', price: '₹1,500' },
       { img: juttiEmb,   label: 'Banarasi Dupatta', price: '₹2,200' },
     ],
-    pageTitle: 'Rangrez Juttis — SYORA Heritage',
+    pageTitle: 'Rangrez Juttis — SYORA Craft',
     pageDescription: 'Shop the Rangrez hand-embroidered juttis — resham & zardozi work on velvet. Perfect for weddings & festivals. COD available.',
     editorialTagline: 'DIFFERENT WORLDS.\nSAME YOU.',
     editorialBg: '/hero-heritage.webp',
@@ -318,7 +318,7 @@ export const PRODUCTS = {
   'her-2': {
     id: 'her-2',
     universeId: 'heritage',
-    universeName: 'THE HERITAGE EDIT',
+    universeName: 'THE CRAFT EDIT',
     name: 'Basant Embroidered Juttis',
     category: 'Juttis',
     subCategory: 'Embroidered Juttis',
@@ -388,7 +388,7 @@ export const PRODUCTS = {
       { img: productHeel, label: 'Polki Earrings', price: '₹2,200' },
       { img: juttiSig,   label: 'Net Dupatta', price: '₹1,500' },
     ],
-    pageTitle: 'Basant Embroidered Juttis — SYORA Heritage',
+    pageTitle: 'Basant Embroidered Juttis — SYORA Craft',
     pageDescription: 'Shop the Basant hand-embroidered silk juttis — metallic threadwork, padded sole. Perfect for weddings & sangeet. COD available.',
     editorialTagline: 'DIFFERENT WORLDS.\nSAME YOU.',
     editorialBg: '/hero-heritage.webp',
@@ -397,7 +397,7 @@ export const PRODUCTS = {
   'her-3': {
     id: 'her-3',
     universeId: 'heritage',
-    universeName: 'THE HERITAGE EDIT',
+    universeName: 'THE CRAFT EDIT',
     name: 'Mitti Everyday Juttis',
     category: 'Juttis',
     subCategory: 'Everyday Juttis',
@@ -473,17 +473,17 @@ export const PRODUCTS = {
       { img: productHeel, label: 'Silver Jhumkas', price: '₹800' },
       { img: juttiSig,   label: 'Block Print Dupatta', price: '₹1,100' },
     ],
-    pageTitle: 'Mitti Everyday Juttis — SYORA Heritage',
+    pageTitle: 'Mitti Everyday Juttis — SYORA Craft',
     pageDescription: 'Shop the Mitti block-printed cotton juttis — thick cushioned sole, 8+ hour comfort. Daily wear craftsmanship. COD available.',
     editorialTagline: 'DIFFERENT WORLDS.\nSAME YOU.',
     editorialBg: '/hero-heritage.webp',
   },
 
-  /* ── EVERYDAY Universe ── */
+  /* ── FLATS Universe ── */
   'evr-1': {
     id: 'evr-1',
     universeId: 'everyday',
-    universeName: 'THE EVERYDAY EDIT',
+    universeName: 'THE FLATS EDIT',
     name: 'Luna Everyday Flats',
     category: 'Flats',
     subCategory: 'Jutti Flats',

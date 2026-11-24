@@ -1585,7 +1585,7 @@
   min-height: 100vh;
 }
 
-/* Specific override for ICON universe's bottom section */
+/* Specific override for HEELS universe's bottom section */
 .icon-dark-bottom {
   --bg-secondary: #3e0f0f;
   --text-main: #fcfaf8;
@@ -1666,7 +1666,7 @@
 /* On universe heroes the header sits on a known, scrimmed photograph, so it uses
    its plain (white) colours. `difference` blending only reads well on very dark
    or very light backdrops and left the logo/nav nearly invisible on the beige
-   HERITAGE and EVERYDAY photos. Product/other pages keep the blend. */
+   CRAFT and FLATS photos. Product/other pages keep the blend. */
 .navbar--hero { mix-blend-mode: normal; }
 .u-hero__eyebrow {
   font-family: 'Inter', sans-serif;
@@ -2296,7 +2296,7 @@ a.product-card__swatch.is-active { box-shadow: inset 0 0 0 1.5px rgba(23, 19, 17
   .u-cta-btn { text-align: center; }
   .u-hero__watermark { display: none; }
 
-  /* Compact mobile treatment (previously ICON-only) now applies to every universe hero. */
+  /* Compact mobile treatment (previously HEELS-only) now applies to every universe hero. */
   .u-hero .u-hero__content { padding: 18px 20px 40px; }
   .u-hero .u-hero__eyebrow {
     margin-bottom: 10px;

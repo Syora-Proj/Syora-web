@@ -9,7 +9,7 @@ Commits: one per round (`git log --oneline`).
 ## Round 1 — shared components
 | Problem | Root cause | Fix |
 |---|---|---|
-| Header text collided with the hero eyebrow on every universe page | `.u-hero` was a fixed `100vh` flex box with bottom-aligned content; taller content overflowed **upward** under the absolute navbar (also true on HERITAGE/EVERYDAY/MOTION, not only ICON) | `.u-hero` now `min-height` and grows with its content |
+| Header text collided with the hero eyebrow on every universe page | `.u-hero` was a fixed `100vh` flex box with bottom-aligned content; taller content overflowed **upward** under the absolute navbar (also true on CRAFT/FLATS/CLOSED, not only HEELS) | `.u-hero` now `min-height` and grows with its content |
 | Nav links ran into the logo between 769–1220px | Left nav needs ~435px but the hamburger only kicked in at 768px | Navigation has its own breakpoint (1220px); gap tightened mid-range, unchanged ≥1440px |
 | Mobile menu rendered colour-inverted, dimmed, and was tabbable while closed | Drawer lives inside a `mix-blend-mode: difference` header; backdrop z-index sat above the drawer; no `visibility` | Blend off while open, backdrop below header, `visibility: hidden` when closed, Escape closes |
 | Dark strip on the right edge of every page; cart focusable while closed | Closed cart drawer's `box-shadow` bled in; `aria-modal` dialog never hidden | Shadow only when open, `visibility` + `aria-hidden` |
@@ -25,10 +25,10 @@ Commits: one per round (`git log --oneline`).
 ## Round 3 — universe pages
 * Hero text column was ~460px (`max-width: 620px` included padding) so headlines broke mid-word and the block grew tall. Now a true 620px; all four heroes are the same height.
 * Light edge scrims + plain header colour on universe heroes (the `difference` blend left the logo/nav unreadable over the beige photos). Imagery unchanged.
-* ICON-only compact mobile treatment now applies to all four universes.
+* HEELS-only compact mobile treatment now applies to all four universes.
 * Explore-More grid was 4 columns for 3 tiles. Now 3.
 * "View full collection" / "All bestsellers" linked to the page you were already on → removed. Empty bestsellers strip no longer renders.
-* Empty collections (HERITAGE, MOTION) and errors share one polished state in each universe's palette, with a route onward.
+* Empty collections (CRAFT, CLOSED) and errors share one polished state in each universe's palette, with a route onward.
 
 ## Round 4 — product cards
 * Card was `<article role="link">` containing a `<button>` (invalid nested interactive). Now: image + title are links, heart is a sibling button (`aria-pressed`, 44px target).
@@ -55,7 +55,7 @@ Commits: one per round (`git log --oneline`).
 2. **Homepage has no header** (cinematic hero). Left as designed. Cart is therefore unreachable from `/` until you open a universe.
 3. **Social icons** removed from the footer: no real URLs exist in the repo and none were invented. Add them to `SOCIAL_LINKS` in `Footer.jsx` and they reappear.
 4. **"Craftsmanship"** footer link removed (no destination). "Our Story" → `/#about`.
-5. **Hero scrim** (`.u-hero::after`) is subtle but visible, especially at the bottom of EVERYDAY/HERITAGE. Dial it down or remove it in one rule if you prefer the raw photographs.
+5. **Hero scrim** (`.u-hero::after`) is subtle but visible, especially at the bottom of FLATS/CRAFT. Dial it down or remove it in one rule if you prefer the raw photographs.
 6. **Add to Bag is primary, Buy Now secondary** (outlined). Swap the two if checkout-first is the intent.
 
 ## Content flagged, not changed

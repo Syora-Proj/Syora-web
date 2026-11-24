@@ -9,8 +9,8 @@
  */
 export const COLLECTION_CONTENT = {
   icon: {
-    eyebrow: 'The ICON Universe',
-    cta: 'Explore ICON',
+    eyebrow: 'The HEELS Universe',
+    cta: 'Explore HEELS',
     headline: 'Statement Heels\nfor Standout Moments.',
     description: 'Bold silhouettes, refined details and unforgettable presence.',
     hero: {
@@ -24,8 +24,8 @@ export const COLLECTION_CONTENT = {
     colors: { bg: '#2b0a0d', ink: '#f7eee4', accent: '#e4c9a3', pill: '#2b0a0d' },
   },
   heritage: {
-    eyebrow: 'The HERITAGE Universe',
-    cta: 'Explore HERITAGE',
+    eyebrow: 'The CRAFT Universe',
+    cta: 'Explore CRAFT',
     headline: 'Rooted in Craft.\nWorn with Pride.',
     description: 'Timeless juttis and traditional-inspired designs that celebrate our rich heritage with a modern interpretation.',
     hero: {
@@ -39,8 +39,8 @@ export const COLLECTION_CONTENT = {
     colors: { bg: '#3a2214', ink: '#f7eee4', accent: '#e6c48c', pill: '#3a2214' },
   },
   everyday: {
-    eyebrow: 'The EVERYDAY Universe',
-    cta: 'Explore EVERYDAY',
+    eyebrow: 'The FLATS Universe',
+    cta: 'Explore FLATS',
     headline: 'Effortless Flats\nfor Everyday Edits.',
     description: 'Versatile, comfortable and endlessly wearable — designed for the days you do it all.',
     hero: {
@@ -54,8 +54,8 @@ export const COLLECTION_CONTENT = {
     colors: { bg: '#f0dcc3', ink: '#2a1810', accent: '#8a4b32', pill: '#5f4128' },
   },
   motion: {
-    eyebrow: 'The MOTION Universe',
-    cta: 'Explore MOTION',
+    eyebrow: 'The CLOSED Universe',
+    cta: 'Explore CLOSED',
     headline: 'City Energy.\nYour Pace.',
     description: 'Modern sneakers and everyday essentials for a life in motion. Designed for those who move, create and go further.',
     hero: {

@@ -38,10 +38,10 @@ Only a Storefront token belongs in this browser app. Never put Shopify Admin API
 | Route | Screen |
 | --- | --- |
 | `/` | `MultiverseEntry`: video hero, universe selector, brand story, footer |
-| `/universe/icon` | Shared `UniversePage` configured for ICON |
-| `/universe/heritage` | Shared `UniversePage` configured for HERITAGE |
-| `/universe/everyday` | Shared `UniversePage` configured for EVERYDAY |
-| `/universe/motion` | Shared `UniversePage` configured for MOTION |
+| `/universe/icon` | Shared `UniversePage` configured for HEELS |
+| `/universe/heritage` | Shared `UniversePage` configured for CRAFT |
+| `/universe/everyday` | Shared `UniversePage` configured for FLATS |
+| `/universe/motion` | Shared `UniversePage` configured for CLOSED |
 | `/universe/off-duty` | Shared `UniversePage` configured for OFF-DUTY |
 | `/product/:handle` | `ProductPage`; `handle` is the Shopify product handle |
 | `/home`, `/shop` | Preserved legacy editorial homepage (`LegacyHome`) |
@@ -87,7 +87,7 @@ Product detail sections include gallery navigation (touch swipe on mobile), size
 - `UNIVERSE_ORDER`: canonical ordering `icon`, `heritage`, `everyday`, `motion`, `off-duty`.
 - `UNIVERSES`: config for each route, including id/name/tagline/headline/editorial/CTA, CSS palette variables, hero image and alt text, and local sample products/bestsellers.
 
-The page route passes the id as the `universe` prop. Product collections are fetched live from Shopify by matching collection handle. The local `products` and `bestsellers` arrays are not used as a fallback by `UniversePage` today; they serve as sample/configuration content and visual reference. MOTION and OFF-DUTY currently have no local product entries and comments mark their product imagery/catalog as pending.
+The page route passes the id as the `universe` prop. Product collections are fetched live from Shopify by matching collection handle. The local `products` and `bestsellers` arrays are not used as a fallback by `UniversePage` today; they serve as sample/configuration content and visual reference. CLOSED and OFF-DUTY currently have no local product entries and comments mark their product imagery/catalog as pending.
 
 ### Local product fixture catalog
 

@@ -6,22 +6,22 @@ import './UniverseShowcase.css';
 export const CARD_ART = {
   icon: {
     src: '/universe-cards/icon.webp',
-    alt: 'Woman wearing strappy ankle-strap heels with a burgundy velvet dress',
+    alt: 'Woman wearing black patent stiletto heels with a burgundy silk dress',
     panel: '#3a0e12',
   },
   heritage: {
     src: '/universe-cards/heritage.webp',
-    alt: 'Woman wearing embroidered juttis on stone steps',
+    alt: 'Woman wearing gold embroidered juttis with a burgundy silk outfit',
     panel: '#4a2a18',
   },
   everyday: {
     src: '/universe-cards/everyday.webp',
-    alt: 'Woman wearing cream flats with a gold buckle detail',
+    alt: 'Woman wearing ivory quilted ballet flats with a bow detail on stone steps',
     panel: '#7a5636',
   },
   motion: {
     src: '/universe-cards/motion.webp',
-    alt: 'Woman wearing white sneakers with striped socks',
+    alt: 'Woman tying white and beige sneakers on stone steps',
     panel: '#34281f',
   },
 };

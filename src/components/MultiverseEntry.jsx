@@ -216,7 +216,7 @@ export default function MultiverseEntry() {
               juttis rooted in tradition and a belief that Indian craft
               deserves to walk into every room with confidence.
             </p>
-            {/* HERITAGE is the existing juttis and craft destination. */}
+            {/* CRAFT is the existing juttis and craft destination. */}
             <Link to="/universe/heritage" className="mv2-about__cta">MEET THE CRAFT →</Link>
             <p className="mv2-about__footer-text">INDIAN CRAFT. GLOBAL STEPS.</p>
           </div>

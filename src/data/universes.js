@@ -19,12 +19,12 @@ export const UNIVERSE_ORDER = ['icon', 'heritage', 'everyday', 'motion'];
 export const UNIVERSES = {
   icon: {
     id: 'icon',
-    name: 'ICON',
+    name: 'HEELS',
     tagline: 'Walk into any room first.',
     headline: 'CONFIDENCE\nIS YOUR\nBEST HEEL.',
-    editorial: 'ICON is for the woman who makes an entrance. Polished, statement-making heels crafted to carry you through every moment that matters — from boardrooms to ballrooms.',
+    editorial: 'HEELS is for the woman who makes an entrance. Polished, statement-making heels crafted to carry you through every moment that matters — from boardrooms to ballrooms.',
     cta: 'SHOP HEELS',
-    // Colour palette for ICON universe (Light Burgundy Theme)
+    // Colour palette for HEELS universe (Light Burgundy Theme)
     palette: {
       bg: '#faf5ee',
       accent: '#5a1717',
@@ -52,10 +52,10 @@ export const UNIVERSES = {
 
   heritage: {
     id: 'heritage',
-    name: 'HERITAGE',
+    name: 'CRAFT',
     tagline: 'Rooted in craft. Worn with pride.',
     headline: 'TRADITION\nHAD A\nGLOW-UP.',
-    editorial: 'HERITAGE is where Indian craft meets contemporary confidence. Each jutti is a conversation between the hands that made it and the woman who wears it — cultural character, re-imagined.',
+    editorial: 'CRAFT is where Indian craft meets contemporary confidence. Each jutti is a conversation between the hands that made it and the woman who wears it — cultural character, re-imagined.',
     cta: 'SHOP JUTTIS',
     palette: {
       bg: '#faf5ee',
@@ -71,7 +71,7 @@ export const UNIVERSES = {
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '62% 84%',
     heroImageMobile: '/hero-heritage-mobile.webp',
-    heroImageAlt: 'SYORA HERITAGE juttis',
+    heroImageAlt: 'SYORA CRAFT juttis',
     products: [
       { id: 'her-1', img: juttiSig, name: 'Signature Juttis',    price: '₹2,499', badge: 'BESTSELLER' },
       { id: 'her-2', img: juttiEmb, name: 'Embroidered Juttis',  price: '₹2,799', badge: 'NEW' },
@@ -85,10 +85,10 @@ export const UNIVERSES = {
 
   everyday: {
     id: 'everyday',
-    name: 'EVERYDAY',
+    name: 'FLATS',
     tagline: 'Effortless. Every single day.',
     headline: 'REFINED FOR\nEVERY\nMOMENT.',
-    editorial: 'EVERYDAY is the universe for the woman who moves through life with understated elegance. Flats and loafers that do not compromise — refined enough for the office, relaxed enough for everything else.',
+    editorial: 'FLATS is the universe for the woman who moves through life with understated elegance. Flats and loafers that do not compromise — refined enough for the office, relaxed enough for everything else.',
     cta: 'SHOP FLATS & LOAFERS',
     palette: {
       bg: '#faf5ee',
@@ -104,7 +104,7 @@ export const UNIVERSES = {
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '82% 80%',
     heroImageMobile: '/hero-everyday-mobile.webp',
-    heroImageAlt: 'SYORA EVERYDAY flats and loafers',
+    heroImageAlt: 'SYORA FLATS collection — flats and loafers',
     products: [
       { id: 'evr-1', img: juttiEvy,  name: 'Everyday Jutti-Flat', price: '₹2,299', badge: null },
       { id: 'evr-2', img: heroModel, name: 'Classic Loafer',       price: '₹2,799', badge: 'NEW' },
@@ -116,10 +116,10 @@ export const UNIVERSES = {
 
   motion: {
     id: 'motion',
-    name: 'MOTION',
+    name: 'CLOSED',
     tagline: 'City energy. Your pace.',
     headline: 'MOVE ON\nYOUR OWN\nTERMS.',
-    editorial: 'MOTION is for the woman who owns the city. Sneakers that match her energy — independent, expressive and built for every version of her day, from sunrise runs to late-night plans.',
+    editorial: 'CLOSED is for the woman who owns the city. Sneakers that match her energy — independent, expressive and built for every version of her day, from sunrise runs to late-night plans.',
     cta: 'SHOP SNEAKERS',
     palette: {
       bg: '#faf5ee', // lighter shade of footer #eedcc7
@@ -135,7 +135,7 @@ export const UNIVERSES = {
     // Where the collection header band crops the hero photo (feet / shoes in frame).
     bandPosition: '55% 84%',
     heroImageMobile: '/hero-motion-mobile.webp',
-    heroImageAlt: 'SYORA MOTION sneakers',
+    heroImageAlt: 'SYORA CLOSED sneakers',
     // No sneaker product images in current assets — placeholder grid below
     products: [
       // ⚠️ CONNECT SNEAKER PRODUCT DATA HERE

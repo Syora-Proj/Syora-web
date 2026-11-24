@@ -32,7 +32,7 @@ import '../pdp.css';
  */
 
 // Existing Shopify gallery views, curated by product so each feature card
-// shows the same kind of detail across the Everyday collection.
+// shows the same kind of detail across the Flats collection.
 const EVERYDAY_FEATURE_GALLERY_INDEX = {
   'syora-flat-5': { cushioning: 4, finish: 2, sole: 5 },
   'syora-flat-4': { cushioning: 1, finish: 2, sole: 5 },

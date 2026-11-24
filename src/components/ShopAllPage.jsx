@@ -24,7 +24,7 @@ export default function ShopAllPage() {
       style={{ '--u-bg': palette.bg, '--u-accent': palette.accent, '--u-text': palette.text, '--u-muted': palette.muted, '--u-border': palette.border, '--u-hero-text': '#f5ece4' }}
     >
       <title>All Products — SYORA</title>
-      <meta name="description" content="Shop every SYORA style — heels, juttis, flats and sneakers across ICON, HERITAGE, EVERYDAY and MOTION." />
+      <meta name="description" content="Shop every SYORA style — heels, juttis, flats and sneakers across HEELS, CRAFT, FLATS and CLOSED." />
       <Navbar universeMode solid />
 
       <main id="products-all" className="u-products">
