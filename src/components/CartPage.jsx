@@ -66,7 +66,7 @@ export default function CartPage() {
               <p className="cp__empty-sub">Find a pair you love and it will wait for you here.</p>
               <div className="cp__empty-actions">
                 <Link to="/shop" className="cp__btn">Shop all products</Link>
-                {['icon', 'heritage', 'everyday', 'motion'].map((id) => (
+                {['icon', 'everyday', 'heritage', 'motion'].map((id) => (
                   <Link key={id} to={`/universe/${id}`} className="cp__chip">{UNIVERSES[id].name}</Link>
                 ))}
               </div>

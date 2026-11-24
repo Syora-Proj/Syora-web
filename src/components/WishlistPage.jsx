@@ -42,7 +42,7 @@ export default function WishlistPage() {
               <p className="cp__empty-sub">Tap the heart on any style to keep it here.</p>
               <div className="cp__empty-actions">
                 <Link to="/shop" className="cp__btn">Shop all products</Link>
-                {['icon', 'heritage', 'everyday', 'motion'].map((id) => (
+                {['icon', 'everyday', 'heritage', 'motion'].map((id) => (
                   <Link key={id} to={`/universe/${id}`} className="cp__chip">{UNIVERSES[id].name}</Link>
                 ))}
               </div>

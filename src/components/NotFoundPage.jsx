@@ -24,7 +24,7 @@ export default function NotFoundPage() {
             <Link to="/shop" className="cp__btn">Shop all products</Link>
             <Link to="/" className="cp__chip">Home</Link>
             <Link to="/search" className="cp__chip">Search</Link>
-            {['icon', 'heritage', 'everyday', 'motion'].map((id) => (
+            {['icon', 'everyday', 'heritage', 'motion'].map((id) => (
               <Link key={id} to={`/universe/${id}`} className="cp__chip">{UNIVERSES[id].name}</Link>
             ))}
           </div>

@@ -14,7 +14,7 @@ import productHero from '../assets/product_hero.png';
 import productHeel from '../assets/product_heel_1.png';
 import secondaryHero from '../assets/secondary_hero.png';
 
-export const UNIVERSE_ORDER = ['icon', 'heritage', 'everyday', 'motion'];
+export const UNIVERSE_ORDER = ['icon', 'everyday', 'heritage', 'motion'];
 
 export const UNIVERSES = {
   icon: {
