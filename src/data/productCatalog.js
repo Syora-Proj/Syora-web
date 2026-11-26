@@ -14,30 +14,13 @@
  * Until then this file keeps the website itself clean. Old /product/<handle> links redirect to the new slug.
  */
 export const PRODUCT_CATALOG = {
-  'black-pump': {
-    name: 'Nyx Black Slingback Heels',
-    slug: 'nyx-black-slingback-heels',
-    description: 'Nyx black slingback heels with a sleek pointed toe, glossy finish and cushioned footbed. Premium women’s heels by SYORA.',
-  },
-  'black-pumps': {
+  // Keys must be the product's CURRENT Shopify handle. Entries whose handle no longer exists in the store
+  // (black-pump, glitter-flat, kitten-heels, zebra-flats) were removed: they pointed at products that were
+  // renamed/removed in Shopify, and 'black-pumps' made /product/colette-black-bow-pumps resolve to a dead handle.
+  'colette-black-bow-pumps': {
     name: 'Colette Black Patent Bow Pumps',
     slug: 'colette-black-bow-pumps',
     description: 'Colette bow pumps in black with a glossy patent finish and soft cushioned insole, made for all-day comfort. By SYORA.',
-  },
-  'glitter-flat': {
-    name: 'Iris Black Mary Janes',
-    slug: 'iris-black-mary-janes',
-    description: 'Iris Mary Jane shoes with a glossy strap, buckle closure and low block heel. Comfortable women’s Mary Janes by SYORA.',
-  },
-  'kitten-heels': {
-    name: 'Aveline Nude Kitten Heels',
-    slug: 'aveline-nude-kitten-heels',
-    description: 'Aveline kitten heels in nude, burgundy and black. Elegant low heels for work, occasions and everyday. By SYORA.',
-  },
-  'zebra-flats': {
-    name: 'Zebra Print Flats',
-    slug: 'zebra-print-flats',
-    description: 'Zebra print flats from SYORA: easy, comfortable women’s flats with a bold animal-print finish.',
   },
   // Add the rest here, e.g.
   // 'syora-flat-5': { name: '…', slug: '…', description: '…' },
